@@ -5,13 +5,9 @@ from typing import Protocol
 from typing import TypeVar
 from typing import cast
 
-from typeline import DelimitedDataReader
 from typeline import ReaderOptions
 from typeline import RecordType
-from typeline import SubscriptableClassmethod
 from typing_extensions import Unpack
-
-from captainslog._files import open_text
 
 if TYPE_CHECKING:
     from captainslog.picard._reader import PicardReader
@@ -44,45 +40,26 @@ class BoundFromPath(Protocol[OwnerType_co]):
         ...
 
 
-def read_path(
-    cls: type[DelimitedDataReader[Any]], path: Path | str, /, **options: Unpack[ReaderOptions]
-) -> DelimitedDataReader[Any]:
-    """Construct a reader from a file path.
-
-    The file is read as UTF-8, decompressed when it is gzip, bzip2, or xz, and closed once read to
-    the end, when a record fails, or when the reader refuses it.
-
-    Args:
-        cls: the reader to construct.
-        path: the path to the file to read.
-        options: the options of the reader, left at the reader's defaults when not given.
-    """
-    handle = open_text(path)
-    try:
-        reader = cls(handle, **options)
-    except BaseException:
-        handle.close()
-        raise
-    reader._rows.close_when_read = True  # pyright: ignore[reportPrivateUsage]
-    return reader
-
-
 class FromPath:
-    """A typeline `from_path` whose constructor builds the class it is read through.
+    """The typeline `from_path` a class inherits, which type checkers see build that class.
 
-    It opens its file with captainslog's `open_text`, and type checkers see the constructor it
-    gives, once subscripted with a record type, build the captainslog class over that type.
+    Once subscripted with a record type, it builds the class it is read through over that type, e.g.
+    `PicardReader.from_path[HsMetrics](path)` builds a `PicardReader[HsMetrics]`.
     """
 
     def __init__(self) -> None:
-        """Wrap the constructor of a reader from a file path."""
-        self._method: SubscriptableClassmethod[...] = SubscriptableClassmethod(read_path)
+        """Wait to learn the class that holds it, and its name there."""
+        self._holder: type[Any] = object
+        self._name: str = ""
 
     def __set_name__(self, owner: type[Any], name: str) -> None:
-        """Take the name of the attribute that holds it, to name it in errors."""
-        self._method.__set_name__(owner, name)
+        """Take the class that holds it and its name, to find the `from_path` it hides."""
+        self._holder = owner
+        self._name = name
 
     def __get__(self, obj: object, owner: type[OwnerType]) -> BoundFromPath[type[OwnerType]]:
-        """Bind to the class it is read through."""
-        bound = self._method.__get__(obj, owner)
-        return cast(BoundFromPath[type[OwnerType]], cast(object, bound))
+        """Hand back the inherited typeline `from_path`, bound to the class it is read through."""
+        mro = owner.__mro__
+        bases = mro[mro.index(self._holder) + 1 :]
+        hidden = next(vars(base)[self._name] for base in bases if self._name in vars(base))
+        return cast(BoundFromPath[type[OwnerType]], hidden.__get__(obj, owner))
