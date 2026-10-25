@@ -2,6 +2,7 @@ import os
 from typing import TextIO
 from typing import cast
 
+from typeline import Comment
 from typeline import RecordType
 from typeline import TsvWriter
 from typing_extensions import override
@@ -79,10 +80,29 @@ class PicardWriter(TsvWriter[RecordType]):
         _ = handle.write(os.linesep)
 
     @override
+    def write_header(self) -> None:
+        """Write nothing: the column header is written with the first record, as htsjdk does."""
+
+    @override
+    def write_comment(self, comment: str | Comment) -> None:
+        """Refuse a comment, since a Picard metrics file holds none outside its header.
+
+        Raises:
+            TypeError: always.
+        """
+        raise TypeError(
+            "A Picard metrics file holds no comments: give its header lines as the writer's header!"
+        )
+
+    @override
     def close(self) -> None:
-        """Write the blank line that ends the metrics section and the last blank line, and close."""
+        """Write the blank line that ends the metrics section and the last blank line, and close.
+
+        Closing a writer that is already closed does nothing.
+        """
         try:
-            _ = self._file.write(os.linesep)
-            _ = self._file.write(os.linesep)
+            if not self._file.closed:
+                _ = self._file.write(os.linesep)
+                _ = self._file.write(os.linesep)
         finally:
             super().close()

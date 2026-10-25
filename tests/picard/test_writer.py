@@ -99,17 +99,18 @@ def test_writer_writes_nan_and_negative_infinity_as_picard_does(tmp_path: Path) 
     records = [
         DuplicationMetrics(library="a", percent_duplication=float("nan")),
         DuplicationMetrics(library="b", percent_duplication=float("-inf")),
+        DuplicationMetrics(library="c", percent_duplication=float("inf")),
     ]
     with PicardWriter.from_path[DuplicationMetrics](path, header=HEADER) as writer:
         writer.write_all(records)
     columns = list(picard_rename(DuplicationMetrics).values())
-    rows = [
-        line.split("\t") for line in path.read_text().split("\n") if line.startswith(("a", "b"))
-    ]
+    lines = path.read_text().split("\n")
+    start = lines.index("\t".join(columns)) + 1
     column = columns.index("PERCENT_DUPLICATION")
-    assert [row[column] for row in rows] == ["?", "-?"]
+    assert [line.split("\t")[column] for line in lines[start : start + 3]] == ["?", "-?", "?"]
     read = list(PicardReader.from_path[DuplicationMetrics](path))
-    assert isnan(read[0].percent_duplication or 0.0)
+    nan = read[0].percent_duplication
+    assert nan is not None and isnan(nan)
     assert read[1].percent_duplication == float("-inf")
 
     flags = tmp_path / "out.sam_comparison_metric"
@@ -120,9 +121,9 @@ def test_writer_writes_nan_and_negative_infinity_as_picard_does(tmp_path: Path) 
         ])
     names = list(picard_rename(SamComparisonMetric).values())
     index = names.index(picard_rename(SamComparisonMetric)["are_equal"])
-    body = [line.split("\t") for line in flags.read_text().split("\n")]
-    values = [row[index] for row in body if len(row) == len(names)][1:]
-    assert values == ["Y", "N"]
+    flag_lines = flags.read_text().split("\n")
+    first = flag_lines.index("\t".join(names)) + 1
+    assert [line.split("\t")[index] for line in flag_lines[first : first + 2]] == ["Y", "N"]
 
 
 def test_writer_writes_a_subclass_under_its_base_java_name(tmp_path: Path) -> None:
@@ -151,8 +152,11 @@ def test_writer_writes_the_default_header_when_given_none(tmp_path: Path) -> Non
     with PicardWriter.from_path[QualityYieldMetrics](path):
         pass
     lines = path.read_text().split("\n")
-    assert lines[:3] == ["## htsjdk.samtools.metrics.StringHeader", "# captainslog", lines[2]]
-    assert lines[2] == "## htsjdk.samtools.metrics.StringHeader"
+    assert lines[:3] == [
+        "## htsjdk.samtools.metrics.StringHeader",
+        "# captainslog",
+        "## htsjdk.samtools.metrics.StringHeader",
+    ]
     assert lines[3].startswith("# Started on: ")
 
 
@@ -172,7 +176,7 @@ def test_writer_refuses_a_cell_holding_a_tab(tmp_path: Path) -> None:
     """A text cell holding a tab cannot be written, since Picard has no quoting."""
     path = tmp_path / "out.duplication_metrics"
     with (
-        pytest.raises(ValueError, match="library"),
+        pytest.raises(ValueError, match=r"field 'library' in column 'LIBRARY'"),
         PicardWriter.from_path[DuplicationMetrics](path, header=HEADER) as writer,
     ):
         writer.write(DuplicationMetrics(library="a\tb"))
@@ -188,3 +192,45 @@ def test_writer_writes_records_through_write_and_write_all_alike(tmp_path: Path)
     with PicardWriter.from_path[QualityYieldMetrics](many, header=HEADER) as writer:
         writer.write_all(records)
     assert one.read_text() == many.read_text()
+
+
+def test_writer_closes_twice_and_inside_a_with_block(tmp_path: Path) -> None:
+    """Closing again leaves the file as a single close does."""
+    once, twice, inside = (tmp_path / name for name in ("once", "twice", "inside"))
+    records = [QualityYieldMetrics(total_reads=5)]
+    for path in (once, twice, inside):
+        writer = PicardWriter.from_path[QualityYieldMetrics](path, header=HEADER)
+        with writer:
+            writer.write_all(records)
+            if path is inside:
+                writer.close()
+        if path is twice:
+            writer.close()
+    assert twice.read_text() == once.read_text() == inside.read_text()
+    assert same(list(PicardReader.from_path[QualityYieldMetrics](twice)), records)
+
+
+def test_writer_write_header_writes_nothing(tmp_path: Path) -> None:
+    """The column header is written with the first record, so `write_header` changes nothing."""
+    plain, called = tmp_path / "plain", tmp_path / "called"
+    with PicardWriter.from_path[QualityYieldMetrics](plain, header=HEADER) as writer:
+        writer.write(QualityYieldMetrics(total_reads=1))
+    with PicardWriter.from_path[QualityYieldMetrics](called, header=HEADER) as writer:
+        writer.write_header()
+        writer.write(QualityYieldMetrics(total_reads=1))
+        writer.write_header()
+    assert called.read_text() == plain.read_text()
+
+
+def test_writer_refuses_a_comment_and_writes_nothing(tmp_path: Path) -> None:
+    """A comment is refused, and the file is as if it had not been given."""
+    plain, called = tmp_path / "plain", tmp_path / "called"
+    with PicardWriter.from_path[QualityYieldMetrics](plain, header=HEADER):
+        pass
+    message = (
+        "A Picard metrics file holds no comments: give its header lines as the writer's header!"
+    )
+    with PicardWriter.from_path[QualityYieldMetrics](called, header=HEADER) as writer:
+        with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
+            writer.write_comment("x")
+    assert called.read_text() == plain.read_text()
