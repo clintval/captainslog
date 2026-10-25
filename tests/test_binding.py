@@ -12,9 +12,11 @@ from captainslog._binding import FromPath
 from captainslog.picard import HsMetrics
 from captainslog.picard import PicardHeader
 from captainslog.picard import PicardReader
+from captainslog.picard import PicardWriter
 from captainslog.picard import QualityYieldMetrics
 from tests.compare import same
 from tests.picard import DATA
+from tests.picard import HEADER
 
 SHARED = FromPath()
 
@@ -62,6 +64,19 @@ def test_from_path_types_the_reader_as_the_subscripted_picard_reader() -> None:
         _ = assert_type(reader, PicardReader[QualityYieldMetrics])
         _ = assert_type(reader.header, PicardHeader)
         assert type(reader).__name__ == "PicardReader[QualityYieldMetrics]"
+
+
+def test_from_path_types_the_writer_as_the_subscripted_picard_writer(tmp_path: Path) -> None:
+    """Type checkers see `from_path` build the writer it is read through, over its record type."""
+    with PicardWriter.from_path[QualityYieldMetrics](tmp_path / "out.txt", header=HEADER) as writer:
+        _ = assert_type(writer, PicardWriter[QualityYieldMetrics])
+        assert type(writer).__name__ == "PicardWriter[QualityYieldMetrics]"
+
+
+def test_from_path_of_the_writer_takes_only_a_header(tmp_path: Path) -> None:
+    """The writer's `from_path` refuses an option the Picard format fixes."""
+    with pytest.raises(TypeError):
+        _ = PicardWriter.from_path[QualityYieldMetrics](tmp_path / "out.txt", quoting=True)  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue, reportUnknownVariableType]  # ty: ignore[unknown-argument]
 
 
 def test_from_path_reads_a_gzipped_file_as_the_plain_file(tmp_path: Path) -> None:

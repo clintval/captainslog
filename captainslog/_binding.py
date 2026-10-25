@@ -3,20 +3,16 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Protocol
 from typing import TypeVar
-from typing import cast
+from typing import overload
 
 from typeline import ReaderOptions
 from typeline import RecordType
 from typing_extensions import Unpack
 
 if TYPE_CHECKING:
+    from captainslog.picard._header import PicardHeader
     from captainslog.picard._reader import PicardReader
-
-OwnerType = TypeVar("OwnerType")
-"""The class a `from_path` is read through."""
-
-OwnerType_co = TypeVar("OwnerType_co", covariant=True)
-"""The class a bound `from_path` was read through."""
+    from captainslog.picard._writer import PicardWriter
 
 BuiltType_co = TypeVar("BuiltType_co", covariant=True)
 """The reader or writer a `from_path` builds."""
@@ -30,13 +26,33 @@ class OpensPath(Protocol[BuiltType_co]):
         ...
 
 
-class BoundFromPath(Protocol[OwnerType_co]):
-    """The `from_path` of a captainslog class, waiting to be subscripted with a record type."""
+class WritesPath(Protocol[BuiltType_co]):
+    """A constructor of a writer of a Picard metrics file, from its path and its header."""
+
+    def __call__(
+        self, path: Path | str, /, *, header: "PicardHeader | None" = None
+    ) -> BuiltType_co:
+        """Open the file at a path, and build its writer."""
+        ...
+
+
+class BoundReaderFromPath(Protocol):
+    """The `from_path` of a reader class, waiting to be subscripted with a record type."""
 
     def __getitem__(
-        self: "BoundFromPath[type[PicardReader[Any]]]", record_type: type[RecordType], /
+        self, record_type: type[RecordType], /
     ) -> "OpensPath[PicardReader[RecordType]]":
-        """Bind the record type, giving a constructor of the class over it."""
+        """Bind the record type, giving a constructor of the reader over it."""
+        ...
+
+
+class BoundWriterFromPath(Protocol):
+    """The `from_path` of a writer class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "WritesPath[PicardWriter[RecordType]]":
+        """Bind the record type, giving a constructor of the writer over it."""
         ...
 
 
@@ -55,7 +71,16 @@ class FromPath:
         """Take the name it is held by, to find the `from_path` it hides."""
         self._name = name
 
-    def __get__(self, obj: object, owner: type[OwnerType]) -> BoundFromPath[type[OwnerType]]:
+    @overload
+    def __get__(self, obj: object, owner: type["PicardReader[Any]"]) -> BoundReaderFromPath: ...
+
+    @overload
+    def __get__(self, obj: object, owner: type["PicardWriter[Any]"]) -> BoundWriterFromPath: ...
+
+    @overload
+    def __get__(self, obj: object, owner: type[object]) -> Any: ...
+
+    def __get__(self, obj: object, owner: type[Any]) -> Any:
         """Hand back the inherited typeline `from_path`, bound to the class it is read through.
 
         Raises:
@@ -66,4 +91,4 @@ class FromPath:
         inherited = next((base for base in mro[at + 1 :] if name in vars(base)), None)
         if inherited is None:
             raise TypeError(f"{owner.__name__} inherits no {name} for FromPath to hand back!")
-        return cast(BoundFromPath[type[OwnerType]], vars(inherited)[name].__get__(obj, owner))
+        return vars(inherited)[name].__get__(obj, owner)

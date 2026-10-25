@@ -8,12 +8,14 @@ from captainslog.picard._levels import accumulation_level
 from captainslog.picard._metrics import *  # noqa: F403
 from captainslog.picard._reader import PicardReader
 from captainslog.picard._reader import metrics_class
+from captainslog.picard._writer import PicardWriter
 
 __all__: list[str] = [
     "AccumulationLevel",
     "Multilevel",
     "PicardHeader",
     "PicardReader",
+    "PicardWriter",
     "accumulation_level",
     "metrics_class",
 ]
