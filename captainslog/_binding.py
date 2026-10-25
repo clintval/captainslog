@@ -48,18 +48,22 @@ class FromPath:
     """
 
     def __init__(self) -> None:
-        """Wait to learn the class that holds it, and its name there."""
-        self._holder: type[Any] = object
+        """Wait to learn the name it is held by."""
         self._name: str = ""
 
     def __set_name__(self, owner: type[Any], name: str) -> None:
-        """Take the class that holds it and its name, to find the `from_path` it hides."""
-        self._holder = owner
+        """Take the name it is held by, to find the `from_path` it hides."""
         self._name = name
 
     def __get__(self, obj: object, owner: type[OwnerType]) -> BoundFromPath[type[OwnerType]]:
-        """Hand back the inherited typeline `from_path`, bound to the class it is read through."""
-        mro = owner.__mro__
-        bases = mro[mro.index(self._holder) + 1 :]
-        hidden = next(vars(base)[self._name] for base in bases if self._name in vars(base))
-        return cast(BoundFromPath[type[OwnerType]], hidden.__get__(obj, owner))
+        """Hand back the inherited typeline `from_path`, bound to the class it is read through.
+
+        Raises:
+            TypeError: if no class after the one holding it, in the class's MRO, has the name.
+        """
+        name, mro = self._name, owner.__mro__
+        at = next((i for i, base in enumerate(mro) if vars(base).get(name) is self), len(mro))
+        inherited = next((base for base in mro[at + 1 :] if name in vars(base)), None)
+        if inherited is None:
+            raise TypeError(f"{owner.__name__} inherits no {name} for FromPath to hand back!")
+        return cast(BoundFromPath[type[OwnerType]], vars(inherited)[name].__get__(obj, owner))

@@ -36,20 +36,28 @@ def java_name(record_type: type[Any]) -> str:
 def check_section(table: Table, java: str, record_name: str) -> None:
     """Refuse a file whose first section is not a metrics table of a Java class.
 
-    A file without a section holds no metrics, since htsjdk writes no section for no rows.
+    A file with a header and no section holds no metrics, since htsjdk writes no section for no
+    rows.
 
     Args:
         table: the metrics table of the file, whose comments and section line are read.
         java: the Java class the table must hold.
         record_name: the name of the dataclass to read the rows into.
+
+    Raises:
+        ValueError: if the file breaks its lines with lone carriage returns, holds metrics of
+            another Java class or only a histogram, or is not a Picard metrics file: it has
+            neither a header nor a section, or its first line after the header starts no section.
     """
     name = "The text" if table.name is None else table.name
     line = table.section_line
     head = [comment.text for comment in table.comments] + ([] if line is None else [line])
     if any("\r" in text for text in head):
         raise ValueError(f"{name} breaks its lines with lone carriage returns, not line feeds!")
-    if line is None:
+    if line is None and table.comments:
         return
+    if line is None:
+        raise ValueError(f"{name} is not a Picard metrics file!")
     if line.startswith(f"{METRICS_CLASS}\t"):
         found = line.removeprefix(f"{METRICS_CLASS}\t")
         if found != java:
@@ -70,7 +78,8 @@ class PicardReader(TsvReader[RecordType]):
     def __init__(self, handle: TextIO, /, **options: Unpack[ReaderOptions]) -> None:
         """Read the header of a Picard metrics file, and check that its table holds the record type.
 
-        A caller's `on_comment` receives each header line here, before any record is read.
+        A caller's `on_comment` receives each header line here, before any record is read, then
+        each line of the table that `comment_prefixes` skips, as it is read.
 
         Args:
             handle: the text of a Picard metrics file.
@@ -79,13 +88,14 @@ class PicardReader(TsvReader[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
             ValueError: if the file holds another class or only a histogram, is not a Picard
-                metrics file, or breaks its lines with lone carriage returns.
+                metrics file, breaks its lines with lone carriage returns, or holds no rows after
+                its `## METRICS CLASS` line, so may be cut short.
         """
         record_type = self._bound_record_type()
         java = java_name(record_type)
         table = Table(handle, marker=METRICS_CLASS)
         check_section(table, java, record_type.__name__)
-        on_comment = options.pop("on_comment", None)
+        on_comment = options.get("on_comment")
         parser = HeaderParser()
         for comment in table.comments:
             parser.feed(comment)

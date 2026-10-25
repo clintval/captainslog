@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from io import StringIO
 from itertools import takewhile
@@ -102,6 +103,48 @@ def test_reader_refuses_a_file_that_is_not_a_picard_metrics_file() -> None:
         _ = PicardReader.from_path[HsMetrics](DATA / "hs.per_target_coverage.txt")
 
 
+@pytest.mark.parametrize("keep", ["## METRICS CLASS", "TOTAL_READS"], ids=["marker", "header"])
+def test_reader_refuses_a_file_cut_short(tmp_path: Path, keep: str) -> None:
+    """A file cut short after its marker line, or after its header, is refused."""
+    lines = (DATA / "cmm.quality_yield_metrics").read_text().split("\n")
+    marker = next(line for line in lines if line.startswith("## METRICS CLASS"))
+    stop = next(index for index, line in enumerate(lines) if line.startswith(keep))
+    path = tmp_path / "cut.quality_yield_metrics"
+    _ = path.write_text("".join(f"{line}\n" for line in lines[: stop + 1]))
+    message = f"{path} holds no rows after its '{marker}' line, so it may be cut short!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardReader.from_path[QualityYieldMetrics](path)
+
+
+@pytest.mark.parametrize("text", ["", "\n \n\n"], ids=["empty", "blank"])
+def test_reader_refuses_a_file_without_a_header_or_a_section(tmp_path: Path, text: str) -> None:
+    """An empty or blank file, which htsjdk never writes, is not a Picard metrics file."""
+    path = tmp_path / "blank.quality_yield_metrics"
+    _ = path.write_text(text)
+    message = f"{path} is not a Picard metrics file!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardReader.from_path[QualityYieldMetrics](path)
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "error"),
+    [("TOTAL_READS", "TOTAL_READZ", "do not match fields"), ("984\t", "many\t", "'many'")],
+    ids=["header", "value"],
+)
+def test_reader_names_the_line_and_file_of_a_typeline_error(
+    tmp_path: Path, old: str, new: str, error: str
+) -> None:
+    """An error typeline raises names its line in the whole file, and the file's path."""
+    lines = (DATA / "cmm.quality_yield_metrics").read_text().split("\n")
+    number = next(number for number, line in enumerate(lines, start=1) if line.startswith(old))
+    lines[number - 1] = lines[number - 1].replace(old, new, 1)
+    path = tmp_path / "bad.quality_yield_metrics"
+    _ = path.write_text("\n".join(lines))
+    place = re.escape(f"on line {number} of '{path}'!")
+    with pytest.raises(ValueError, match=f"{re.escape(error)}.* {place}"):
+        _ = list(PicardReader.from_path[QualityYieldMetrics](path))
+
+
 def test_reader_refuses_a_file_whose_lines_end_with_a_lone_carriage_return() -> None:
     """A file whose lines end with a carriage return alone is refused, not read as empty."""
     text = (DATA / "cmm.quality_yield_metrics").read_text().replace("\n", "\r")
@@ -152,6 +195,21 @@ def test_reader_of_a_file_without_a_metrics_section_reads_no_records() -> None:
     with PicardReader[QualityYieldMetrics](StringIO("\n".join([*LINES, "", "", "", ""]))) as reader:
         assert list(reader) == []
         assert reader.header == HEADER
+
+
+def test_reader_passes_comment_rows_of_the_table_to_the_callers_on_comment() -> None:
+    """A row typeline skips as a comment reaches the caller's `on_comment`, after the header."""
+    lines = (
+        (DATA / "dup.duplication_metrics").read_text().replace("\nPond-", "\n#Pond-").split("\n")
+    )
+    number = next(number for number, line in enumerate(lines, start=1) if line.startswith("#Pond-"))
+    received: list[Comment] = []
+    reader = PicardReader[DuplicationMetrics](
+        StringIO("\n".join(lines)), comment_prefixes=("#",), on_comment=received.append
+    )
+    assert [row.library for row in reader] == ["NormPond-544932"]
+    assert received[:4] == [Comment(n, line) for n, line in enumerate(lines[:4], start=1)]
+    assert received[4:] == [Comment(number, lines[number - 1])]
 
 
 def test_reader_passes_comments_to_the_callers_on_comment() -> None:

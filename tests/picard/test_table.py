@@ -12,6 +12,7 @@ from typing_extensions import override
 from captainslog._files import open_text
 from captainslog.picard._table import Table
 from captainslog.picard._table import as_text_io
+from tests.picard import DATA
 from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES
 
@@ -279,12 +280,12 @@ def test_table_reads_a_row_of_empty_fields_and_the_rows_after_it(most: int) -> N
 
 def test_table_starts_at_a_line_holding_a_tab() -> None:
     """The first line of a table is the first line after the marker that is not blank."""
-    table = Table(StringIO("## M\n \n\t\n\nsample\treads\n"), marker="## M")
-    assert table.read() == "\n \n\t\n"
+    table = Table(StringIO("## M\n \n\t\nx\n\nsample\treads\n"), marker="## M")
+    assert table.read() == "\n \n\t\nx\n"
 
 
-def test_table_of_only_a_header_reads_no_records() -> None:
-    """A table of only its header line has no records, and the table after it reads on."""
+def test_table_of_only_a_header_is_refused_as_cut_short() -> None:
+    """A table of only its header line may be cut short, since htsjdk writes no empty table."""
     text = "\n".join([
         *LINES,
         "",
@@ -295,8 +296,77 @@ def test_table_of_only_a_header_reads_no_records() -> None:
         "coverage\tcount",
         "0\t1",
     ])
-    assert metrics(StringIO(text)) == []
+    message = (
+        f"^The text holds no rows after its '{re.escape(METRICS)}' line, so it may be cut short!$"
+    )
+    with pytest.raises(ValueError, match=message):
+        _ = metrics(StringIO(text))
     assert bins(StringIO(text)) == [Bin(0, 1)]
+
+
+@pytest.mark.parametrize("most", [1, 2, 1000])
+@pytest.mark.parametrize(
+    "after",
+    [
+        [],
+        [""],
+        ["", " ", ""],
+        ["coverage\tcount"],
+        ["coverage\tcount", ""],
+        ["coverage\tcount", " "],
+        ["coverage\tcount", "", "0\t1"],
+        ["coverage\tcount\r", "\r", ""],
+    ],
+    ids=[
+        "marker-without-a-line-break",
+        "marker",
+        "blank-lines",
+        "header-without-a-line-break",
+        "header",
+        "header-and-whitespace",
+        "header-and-a-blank-line",
+        "crlf-header-and-a-blank-line",
+    ],
+)
+def test_table_refuses_a_histogram_cut_short(most: int, after: list[str]) -> None:
+    """A histogram without a header and a row before its end may be cut short."""
+    text = "\n".join([*LINES, "", METRICS, "sample\treads", "a\t1", "", HISTOGRAM, *after])
+    message = (
+        f"^The text holds no rows after its '{re.escape(HISTOGRAM)}' line, so it may be cut short!$"
+    )
+    with pytest.raises(ValueError, match=message):
+        _ = bins(Trickle(text, most))
+
+
+@pytest.mark.parametrize("most", [1, 2, 1000])
+@pytest.mark.parametrize("row", ["0\t1", "0\t1\n", "0\t1\n\n"], ids=repr)
+def test_table_of_a_header_and_one_row_is_whole(most: int, row: str) -> None:
+    """A table of a header and one row, however it ends, is not cut short."""
+    text = "\n".join([*LINES, "", HISTOGRAM, "coverage\tcount", row])
+    assert bins(Trickle(text, most)) == [Bin(0, 1)]
+
+
+def test_table_of_a_file_cut_short_names_the_file(tmp_path: Path) -> None:
+    """A table cut short is named by the path of its file."""
+    path = tmp_path / "example.metrics"
+    _ = path.write_text("\n".join([*LINES, "", METRICS, "sample\treads", ""]))
+    message = "^" + re.escape(f"{path} holds no rows after its '{METRICS}' line")
+    with (
+        open_text(path) as handle,
+        pytest.raises(ValueError, match=message),
+    ):
+        _ = metrics(handle)
+
+
+@pytest.mark.parametrize(
+    "path",
+    sorted(path for path in DATA.glob("*") if "\n## HISTOGRAM" in path.read_text()),
+    ids=lambda path: path.name,
+)
+def test_table_of_each_picard_histogram_is_whole(path: Path) -> None:
+    """No histogram Picard wrote is refused as cut short."""
+    with open_text(path) as handle:
+        assert Table(handle, marker="## HISTOGRAM").read().strip("\n")
 
 
 def test_table_passes_on_blank_lines_before_its_first_line() -> None:

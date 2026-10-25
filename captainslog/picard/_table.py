@@ -29,6 +29,9 @@ class Table:
     file numbers it. The table then reads as it is, up to the first blank line after its first
     line, or the end of the file. With no marker line, every line reads as an empty line.
 
+    A table after a marker line holds a header line and at least one row, since htsjdk writes no
+    empty table, so one without them is refused as cut short once its end is read.
+
     A blank line holds only whitespace other than tabs, as for typeline, so a row of empty fields
     is a row.
 
@@ -58,6 +61,8 @@ class Table:
         self._text: str = ""
         self._ready: str = ""
         self._step: Callable[[str, bool], None] | None = self._skip
+        self._past_header: bool = False
+        self._has_row: bool = False
         self._read_head()
 
     def read(self, size: int = -1, /) -> str:
@@ -65,9 +70,17 @@ class Table:
 
         Args:
             size: the most characters to read, or a negative number to read the rest.
+
+        Raises:
+            ValueError: if the table after the marker line ends without a header and a row.
         """
         while (step := self._step) is not None and (size < 0 or not self._ready):
             step(self._text + self._pull(), self._ended)
+        if self._step is None and self.marker_line is not None and not self._has_row:
+            name = "The text" if self.name is None else self.name
+            raise ValueError(
+                f"{name} holds no rows after its '{self.marker_line}' line, so it may be cut short!"
+            )
         size = len(self._ready) if size < 0 else size
         text, self._ready = self._ready[:size], self._ready[size:]
         return text
@@ -141,6 +154,7 @@ class Table:
         """Pass on the table's lines up to its first blank line, holding back a partial line."""
         blank = BLANK_LINE.search(text, start)
         if blank is not None:
+            self._look_for_a_row(text, start, blank.start() + 1)
             self._ready += text[: blank.start() + 1]
             self._text = ""
             self._step = None
@@ -148,9 +162,22 @@ class Table:
         cut = text.rfind("\n", start)
         if end or cut < 0:
             cut = len(text)
+        self._look_for_a_row(text, start, cut)
         self._ready += text[:cut]
         self._text = text[cut:]
         self._step = None if end else self._rows
+
+    def _look_for_a_row(self, text: str, start: int, stop: int) -> None:
+        """Note whether the table's text passed on so far holds a row after its header line."""
+        if self._has_row:
+            return
+        if not self._past_header:
+            at = text.find("\n", start, stop)
+            if at < 0:
+                return
+            self._past_header = True
+            start = at + 1
+        self._has_row = NOT_BLANK.search(text, start, stop) is not None
 
 
 def as_text_io(table: Table) -> TextIO:

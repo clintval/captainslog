@@ -1,17 +1,44 @@
 import gzip
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from typing import assert_type
 
 import pytest
+from typeline import RecordType
 
+from captainslog._binding import FromPath
 from captainslog.picard import HsMetrics
 from captainslog.picard import PicardHeader
 from captainslog.picard import PicardReader
 from captainslog.picard import QualityYieldMetrics
 from tests.compare import same
 from tests.picard import DATA
+
+SHARED = FromPath()
+
+
+class OwnReader(PicardReader[RecordType]):
+    """A user's subclass of the Picard reader."""
+
+
+class FirstReader(PicardReader[RecordType]):
+    """A reader that holds the same `from_path` as another reader."""
+
+    from_path: FromPath = SHARED
+
+
+class SecondReader(PicardReader[RecordType]):
+    """A reader that holds the same `from_path` as another reader."""
+
+    from_path: FromPath = SHARED
+
+
+class Lonely:
+    """A class that inherits no `from_path` for its own to hand back."""
+
+    from_path: FromPath = FromPath()
 
 
 @pytest.fixture
@@ -65,3 +92,27 @@ def test_from_path_closes_the_file_when_the_reader_refuses_it(opened: list[Any])
         _ = PicardReader.from_path[HsMetrics](DATA / "cmm.insert_size_metrics")
     assert opened
     assert all(handle.closed for handle in opened)
+
+
+def test_from_path_on_a_subclass_of_the_reader_builds_the_subclass() -> None:
+    """A user's subclass of the reader builds itself from a path."""
+    reader = OwnReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics")
+    assert isinstance(reader, OwnReader)
+    assert type(reader).__name__ == "OwnReader[QualityYieldMetrics]"
+    assert list(reader)
+
+
+def test_from_path_held_by_two_classes_builds_each() -> None:
+    """One `from_path` held by two classes builds whichever class it is read through."""
+    path = DATA / "cmm.quality_yield_metrics"
+    for kind in (FirstReader, SecondReader):
+        reader = kind.from_path[QualityYieldMetrics](path)
+        assert type(reader).__name__ == f"{kind.__name__}[QualityYieldMetrics]"
+        assert list(reader)
+
+
+def test_from_path_without_an_inherited_from_path_is_refused() -> None:
+    """A class that inherits no `from_path` cannot hand one back."""
+    message = "Lonely inherits no from_path for FromPath to hand back!"
+    with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
+        _ = Lonely.from_path
