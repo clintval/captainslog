@@ -1,0 +1,50 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "!**"
+  pull_request:
+  workflow_call:
+
+permissions: {}
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: 0.12.20
+
+jobs:
+  Tests:
+    name: Tests (${{ matrix.PYTHON_VERSION }})
+    # Branches of this repository are tested when pushed, so only pull requests from forks run here.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read  # to check out the repository
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python ${{ matrix.PYTHON_VERSION }}
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ matrix.PYTHON_VERSION }}
+          enable-cache: "false"
+
+      - name: Install the library and its development tools
+        run: uv sync --locked
+
+      - name: Run every check
+        run: uv run --no-sync poe check-all

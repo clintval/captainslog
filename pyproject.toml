@@ -1,0 +1,246 @@
+[project]
+name = "captainslog"
+version = "0.1.0"
+description = "Typed dataclasses with typeline readers and writers for Picard and Riker metrics files."
+authors = [{ name = "Clint Valentine", email = "valentine.clint@gmail.com" }]
+license = "MIT"
+readme = "README.md"
+keywords = ["bioinformatics", "Picard", "Riker", "metrics", "NGS"]
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+    "typeline >=3.1.0,<4",
+    "typing-extensions >=4.12",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: File Formats",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[project.urls]
+"homepage" = "https://github.com/clintval/captainslog"
+"repository" = "https://github.com/clintval/captainslog"
+"Bug Tracker" = "https://github.com/clintval/captainslog/issues"
+
+[dependency-groups]
+test = [
+    "pytest ~=9.1",
+    "pytest-cov ~=7.1",
+    "sybil[pytest] ~=10.1",
+]
+lint = [
+    "poethepoet ~=0.48",
+    "ruff ~=0.16",
+    "validate-pyproject[all] ~=0.26",
+]
+typing = [
+    "basedpyright ~=1.40",
+    "mypy ~=2.3",
+    "ty ~=0.0.83",
+]
+dev = [
+    { include-group = "test" },
+    { include-group = "lint" },
+    { include-group = "typing" },
+]
+
+[build-system]
+requires      = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["captainslog", "tests", "conftest.py", "README.md", "CONTRIBUTING.md", "LICENSE"]
+
+[tool.uv]
+# Ignore releases younger than a week, so a compromised publish has time to be
+# caught before it can be locked. Must stay >= the Dependabot `cooldown` in
+# .github/dependabot.yml, or Dependabot will propose versions that can't lock.
+exclude-newer = "1 week"
+# typeline is released alongside captainslog, so its new releases are allowed right away.
+exclude-newer-package = { typeline = false }
+
+[tool.poe.tasks]
+fix-format = "ruff format"
+fix-lint   = "ruff check --fix"
+
+fix-all.ignore_fail = "return_non_zero"
+fix-all.sequence    = [
+    "fix-format",
+    "fix-lint"
+]
+
+check-lock      = "uv lock --check"
+check-pyproject = "validate-pyproject pyproject.toml"
+check-format = "ruff format --check --diff"
+check-lint   = "ruff check"
+check-tests  = "pytest"
+
+_check-mypy    = "mypy"
+_check-pyright = "basedpyright"
+_check-ty      = "ty check"
+check-typing.sequence = [
+    "_check-mypy",
+    "_check-pyright",
+    "_check-ty"
+]
+
+check-static.ignore_fail = "return_non_zero"
+check-static.sequence    = [
+    "check-lock",
+    "check-pyproject",
+    "check-format",
+    "check-lint"
+]
+
+check-all.ignore_fail = "return_non_zero"
+check-all.sequence    = [
+    "check-static",
+    "check-tests",
+    "check-typing"
+]
+
+fix-and-check-all.ignore_fail = "return_non_zero"
+fix-and-check-all.sequence    = [
+    "fix-all",
+    "check-all"
+]
+
+[tool.pytest.ini_options]
+addopts    = [
+    "--color=yes",
+    "--cov-fail-under=95",
+    "--cov-report=term-missing",
+    "--cov=captainslog",
+    "--doctest-modules",
+    "--import-mode=importlib",
+]
+norecursedirs = [".*", "build", "dist", "*.egg", "venv", "docs", "scripts"]
+doctest_optionflags = [
+    "ELLIPSIS",
+    "IGNORE_EXCEPTION_DETAIL",
+    "NORMALIZE_WHITESPACE",
+]
+
+[tool.mypy]
+files                       = ["captainslog/", "tests/", "conftest.py"]
+strict_optional             = true
+strict_equality             = true
+check_untyped_defs          = true
+disallow_incomplete_defs    = true
+disallow_untyped_calls      = true
+disallow_untyped_decorators = true
+disallow_untyped_defs       = true
+no_implicit_optional        = true
+warn_no_return              = true
+warn_redundant_casts        = true
+warn_return_any             = true
+warn_unreachable            = true
+warn_unused_configs         = true
+warn_unused_ignores         = true
+enable_error_code           = [
+    "ignore-without-code",
+    "possibly-undefined",
+]
+
+[tool.pyright]
+include = ["captainslog/", "tests/", "conftest.py"]
+reportAny = false
+reportExplicitAny = false
+pythonVersion = "3.11"
+
+[tool.ty.src]
+include = ["captainslog", "tests", "conftest.py"]
+
+[tool.ty.analysis]
+respect-type-ignore-comments = false
+
+[tool.ty.rules]
+unused-ignore-comment = "error"
+
+[tool.ruff]
+include        = ["captainslog/**", "tests/**", "scripts/**", "conftest.py"]
+line-length    = 100
+target-version = "py311"
+output-format  = "full"
+preview        = true
+
+[tool.ruff.lint]
+select    = [
+    "ARG",    # Unused arguments
+    "C901",   # McCabe complexity
+    "B",      # bugbear
+    "D",      # pydocstyle (docstrings. We have the "google" convention enabled)
+    "E",      # pycodestyle errors
+    "LOG",    # flake8-logging
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # PEP8 naming
+    "W",      # pycodestyle warnings
+    "Q",      # flake8-quotes
+]
+ignore    = [
+    "E203",
+    "E701",
+    "D213",  # summary line should be located on the line after opening quote
+    "D100",  # missing docstring in public module
+    "D104",  # missing docstring in public package
+]
+unfixable = ["B"]
+
+[tool.ruff.lint.per-file-ignores]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 13
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.git-cliff.changelog]
+header = ""
+trim = true
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+    ## {{ group | upper_first }}
+    {% for commit in commits %}
+        - {{ commit.message | upper_first }} ({{ commit.id | truncate(length=8, end="") }})\
+    {% endfor %}
+{% endfor %}\n
+"""
+
+[tool.git-cliff.git]
+conventional_commits = true
+commit_parsers = [
+    { message = "^[a-z]+(\\(.+\\))?!:", group = "Breaking"},
+    { message = "^security*", group = "Security"},
+    { message = "^feat*", group = "Features"},
+    { message = "^fix*", group = "Bug Fixes"},
+    { message = "^docs*", group = "Documentation"},
+    { message = "^perf*", group = "Performance"},
+    { message = "^refactor*", group = "Refactor"},
+    { message = "^style*", group = "Styling"},
+    { message = "^test*", group = "Testing"},
+    { message = "^build*", group = "Build"},
+    { message = "^ci*", group = "Continuous Integration"},
+    { message = "^revert*", group = "Reverts"},
+    { message = "^chore\\(release\\):*", skip = true},
+    { message = "^chore\\(deps\\)*", skip = true},
+    { message = "^chore*", group = "Miscellaneous Tasks"},
+    { body = ".*security", group = "Security"}
+]
+filter_commits = false
