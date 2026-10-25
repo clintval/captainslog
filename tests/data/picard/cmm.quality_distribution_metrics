@@ -1,0 +1,47 @@
+## htsjdk.samtools.metrics.StringHeader
+# CollectMultipleMetrics INPUT=in/sample.bam OUTPUT=picard/cmm METRIC_ACCUMULATION_LEVEL=[ALL_READS, LIBRARY, SAMPLE, READ_GROUP] PROGRAM=[CollectAlignmentSummaryMetrics, CollectBaseDistributionByCycle, CollectGcBiasMetrics, CollectInsertSizeMetrics, CollectQualityYieldMetrics, CollectSequencingArtifactMetrics, MeanQualityByCycle, QualityScoreDistribution] REFERENCE_SEQUENCE=in/reference.shifted.for.crams.fasta    ASSUME_SORTED=true STOP_AFTER=0 INCLUDE_UNPAIRED=false DO_NOT_CREATE_PLOTS=false VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Sat Oct 24 21:42:13 HST 2026
+
+
+## HISTOGRAM	java.lang.Byte
+QUALITY	COUNT_OF_Q	COUNT_OF_OQ
+1	2	0
+2	5027	5016
+3	50	0
+4	88	0
+5	164	0
+6	248	0
+7	337	134
+8	374	125
+9	438	0
+10	324	0
+11	449	2820
+12	493	1980
+13	625	0
+14	604	0
+15	539	0
+16	538	0
+17	512	0
+18	448	0
+19	479	0
+20	621	0
+21	786	0
+22	1158	3609
+23	1652	0
+24	2167	0
+25	2453	0
+26	3494	0
+27	6625	4809
+28	20612	0
+29	43955	0
+30	32642	0
+31	15674	0
+32	4311	11516
+33	637	0
+34	6	0
+35	1	0
+37	0	21791
+41	0	44008
+42	0	52725
+

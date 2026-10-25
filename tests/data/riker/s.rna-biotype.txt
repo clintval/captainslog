@@ -1,0 +1,2 @@
+sample	biotype	reads	frac_reads
+NA12891	protein_coding	193	1.00000

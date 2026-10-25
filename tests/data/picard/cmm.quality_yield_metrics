@@ -1,0 +1,10 @@
+## htsjdk.samtools.metrics.StringHeader
+# CollectMultipleMetrics INPUT=in/sample.bam OUTPUT=picard/cmm METRIC_ACCUMULATION_LEVEL=[ALL_READS, LIBRARY, SAMPLE, READ_GROUP] PROGRAM=[CollectAlignmentSummaryMetrics, CollectBaseDistributionByCycle, CollectGcBiasMetrics, CollectInsertSizeMetrics, CollectQualityYieldMetrics, CollectSequencingArtifactMetrics, MeanQualityByCycle, QualityScoreDistribution] REFERENCE_SEQUENCE=in/reference.shifted.for.crams.fasta    ASSUME_SORTED=true STOP_AFTER=0 INCLUDE_UNPAIRED=false DO_NOT_CREATE_PLOTS=false VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Sat Oct 24 21:42:13 HST 2026
+
+## METRICS CLASS	picard.analysis.CollectQualityYieldMetrics$QualityYieldMetrics
+TOTAL_READS	PF_READS	READ_LENGTH	TOTAL_BASES	PF_BASES	Q20_BASES	PF_Q20_BASES	Q30_BASES	PF_Q30_BASES	Q20_EQUIVALENT_YIELD	PF_Q20_EQUIVALENT_YIELD
+984	984	151	148584	148584	138458	138458	130040	130040	273482	273482
+
+
