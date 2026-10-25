@@ -1,11 +1,26 @@
 from pathlib import Path
 from typing import Any
 
+from captainslog.picard._header import PicardHeader
 from captainslog.picard._java import JAVA_NAMES
 
 DATA = Path(__file__).parents[1] / "data" / "picard"
 
 METRICS_CLASS = "## METRICS CLASS\t"
+
+LINES = [
+    "## htsjdk.samtools.metrics.StringHeader",
+    "# CollectQualityYieldMetrics I=in.bam O=out.txt",
+    "## htsjdk.samtools.metrics.StringHeader",
+    "# Started on: Sat Oct 24 10:00:00 HST 2026",
+    "## htsjdk.samtools.metrics.VersionHeader",
+    "# picard\t3.5.0",
+]
+HEADER = PicardHeader(
+    command_line="CollectQualityYieldMetrics I=in.bam O=out.txt",
+    started_on="Sat Oct 24 10:00:00 HST 2026",
+    others=(("htsjdk.samtools.metrics.VersionHeader", "picard\t3.5.0"),),
+)
 
 
 def _metrics_class_line(path: Path) -> str | None:
