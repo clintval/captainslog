@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 from typing import TextIO
 
@@ -7,6 +8,7 @@ from typeline import TsvReader
 from typing_extensions import Unpack
 
 from captainslog._binding import FromPath
+from captainslog._files import open_text
 from captainslog.picard._format import PICARD_CODECS
 from captainslog.picard._format import picard_rename
 from captainslog.picard._header import HeaderParser
@@ -33,6 +35,33 @@ def java_name(record_type: type[Any]) -> str:
     return java
 
 
+def find_section(table: Table, name: str) -> str | None:
+    """Read the first section line of a file, refusing a file that cannot hold a metrics table.
+
+    Args:
+        table: the table of the file, whose comments and section line are read.
+        name: how to name the file in an error.
+
+    Returns:
+        The section line, or None for a file with a header and no section, since htsjdk writes no
+        section for no rows.
+
+    Raises:
+        ValueError: if the file breaks its lines with lone carriage returns, or is not a Picard
+            metrics file: it has neither a header nor a section, or its first line after the
+            header starts no section.
+    """
+    line = table.section_line
+    head = [comment.text for comment in table.comments] + ([] if line is None else [line])
+    if any("\r" in text for text in head):
+        raise ValueError(f"{name} breaks its lines with lone carriage returns, not line feeds!")
+    if line is None and table.comments:
+        return None
+    if line is None or not line.startswith((f"{METRICS_CLASS}\t", HISTOGRAM)):
+        raise ValueError(f"{name} is not a Picard metrics file!")
+    return line
+
+
 def check_section(table: Table, java: str, record_name: str) -> None:
     """Refuse a file whose first section is not a metrics table of a Java class.
 
@@ -50,24 +79,42 @@ def check_section(table: Table, java: str, record_name: str) -> None:
             neither a header nor a section, or its first line after the header starts no section.
     """
     name = "The text" if table.name is None else table.name
-    line = table.section_line
-    head = [comment.text for comment in table.comments] + ([] if line is None else [line])
-    if any("\r" in text for text in head):
-        raise ValueError(f"{name} breaks its lines with lone carriage returns, not line feeds!")
-    if line is None and table.comments:
-        return
+    line = find_section(table, name)
     if line is None:
-        raise ValueError(f"{name} is not a Picard metrics file!")
+        return
     if line.startswith(f"{METRICS_CLASS}\t"):
         found = line.removeprefix(f"{METRICS_CLASS}\t")
         if found != java:
             raise ValueError(f"{name} holds {found}, not {record_name}!")
-    elif line.startswith(HISTOGRAM):
+    else:
         raise ValueError(
             f"{name} holds no metrics, only a histogram! Read it with PicardHistogramReader."
         )
-    else:
-        raise ValueError(f"{name} is not a Picard metrics file!")
+
+
+def metrics_class(path: Path | str) -> type[Any]:
+    """Find the dataclass of the metrics table of a Picard metrics file, from its first lines.
+
+    Args:
+        path: the path to the file, which may be gzip, bzip2, or xz compressed.
+
+    Raises:
+        ValueError: if the file holds a class that is not a Picard 3.5.0 metrics class, holds no
+            metrics table, is not a Picard metrics file, or breaks its lines with lone carriage
+            returns.
+    """
+    with open_text(path) as handle:
+        line = find_section(Table(handle, marker=METRICS_CLASS), str(path))
+    if line is None or line.startswith(HISTOGRAM):
+        raise ValueError(
+            f"{path} holds no metrics table! "
+            + "If it holds only a histogram, find its type with histogram_class."
+        )
+    found = line.removeprefix(f"{METRICS_CLASS}\t")
+    kind = next((kind for kind, java in JAVA_NAMES.items() if java == found), None)
+    if kind is None:
+        raise ValueError(f"{path} holds {found}, which is not a Picard 3.5.0 metrics class!")
+    return kind
 
 
 class PicardReader(TsvReader[RecordType]):
