@@ -167,6 +167,7 @@ enable_error_code           = [
 include = ["captainslog/", "tests/", "conftest.py"]
 reportAny = false
 reportExplicitAny = false
+reportImportCycles = false
 pythonVersion = "3.11"
 
 [tool.ty.src]

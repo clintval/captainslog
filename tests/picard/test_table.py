@@ -176,7 +176,65 @@ def test_table_reads_alike_however_its_text_is_split(
     assert "".join(pieces) == whole == expected
     assert table.read(size) == ""
     assert table.comments == COMMENTS
+    assert table.section_line == METRICS
     assert table.marker_line == line
+
+
+@pytest.mark.parametrize("marker", ["## METRICS CLASS", "## HISTOGRAM"])
+@pytest.mark.parametrize(
+    ("text", "section"),
+    [
+        (TEXT, METRICS),
+        (picard_file("a\t1", newline="\r\n"), METRICS),
+        ("\n".join([*LINES, "", "", HISTOGRAM, "coverage\tcount", "0\t10", "", ""]), HISTOGRAM),
+        ("\n".join([*LINES, "", " ", "\x0c\r", METRICS, "sample\treads", ""]), METRICS),
+        ("\n".join([*LINES, "", "", "", ""]), None),
+        ("\n".join(LINES), None),
+        ("sample\treads\na\t1\n", "sample\treads"),
+        ("\n\t\nsample\treads\n", "\t"),
+        ("", None),
+    ],
+    ids=[
+        "metrics",
+        "crlf",
+        "histogram-only",
+        "after-blank-lines",
+        "no-section",
+        "only-comments",
+        "no-comments",
+        "a-tab",
+        "empty",
+    ],
+)
+def test_table_holds_the_first_line_after_its_comments_that_is_not_blank(
+    marker: str, text: str, section: str | None
+) -> None:
+    """The section line is the first line after the comments that is not blank, or None."""
+    table = Table(Trickle(text, 1), marker=marker)
+    assert table.section_line == section
+
+
+@pytest.mark.parametrize("line", [METRICS, HISTOGRAM])
+def test_table_ends_its_comments_at_a_section_without_a_blank_line_before_it(line: str) -> None:
+    """A section line that follows the comments directly is a section line, not a comment."""
+    text = "\n".join([*LINES, line, "sample\treads", "a\t1", ""])
+    table = Table(StringIO(text), marker="## METRICS CLASS")
+    assert table.comments == COMMENTS
+    assert table.section_line == line
+
+
+def test_table_reads_a_metrics_table_without_a_blank_line_before_it() -> None:
+    """The rows of a section that follows the comments directly are read."""
+    text = "\n".join([*LINES, METRICS, "sample\treads", "a\t1", ""])
+    assert metrics(StringIO(text)) == [Metric("a", 1)]
+
+
+@pytest.mark.parametrize("most", [1, 2, 1000])
+def test_table_keeps_the_blank_lines_it_reads_to_find_the_section_line(most: int) -> None:
+    """The blank lines read to find the section line still count toward each line's number."""
+    text = "\n".join([*LINES, "", " ", "", METRICS, "sample\treads", "a\t1", "b\tmany", ""])
+    with pytest.raises(ValueError, match="'many' on line 13!"):
+        _ = metrics(Trickle(text, most))
 
 
 def test_table_drops_a_byte_order_mark() -> None:

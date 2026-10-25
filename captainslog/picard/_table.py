@@ -8,6 +8,12 @@ from typeline import Comment
 CHUNK: int = 65536
 """The number of characters to read from a handle at a time."""
 
+METRICS_CLASS: str = "## METRICS CLASS"
+"""The start of the line before the metrics table, which names the table's Java class."""
+
+HISTOGRAM: str = "## HISTOGRAM"
+"""The start of the line before the histogram, which names the Java class of its bins."""
+
 BLANK_LINE: re.Pattern[str] = re.compile(r"\n[^\S\n\t]*\n")
 """A line break, and the blank line after it with its own line break."""
 
@@ -25,10 +31,13 @@ class Table:
 
     A blank line holds only whitespace other than tabs, as for typeline, so a row of empty fields
     is a row.
+
+    The leading comment lines, and the first line after them that is not blank, which starts the
+    file's first section, are read when the table is built.
     """
 
     def __init__(self, handle: TextIO, /, marker: str) -> None:
-        """Read the leading comment lines of a Picard metrics file, and wait to read its table.
+        """Read the leading comments of a Picard metrics file and its section line, not its table.
 
         Args:
             handle: the text of a Picard metrics file.
@@ -38,7 +47,9 @@ class Table:
         self.name: str | None = name if isinstance(name, str) else None
         """The name of the file the handle reads, when it has one."""
         self.comments: list[Comment] = []
-        """The leading lines that start with `#`, before the first line that does not."""
+        """The leading lines that start with `#`, up to one that does not or starts a section."""
+        self.section_line: str | None = None
+        """The first line after the comments that is not blank, without its line break, or None."""
         self.marker_line: str | None = None
         """The marker line without its line break, or None until read or when there is none."""
         self._handle: TextIO = handle
@@ -47,7 +58,7 @@ class Table:
         self._text: str = ""
         self._ready: str = ""
         self._step: Callable[[str, bool], None] | None = self._skip
-        self._read_comments()
+        self._read_head()
 
     def read(self, size: int = -1, /) -> str:
         """Read at most `size` characters of the table, or all that is left when it is negative.
@@ -71,22 +82,24 @@ class Table:
         self._ended = not chunk
         return chunk
 
-    def _read_comments(self) -> None:
-        """Read the leading comment lines, keeping all the text read to read again as the table."""
+    def _read_head(self) -> None:
+        """Read the comments and the section line, keeping the text read to read as the table."""
         text = self._pull().removeprefix("\ufeff")
         start = 0
+        leading = True
         while True:
-            if start == len(text) and not self._ended:
-                text += self._pull()
-                continue
-            if not text.startswith("#", start):
-                break
             stop = text.find("\n", start)
             if stop < 0 and not self._ended:
                 text += self._pull()
                 continue
-            line = text[start:] if stop < 0 else text[start:stop]
-            self.comments.append(Comment(len(self.comments) + 1, line.removesuffix("\r")))
+            line = (text[start:] if stop < 0 else text[start:stop]).removesuffix("\r")
+            if leading and line.startswith("#") and not line.startswith((METRICS_CLASS, HISTOGRAM)):
+                self.comments.append(Comment(len(self.comments) + 1, line))
+            elif NOT_BLANK.search(line) is not None:
+                self.section_line = line
+                break
+            else:
+                leading = False
             if stop < 0:
                 break
             start = stop + 1
