@@ -66,10 +66,10 @@ __all__ = [
     "TargetedPcrMetrics",
     "TheoreticalSensitivityMetrics",
     "TruthState",
-    "Type",
     "UmiMetrics",
     "VariantCallingDetailMetrics",
     "VariantCallingSummaryMetrics",
+    "VariantType",
     "VerifyIDIntensityContaminationMetrics",
     "WgsMetrics",
     "WgsMetricsWithNonZeroCoverage",
@@ -103,7 +103,7 @@ class CallState(StrEnum):
 
 
 class Category(StrEnum):
-    """Picard's `picard.analysis.AlignmentSummaryMetrics$Category`."""
+    """Picard's `AlignmentSummaryMetrics$Category`."""
 
     UNPAIRED = "UNPAIRED"
     FIRST_OF_PAIR = "FIRST_OF_PAIR"
@@ -121,7 +121,7 @@ class DataType(StrEnum):
 
 
 class FingerprintResult(StrEnum):
-    """Picard's `picard.fingerprint.CrosscheckMetric$FingerprintResult`."""
+    """Picard's `CrosscheckMetric$FingerprintResult`."""
 
     EXPECTED_MATCH = "EXPECTED_MATCH"
     EXPECTED_MISMATCH = "EXPECTED_MISMATCH"
@@ -131,7 +131,7 @@ class FingerprintResult(StrEnum):
 
 
 class PairOrientation(StrEnum):
-    """htsjdk's `htsjdk.samtools.SamPairUtil$PairOrientation`."""
+    """htsjdk's `SamPairUtil$PairOrientation`."""
 
     FR = "FR"
     RF = "RF"
@@ -139,7 +139,7 @@ class PairOrientation(StrEnum):
 
 
 class PfFailReason(StrEnum):
-    """Picard's `picard.illumina.quality.CollectHiSeqXPfFailMetrics$ReadClassifier$PfFailReason`."""
+    """Picard's `CollectHiSeqXPfFailMetrics$ReadClassifier$PfFailReason`."""
 
     EMPTY = "EMPTY"
     POLYCLONAL = "POLYCLONAL"
@@ -174,8 +174,8 @@ class TruthState(StrEnum):
     IS_MIXED = "IS_MIXED"
 
 
-class Type(StrEnum):
-    """htsjdk's `htsjdk.variant.variantcontext.VariantContext$Type`."""
+class VariantType(StrEnum):
+    """htsjdk's `VariantContext$Type`."""
 
     NO_VARIATION = "NO_VARIATION"
     SNP = "SNP"
@@ -186,9 +186,7 @@ class Type(StrEnum):
 
 
 class WgsMetricsWithNonZeroCoverageCategory(StrEnum):
-    """Picard's
-    `picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage$Category`.
-    """
+    """Picard's `CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage$Category`."""
 
     WHOLE_GENOME = "WHOLE_GENOME"
     NON_ZERO_REGIONS = "NON_ZERO_REGIONS"
@@ -383,9 +381,7 @@ class AlignmentSummaryMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class ArraysControlCodesSummaryMetrics:
-    """Picard's
-    `picard.arrays.CollectArraysVariantCallingMetrics$ArraysControlCodesSummaryMetrics`.
-    """
+    """Picard's `CollectArraysVariantCallingMetrics$ArraysControlCodesSummaryMetrics`."""
 
     control: str = ""
     """Various control intensities that are present on the infinium chips."""
@@ -402,9 +398,7 @@ class ArraysControlCodesSummaryMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class ArraysVariantCallingDetailMetrics:
-    """Picard's
-    `picard.arrays.CollectArraysVariantCallingMetrics$ArraysVariantCallingDetailMetrics`.
-    """
+    """Picard's `CollectArraysVariantCallingMetrics$ArraysVariantCallingDetailMetrics`."""
 
     chip_well_barcode: str = ""
     """The chip well barcode of the Illumina array being assayed"""
@@ -525,9 +519,7 @@ class ArraysVariantCallingDetailMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class ArraysVariantCallingSummaryMetrics:
-    """Picard's
-    `picard.arrays.CollectArraysVariantCallingMetrics$ArraysVariantCallingSummaryMetrics`.
-    """
+    """Picard's `CollectArraysVariantCallingMetrics$ArraysVariantCallingSummaryMetrics`."""
 
     num_assays: int = 0
     """The total number of assays (SNP and indels) in the VCF"""
@@ -579,7 +571,7 @@ class ArraysVariantCallingSummaryMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class BafRegressMetrics:
-    """Picard's `picard.arrays.BafRegressMetrics`."""
+    """Picard's `BafRegressMetrics`."""
 
     sample: str = ""
     """The sample name"""
@@ -776,7 +768,7 @@ class BarcodeMetric:
 
 @dataclass(frozen=True, kw_only=True)
 class BaseDistributionByCycleMetrics:
-    """Picard's `picard.analysis.BaseDistributionByCycleMetrics`."""
+    """Picard's `BaseDistributionByCycleMetrics`."""
 
     read_end: int = 0
 
@@ -1297,7 +1289,7 @@ class FingerprintingSummaryMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class FlowBasedDuplicationMetrics:
-    """Picard's `picard.sam.FlowBasedDuplicationMetrics`."""
+    """Picard's `FlowBasedDuplicationMetrics`."""
 
     unpaired_with_tlen: int = 0
 
@@ -1466,7 +1458,7 @@ class GcBiasSummaryMetrics:
 class GenotypeConcordanceContingencyMetrics:
     """Class that holds metrics about the Genotype Concordance contingency tables."""
 
-    variant_type: Type
+    variant_type: VariantType
     """The type of the event (i.e. either SNP or INDEL)"""
 
     truth_sample: str = ""
@@ -1495,7 +1487,7 @@ class GenotypeConcordanceContingencyMetrics:
 class GenotypeConcordanceDetailMetrics:
     """Class that holds detail metrics about Genotype Concordance."""
 
-    variant_type: Type
+    variant_type: VariantType
     """The type of the event (i.e. either SNP or INDEL)"""
 
     truth_sample: str = ""
@@ -1535,7 +1527,7 @@ class GenotypeConcordanceDetailMetrics:
 class GenotypeConcordanceSummaryMetrics:
     """Class that holds summary metrics about Genotype Concordance."""
 
-    variant_type: Type
+    variant_type: VariantType
     """The type of the event (i.e. either SNP or INDEL)"""
 
     truth_sample: str = ""
@@ -2002,127 +1994,127 @@ class IndelErrorMetric:
 class IndependentReplicateMetric:
     """A class to store information relevant for biological rate estimation."""
 
-    nsites: int | None = None
+    n_sites: int | None = None
     """The count of sites used."""
 
-    nthreeallelessites: int | None = None
+    n_three_alleles_sites: int | None = None
     """The count of sites in which a third allele was found."""
 
-    ntotalreads: int | None = None
+    n_total_reads: int | None = None
     """The total number of reads over the het sites."""
 
-    nduplicatesets: int | None = None
+    n_duplicate_sets: int | None = None
     """The number of duplicate sets examined."""
 
-    nexactlytriple: int | None = None
+    n_exactly_triple: int | None = None
     """The number of sets of size exactly 3 found."""
 
-    nexactlydouble: int | None = None
+    n_exactly_double: int | None = None
     """The number of sets of size exactly 2 found."""
 
-    nreadsinbigsets: int | None = None
+    n_reads_in_big_sets: int | None = None
     """The number of reads in duplicate of sizes greater than 3."""
 
-    ndifferentallelesbidups: int | None = None
+    n_different_alleles_bi_dups: int | None = None
     """The number of doubletons where the two reads had different bases in the locus."""
 
-    nreferenceallelesbidups: int | None = None
+    n_reference_alleles_bi_dups: int | None = None
     """The number of doubletons where the two reads matched the reference."""
 
-    nalternateallelesbidups: int | None = None
+    n_alternate_alleles_bi_dups: int | None = None
     """The number of doubletons where the two reads matched the alternate."""
 
-    ndifferentallelestridups: int | None = None
+    n_different_alleles_tri_dups: int | None = None
     """The number of tripletons where at least one of the reads didn't match either allele of the
     het site.
     """
 
-    nmismatchingallelesbidups: int | None = None
+    n_mismatching_alleles_bi_dups: int | None = None
     """The number of tripletons where the two reads had different bases in the locus."""
 
-    nreferenceallelestridups: int | None = None
+    n_reference_alleles_tri_dups: int | None = None
     """The number of tripletons where the two reads matched the reference."""
 
-    nalternateallelestridups: int | None = None
+    n_alternate_alleles_tri_dups: int | None = None
     """The number of tripletons where the two reads matched the alternate."""
 
-    nmismatchingallelestridups: int | None = None
+    n_mismatching_alleles_tri_dups: int | None = None
     """The number of tripletons where at least one of the reads didn't match either allele of the
     het site.
     """
 
-    nreferencereads: int | None = None
+    n_reference_reads: int | None = None
     """The number of reference alleles in the reads."""
 
-    nalternatereads: int | None = None
+    n_alternate_reads: int | None = None
     """The number of alternate alleles in the reads."""
 
-    nmismatchingumisindiffbidups: int | None = None
+    n_mismatching_umis_in_diff_bi_dups: int | None = None
     """The number of UMIs that are different within Bi-sets that come from different alleles."""
 
-    nmatchingumisindiffbidups: int | None = None
+    n_matching_umis_in_diff_bi_dups: int | None = None
     """The number of UMIs that are match within Bi-sets that come from different alleles."""
 
-    nmismatchingumisinsamebidups: int | None = None
+    n_mismatching_umis_in_same_bi_dups: int | None = None
     """The number of UMIs that are different within Bi-sets that come from the same alleles."""
 
-    nmatchingumisinsamebidups: int | None = None
+    n_matching_umis_in_same_bi_dups: int | None = None
     """The number of UMIs that are match within Bi-sets that come from the same alleles."""
 
-    nmismatchingumisincoorientedbidups: int | None = None
+    n_mismatching_umis_in_co_oriented_bi_dups: int | None = None
     """The number of bi-sets with mismatching UMIs and same orientation."""
 
-    nmismatchingumisincontraorientedbidups: int | None = None
+    n_mismatching_umis_in_contra_oriented_bi_dups: int | None = None
     """The number of bi-sets with mismatching UMIs and opposite orientation."""
 
-    nbadbarcodes: int | None = None
+    n_bad_barcodes: int | None = None
     """The number of sets where the UMIs had poor quality bases and were not used for any
     comparisons.
     """
 
-    ngoodbarcodes: int | None = None
+    n_good_barcodes: int | None = None
     """the number of sets where the UMIs had good quality bases and were used for any
     comparisons.
     """
 
-    bisiteheterogeneityrate: float | None = None
+    bi_site_heterogeneity_rate: float | None = None
     """the rate of heterogeneity within doubleton sets."""
 
-    trisiteheterogeneityrate: float | None = None
+    tri_site_heterogeneity_rate: float | None = None
     """the rate of heterogeneity within tripleton sets"""
 
-    bisitehomogeneityrate: float | None = None
+    bi_site_homogeneity_rate: float | None = None
     """the rate of homogeneity within doubleton sets."""
 
-    trisitehomogeneityrate: float | None = None
+    tri_site_homogeneity_rate: float | None = None
     """the rate of homogeneity within tripleton sets."""
 
-    independentreplicationratefrombidups: float | None = None
+    independent_replication_rate_from_bi_dups: float | None = None
 
-    independentreplicationratefromtridups: float | None = None
+    independent_replication_rate_from_tri_dups: float | None = None
     """The biological duplication rate (as a fraction of the duplicates sets) calculated from
     tripleton sets.
     """
 
-    psameumiinindependentbidup: float | None = None
+    p_same_umi_in_independent_bi_dup: float | None = None
     """When the alleles are different, we know that this is a biological duplication, thus we
     expect nearly all the UMIs to be different (allowing for equality due to chance). So we
     expect this to be near 1.
     """
 
-    psameallelewhenmismatchingumi: float | None = None
+    p_same_allele_when_mismatching_umi: float | None = None
     """When the UMIs mismatch, we expect about the same number of different alleles as the same
     (assuming that different UMI implies biological duplicate) thus, this value should be near
     0.5
     """
 
-    independentreplicationratefromumi: float | None = None
+    independent_replication_rate_from_umi: float | None = None
     """Given the UMIs one can estimate the rate of biological duplication directly, as this would
     be the rate of having different UMIs in all duplicate sets. This is only a good estimate if
     the assumptions hold, for example if pSameUmiInIndependentBiDup is near 1.
     """
 
-    replicationratefromreplicatesets: float | None = None
+    replication_rate_from_replicate_sets: float | None = None
     """An estimate of the duplication rate that is based on the duplicate sets we observed."""
 
 
@@ -2360,7 +2352,7 @@ class MendelianViolationMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class MetricComparisonDifferences:
-    """Picard's `picard.analysis.CompareMetrics$MetricComparisonDifferences`."""
+    """Picard's `CompareMetrics$MetricComparisonDifferences`."""
 
     key: str = ""
 
@@ -2373,7 +2365,7 @@ class MetricComparisonDifferences:
 
 @dataclass(frozen=True, kw_only=True)
 class MultilevelMetrics:
-    """Picard's `picard.metrics.MultilevelMetrics`."""
+    """Picard's `MultilevelMetrics`."""
 
     sample: str | None = None
     """The sample to which these metrics apply. If null, it means they apply to all reads in the
@@ -2987,7 +2979,7 @@ class QualityYieldMetricsSnvq:
 
 @dataclass(frozen=True, kw_only=True)
 class RawWgsMetrics:
-    """Picard's `picard.analysis.CollectRawWgsMetrics$RawWgsMetrics`."""
+    """Picard's `CollectRawWgsMetrics$RawWgsMetrics`."""
 
     genome_territory: int = 0
     """The number of non-N bases in the genome reference over which coverage will be evaluated."""
@@ -4347,7 +4339,7 @@ class VariantCallingSummaryMetrics:
 
 @dataclass(frozen=True, kw_only=True)
 class VerifyIDIntensityContaminationMetrics:
-    """Picard's `picard.arrays.VerifyIDIntensityContaminationMetrics`."""
+    """Picard's `VerifyIDIntensityContaminationMetrics`."""
 
     id: int = 0
     """The ID of this entry"""

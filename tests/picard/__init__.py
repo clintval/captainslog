@@ -3,7 +3,7 @@ from typing import Any
 
 from captainslog.picard._java import JAVA_NAMES
 
-DATA = Path("tests/data/picard")
+DATA = Path(__file__).parents[1] / "data" / "picard"
 
 METRICS_CLASS = "## METRICS CLASS\t"
 

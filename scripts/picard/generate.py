@@ -45,6 +45,7 @@ RENAMES = {
 }
 
 ENUM_RENAMES = {
+    "htsjdk.variant.variantcontext.VariantContext$Type": "VariantType",
     "picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage$Category": (
         "WgsMetricsWithNonZeroCoverageCategory"
     ),
@@ -64,7 +65,7 @@ FIELD_DECLARATION = re.compile(r"(\w+)\s*(?:=.*)?$", re.DOTALL)
 @functools.cache
 def javadocs(path: Path) -> dict[str, str]:
     """The Javadocs in a Java file, by type (`Outer$Inner`) and by field (`Outer$Inner.FIELD`)."""
-    text = path.read_text() if path.exists() else ""
+    text = path.read_text()
     docs: dict[str, str] = {}
     scopes: list[str] = []
     head, doc, start = "", "", 0
@@ -102,6 +103,10 @@ def javadoc(source: Path, java: str, member: str | None = None) -> list[str]:
     """The paragraphs of the Javadoc of a Java type, or of one of its fields."""
     package, _, nested = java.rpartition(".")
     path = source / "src/main/java" / package.replace(".", "/") / f"{nested.split('$')[0]}.java"
+    if not path.exists():
+        if java.startswith("htsjdk."):
+            return []
+        raise SystemExit(f"{java} has no source file at {path}!")
     doc = javadocs(path).get(nested if member is None else f"{nested}.{member}")
     return paragraphs(doc) if doc else []
 
@@ -110,7 +115,8 @@ def class_summary(source: Path, java: str) -> str:
     """The first paragraph of a type's Javadoc, ending in a period, or else its Java name."""
     found = javadoc(source, java)
     if not found:
-        return f"{'htsjdk' if java.startswith('htsjdk.') else 'Picard'}'s `{java}`."
+        owner = "htsjdk" if java.startswith("htsjdk.") else "Picard"
+        return f"{owner}'s `{java.rpartition('.')[2]}`."
     summary = found[0].rstrip(":;, ")
     return summary if summary.endswith((".", "?", "!")) else f"{summary}."
 
@@ -148,9 +154,23 @@ def python_type(owner: str, field: dict[str, str], enums: dict[str, str]) -> tup
 
 
 def field_name(java: str) -> str:
-    """The Python name of a Java field: lowercase, with a trailing underscore after a keyword."""
+    """The snake_case name of a Java field, with a trailing underscore after a keyword.
+
+    A camelCase name gets an underscore before each capital that follows a lowercase letter or
+    a digit; an UPPER_SNAKE name, such as `PCT_10X`, is only lowercased.
+    """
+    if re.search("[a-z]", java):
+        java = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", java)
     name = java.lower()
     return f"{name}_" if keyword.iskeyword(name) else name
+
+
+def column_labels(java: str, fields: list[dict[str, str]]) -> dict[str, str]:
+    """The column label of each field of a Java class, by its Python name."""
+    labels = {field_name(field["name"]): field["name"] for field in fields}
+    if len(labels) < len(fields):
+        raise SystemExit(f"Two fields of {java} have the same Python name!")
+    return labels
 
 
 def metrics_module(
@@ -166,9 +186,8 @@ def metrics_module(
     for java, name in sorted(classes.items(), key=lambda item: item[1]):
         body += ["", "", "@dataclass(frozen=True, kw_only=True)", f"class {name}:"]
         body += docstring([class_summary(source, java)], "    ")
-        for field in fields[java]:
+        for attribute, field in zip(column_labels(java, fields[java]), fields[java], strict=True):
             annotation, default = python_type(java, field, enums)
-            attribute = field_name(field["name"])
             body += ["", f"    {attribute}: {annotation}" + (default and f" = {default}")]
             if found := javadoc(source, field["declared_by"], field["name"]):
                 body += docstring(found, "    ")
@@ -180,22 +199,36 @@ def metrics_module(
 
 
 def java_module(schema: dict[str, Any], classes: dict[str, str]) -> str:
-    """The source of the module mapping each dataclass to its Java name."""
-    entries: list[str] = []
+    """The source of the module holding each dataclass's Java name and unusual column labels."""
+    fields = {metric["class"]: metric["fields"] for metric in schema["classes"]}
+    names: list[str] = []
+    labels: list[str] = []
     for java, name in sorted(classes.items()):
         entry = f'    _metrics.{name}: "{java}",'
         wrapped = [f"    _metrics.{name}: (", f'        "{java}"', "    ),"]
-        entries += [entry] if len(entry) <= WIDTH else wrapped
+        names += [entry] if len(entry) <= WIDTH else wrapped
+        unusual = {
+            attribute: label
+            for attribute, label in column_labels(java, fields[java]).items()
+            if attribute.removesuffix("_").upper() != label
+        }
+        if unusual:
+            entries = (f'        "{attribute}": "{label}",' for attribute, label in unusual.items())
+            labels += [f"    _metrics.{name}: {{", *entries, "    },"]
     return "\n".join([
         HEADER.format(schema["picard"]),
         "from typing import Any",
         "",
         "from captainslog.picard import _metrics",
         "",
-        '__all__ = ["JAVA_NAMES"]',
+        '__all__ = ["COLUMN_LABELS", "JAVA_NAMES"]',
         "",
         "JAVA_NAMES: dict[type[Any], str] = {",
-        *entries,
+        *names,
+        "}",
+        "",
+        "COLUMN_LABELS: dict[type[Any], dict[str, str]] = {",
+        *labels,
         "}",
         "",
     ])
@@ -214,8 +247,10 @@ def main() -> None:
     schema = json.loads(args.schema.read_text())
     kept = [metric for metric in schema["classes"] if metric["class"] not in SKIPPED]
     used = {field["type"] for metric in kept for field in metric["fields"]}
-    classes = {metric["class"]: RENAMES.get(metric["class"], "") for metric in kept}
-    classes = {java: name or simple_name(java) for java, name in classes.items()}
+    classes = {
+        metric["class"]: RENAMES.get(metric["class"], simple_name(metric["class"]))
+        for metric in kept
+    }
     enums = {
         java: ENUM_RENAMES.get(java, simple_name(java)) for java in used & set(schema["enums"])
     }

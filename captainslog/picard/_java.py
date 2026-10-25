@@ -3,7 +3,7 @@ from typing import Any
 
 from captainslog.picard import _metrics
 
-__all__ = ["JAVA_NAMES"]
+__all__ = ["COLUMN_LABELS", "JAVA_NAMES"]
 
 JAVA_NAMES: dict[type[Any], str] = {
     _metrics.AlignmentSummaryMetrics: "picard.analysis.AlignmentSummaryMetrics",
@@ -100,4 +100,44 @@ JAVA_NAMES: dict[type[Any], str] = {
     _metrics.GenotypeConcordanceDetailMetrics: "picard.vcf.GenotypeConcordanceDetailMetrics",
     _metrics.GenotypeConcordanceSummaryMetrics: "picard.vcf.GenotypeConcordanceSummaryMetrics",
     _metrics.MendelianViolationMetrics: "picard.vcf.MendelianViolations.MendelianViolationMetrics",
+}
+
+COLUMN_LABELS: dict[type[Any], dict[str, str]] = {
+    _metrics.IndependentReplicateMetric: {
+        "n_sites": "nSites",
+        "n_three_alleles_sites": "nThreeAllelesSites",
+        "n_total_reads": "nTotalReads",
+        "n_duplicate_sets": "nDuplicateSets",
+        "n_exactly_triple": "nExactlyTriple",
+        "n_exactly_double": "nExactlyDouble",
+        "n_reads_in_big_sets": "nReadsInBigSets",
+        "n_different_alleles_bi_dups": "nDifferentAllelesBiDups",
+        "n_reference_alleles_bi_dups": "nReferenceAllelesBiDups",
+        "n_alternate_alleles_bi_dups": "nAlternateAllelesBiDups",
+        "n_different_alleles_tri_dups": "nDifferentAllelesTriDups",
+        "n_mismatching_alleles_bi_dups": "nMismatchingAllelesBiDups",
+        "n_reference_alleles_tri_dups": "nReferenceAllelesTriDups",
+        "n_alternate_alleles_tri_dups": "nAlternateAllelesTriDups",
+        "n_mismatching_alleles_tri_dups": "nMismatchingAllelesTriDups",
+        "n_reference_reads": "nReferenceReads",
+        "n_alternate_reads": "nAlternateReads",
+        "n_mismatching_umis_in_diff_bi_dups": "nMismatchingUMIsInDiffBiDups",
+        "n_matching_umis_in_diff_bi_dups": "nMatchingUMIsInDiffBiDups",
+        "n_mismatching_umis_in_same_bi_dups": "nMismatchingUMIsInSameBiDups",
+        "n_matching_umis_in_same_bi_dups": "nMatchingUMIsInSameBiDups",
+        "n_mismatching_umis_in_co_oriented_bi_dups": "nMismatchingUMIsInCoOrientedBiDups",
+        "n_mismatching_umis_in_contra_oriented_bi_dups": "nMismatchingUMIsInContraOrientedBiDups",
+        "n_bad_barcodes": "nBadBarcodes",
+        "n_good_barcodes": "nGoodBarcodes",
+        "bi_site_heterogeneity_rate": "biSiteHeterogeneityRate",
+        "tri_site_heterogeneity_rate": "triSiteHeterogeneityRate",
+        "bi_site_homogeneity_rate": "biSiteHomogeneityRate",
+        "tri_site_homogeneity_rate": "triSiteHomogeneityRate",
+        "independent_replication_rate_from_bi_dups": "independentReplicationRateFromBiDups",
+        "independent_replication_rate_from_tri_dups": "independentReplicationRateFromTriDups",
+        "p_same_umi_in_independent_bi_dup": "pSameUmiInIndependentBiDup",
+        "p_same_allele_when_mismatching_umi": "pSameAlleleWhenMismatchingUmi",
+        "independent_replication_rate_from_umi": "independentReplicationRateFromUmi",
+        "replication_rate_from_replicate_sets": "replicationRateFromReplicateSets",
+    },
 }
