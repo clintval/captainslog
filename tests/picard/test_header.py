@@ -1,16 +1,17 @@
 import re
 
+import pytest
 from typeline import Comment
 
-from captainslog.picard import IndependentReplicateMetric
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard._format import picard_rename
 from captainslog.picard._header import HeaderParser
 from captainslog.picard._header import PicardHeader
 from captainslog.picard._header import default_header
 from captainslog.picard._header import header_lines
 from tests.picard import HEADER
 from tests.picard import LINES
+
+STRING_HEADER = "htsjdk.samtools.metrics.StringHeader"
+VERSION_HEADER = "htsjdk.samtools.metrics.VersionHeader"
 
 
 def test_header_parser_reads_the_command_line_start_time_and_other_headers() -> None:
@@ -54,37 +55,50 @@ def test_header_lines_of_an_empty_header_are_none() -> None:
     assert header_lines(PicardHeader()) == []
 
 
+def test_header_lines_hold_the_place_of_an_empty_command_line_before_a_start_time() -> None:
+    """An empty command line is written when a string header follows it, so it reads back."""
+    assert header_lines(PicardHeader(started_on="today")) == [
+        f"## {STRING_HEADER}",
+        "# ",
+        f"## {STRING_HEADER}",
+        "# Started on: today",
+    ]
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        HEADER,
+        PicardHeader(command_line="CollectQualityYieldMetrics I=in.bam O=out.txt"),
+        PicardHeader(started_on="Sat Oct 24 10:00:00 HST 2026"),
+        PicardHeader(others=((STRING_HEADER, "note"),)),
+        PicardHeader(others=((VERSION_HEADER, "picard\t3.5.0"),)),
+        PicardHeader(others=((STRING_HEADER, "Started on: later"),)),
+        PicardHeader(command_line="tool", others=((STRING_HEADER, "Started on: later"),)),
+        PicardHeader(),
+    ],
+    ids=[
+        "full",
+        "command-line",
+        "start-time",
+        "string-header",
+        "version-header",
+        "start-time-string-header",
+        "command-line-and-start-time-string-header",
+        "empty",
+    ],
+)
+def test_header_lines_read_back_as_the_same_header(header: PicardHeader) -> None:
+    """The lines written for any header read back as that header."""
+    parser = HeaderParser()
+    for number, text in enumerate(header_lines(header), start=1):
+        parser.feed(Comment(number, text))
+    assert parser.header == header
+
+
 def test_default_header_names_captainslog_and_the_time_it_starts() -> None:
     """The default header names captainslog, and the local time as htsjdk writes it."""
     header = default_header()
     assert header.command_line == "captainslog"
     assert re.fullmatch(r"\w{3} \w{3} \d{2} \d{2}:\d{2}:\d{2} .+ \d{4}", header.started_on)
     assert header.others == ()
-
-
-def test_picard_rename_upper_cases_each_field() -> None:
-    """A field's column is its name in upper case."""
-    assert picard_rename(QualityYieldMetrics)["total_reads"] == "TOTAL_READS"
-
-
-def test_picard_rename_keeps_the_java_label_of_a_camel_case_field() -> None:
-    """A field whose Java label is not its name in upper case keeps that label."""
-    assert picard_rename(IndependentReplicateMetric)["n_sites"] == "nSites"
-
-
-def test_picard_rename_gives_a_subclass_the_columns_of_its_picard_dataclass() -> None:
-    """A subclass of a Picard dataclass that adds only a property has its parent's columns."""
-
-    class Yield(QualityYieldMetrics):
-        @property
-        def pf_fraction(self) -> float:
-            return self.pf_reads / self.total_reads
-
-    class Replicate(IndependentReplicateMetric):
-        @property
-        def sites(self) -> int | None:
-            return self.n_sites
-
-    assert picard_rename(Yield) == picard_rename(QualityYieldMetrics)
-    assert picard_rename(Replicate) == picard_rename(IndependentReplicateMetric)
-    assert picard_rename(Replicate)["n_sites"] == "nSites"

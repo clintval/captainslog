@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from typing import TextIO
-from typing import cast
 
 import pytest
 from typeline import Comment
@@ -12,6 +11,7 @@ from typing_extensions import override
 
 from captainslog._files import open_text
 from captainslog.picard._table import Table
+from captainslog.picard._table import as_text_io
 from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES
 
@@ -26,6 +26,15 @@ class Metric:
 
     sample: str
     reads: int
+
+
+@dataclass(frozen=True)
+class Sample:
+    """A row of a metrics table whose fields may each be empty."""
+
+    sample: str | None
+    reads: int | None
+    ratio: float | None
 
 
 @dataclass(frozen=True)
@@ -45,21 +54,16 @@ def picard_file(*rows: str, newline: str = "\n") -> str:
 TEXT = picard_file("a\t1", "b\t2")
 
 
-def as_handle(table: Table) -> TextIO:
-    """A table typed as the handle of a typeline reader, which uses its name, read, and close."""
-    return cast(TextIO, cast(object, table))
-
-
 def metrics(handle: TextIO) -> list[Metric]:
     """The metrics a typeline reader reads from the metrics table of a Picard file."""
-    table = as_handle(Table(handle, marker="## METRICS CLASS"))
+    table = as_text_io(Table(handle, marker="## METRICS CLASS"))
     with TsvReader[Metric](table, comment_prefixes=(), quoting=False) as reader:
         return list(reader)
 
 
 def bins(handle: TextIO) -> list[Bin]:
     """The bins a typeline reader reads from the histogram of a Picard file."""
-    table = as_handle(Table(handle, marker="## HISTOGRAM"))
+    table = as_text_io(Table(handle, marker="## HISTOGRAM"))
     with TsvReader[Bin](table, comment_prefixes=(), quoting=False) as reader:
         return list(reader)
 
@@ -123,7 +127,7 @@ def test_table_without_its_marker_reads_no_records() -> None:
     """A file without the marker line has no table, so no records."""
     text = "\n".join([*LINES, "", "sample\treads", "a\t1", ""])
     table = Table(StringIO(text), marker="## METRICS CLASS")
-    with TsvReader[Metric](as_handle(table), comment_prefixes=(), quoting=False) as reader:
+    with TsvReader[Metric](as_text_io(table), comment_prefixes=(), quoting=False) as reader:
         assert list(reader) == []
     assert table.marker_line is None
 
@@ -189,11 +193,36 @@ def test_table_ends_at_the_end_of_a_file_without_a_closing_blank_line(end: str) 
     assert metrics(StringIO(text)) == [Metric("a", 1), Metric("b", 2)]
 
 
-@pytest.mark.parametrize("blank", ["", " ", "\t\t", " \t\r"], ids=repr)
-def test_table_ends_at_a_line_of_only_whitespace(blank: str) -> None:
-    """A table ends at the first line of only whitespace after its first line."""
+@pytest.mark.parametrize("blank", ["", " ", " \r", "\x0c"], ids=repr)
+def test_table_ends_at_a_line_of_only_whitespace_without_a_tab(blank: str) -> None:
+    """A table ends at its first blank line, of whitespace other than tabs, after its first line."""
     text = "\n".join([*LINES, "", METRICS, "sample\treads", "a\t1", blank, "b\t2", ""])
     assert metrics(StringIO(text)) == [Metric("a", 1)]
+
+
+@pytest.mark.parametrize("line", ["\t\t", " \t\r"], ids=repr)
+def test_table_reads_a_line_of_whitespace_with_a_tab_as_a_row(line: str) -> None:
+    """A line of whitespace that holds a tab is a row, here one typeline cannot read."""
+    text = "\n".join([*LINES, "", METRICS, "sample\treads", "a\t1", line, "b\t2", ""])
+    with pytest.raises(ValueError, match=r" on line 11\b"):
+        _ = metrics(StringIO(text))
+
+
+@pytest.mark.parametrize("most", [1, 2, 3, 1000])
+def test_table_reads_a_row_of_empty_fields_and_the_rows_after_it(most: int) -> None:
+    """A row of only empty fields is a row of None, and does not end the table."""
+    header = "sample\treads\tratio"
+    text = "\n".join([*LINES, "", METRICS, header, "a\t1\t0.5", "\t\t", "c\t3\t1.5", "", ""])
+    table = as_text_io(Table(Trickle(text, most), marker="## METRICS CLASS"))
+    with TsvReader[Sample](table, comment_prefixes=(), quoting=False) as reader:
+        rows = list(reader)
+    assert rows == [Sample("a", 1, 0.5), Sample(None, None, None), Sample("c", 3, 1.5)]
+
+
+def test_table_starts_at_a_line_holding_a_tab() -> None:
+    """The first line of a table is the first line after the marker that is not blank."""
+    table = Table(StringIO("## M\n \n\t\n\nsample\treads\n"), marker="## M")
+    assert table.read() == "\n \n\t\n"
 
 
 def test_table_of_only_a_header_reads_no_records() -> None:
@@ -224,7 +253,8 @@ def test_table_of_each_picard_file_is_its_metrics_table(path: Path) -> None:
     """The metrics table of a file Picard wrote is the lines after its marker, up to a blank one."""
     lines = path.read_text().split("\n")
     at = next(index for index, line in enumerate(lines) if line.startswith("## METRICS CLASS"))
-    stop = next(index for index in range(at + 2, len(lines)) if not lines[index].strip())
+    blank = [not line.strip() and "\t" not in line for line in lines]
+    stop = next(index for index in range(at + 2, len(lines)) if blank[index])
     with open_text(path) as handle:
         text = Table(handle, marker="## METRICS CLASS").read()
     assert text == "\n" * (at + 1) + "".join(f"{line}\n" for line in lines[at + 1 : stop])

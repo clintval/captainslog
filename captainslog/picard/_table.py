@@ -1,14 +1,18 @@
 import re
 from collections.abc import Callable
 from typing import TextIO
+from typing import cast
 
 from typeline import Comment
 
 CHUNK: int = 65536
 """The number of characters to read from a handle at a time."""
 
-BLANK_LINE: re.Pattern[str] = re.compile(r"\n[^\S\n]*\n")
-"""A line break, and the line of only whitespace after it with its own line break."""
+BLANK_LINE: re.Pattern[str] = re.compile(r"\n[^\S\n\t]*\n")
+"""A line break, and the blank line after it with its own line break."""
+
+NOT_BLANK: re.Pattern[str] = re.compile(r"[\S\t]")
+"""A character that no blank line holds: a tab, or any that is not whitespace."""
 
 
 class Table:
@@ -16,8 +20,11 @@ class Table:
 
     Each line up to and including the first line that starts with the marker reads as an empty
     line, so a reader skips it and still counts it, and names each line of the table as the whole
-    file numbers it. The table then reads as it is, up to the first line of only whitespace after
-    its first line, or the end of the file. With no marker line, every line reads as an empty line.
+    file numbers it. The table then reads as it is, up to the first blank line after its first
+    line, or the end of the file. With no marker line, every line reads as an empty line.
+
+    A blank line holds only whitespace other than tabs, as for typeline, so a row of empty fields
+    is a row.
     """
 
     def __init__(self, handle: TextIO, /, marker: str) -> None:
@@ -108,17 +115,17 @@ class Table:
 
     def _lead(self, text: str, end: bool) -> None:
         """Pass on the blank lines after the marker line, up to the first line of the table."""
-        rest = text.lstrip()
-        if rest:
+        found = NOT_BLANK.search(text)
+        if found is not None:
             self._step = self._rows
-            self._rows(text, end, start=len(text) - len(rest))
+            self._rows(text, end, start=found.start())
             return
         self._ready += text
         self._text = ""
         self._step = None if end else self._lead
 
     def _rows(self, text: str, end: bool, start: int = 0) -> None:
-        """Pass on the lines of the table, up to the first line of only whitespace."""
+        """Pass on the table's lines up to its first blank line, holding back a partial line."""
         blank = BLANK_LINE.search(text, start)
         if blank is not None:
             self._ready += text[: blank.start() + 1]
@@ -126,8 +133,17 @@ class Table:
             self._step = None
             return
         cut = text.rfind("\n", start)
-        if end or cut < 0 or text[cut + 1 :].strip():
+        if end or cut < 0:
             cut = len(text)
         self._ready += text[:cut]
         self._text = text[cut:]
         self._step = None if end else self._rows
+
+
+def as_text_io(table: Table) -> TextIO:
+    """Type a table as the text a typeline reader takes, of which it uses `name`, `read`, `close`.
+
+    Args:
+        table: the table to read.
+    """
+    return cast(TextIO, cast(object, table))
