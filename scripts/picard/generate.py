@@ -204,9 +204,7 @@ def java_module(schema: dict[str, Any], classes: dict[str, str]) -> str:
     names: list[str] = []
     labels: list[str] = []
     for java, name in sorted(classes.items()):
-        entry = f'    _metrics.{name}: "{java}",'
-        wrapped = [f"    _metrics.{name}: (", f'        "{java}"', "    ),"]
-        names += [entry] if len(entry) <= WIDTH else wrapped
+        names += [f'    _metrics.{name}: "{java}",']
         unusual = {
             attribute: label
             for attribute, label in column_labels(java, fields[java]).items()
@@ -223,9 +221,11 @@ def java_module(schema: dict[str, Any], classes: dict[str, str]) -> str:
         "",
         '__all__ = ["COLUMN_LABELS", "JAVA_NAMES"]',
         "",
+        "# fmt: off",
         "JAVA_NAMES: dict[type[Any], str] = {",
         *names,
         "}",
+        "# fmt: on",
         "",
         "COLUMN_LABELS: dict[type[Any], dict[str, str]] = {",
         *labels,

@@ -209,6 +209,7 @@ ignore    = [
 unfixable = ["B"]
 
 [tool.ruff.lint.per-file-ignores]
+"captainslog/picard/_java.py" = ["E501"]
 "captainslog/picard/_metrics.py" = ["D205"]
 
 [tool.ruff.lint.mccabe]

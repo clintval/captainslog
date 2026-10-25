@@ -5,24 +5,17 @@ from captainslog.picard import _metrics
 
 __all__ = ["COLUMN_LABELS", "JAVA_NAMES"]
 
+# fmt: off
 JAVA_NAMES: dict[type[Any], str] = {
     _metrics.AlignmentSummaryMetrics: "picard.analysis.AlignmentSummaryMetrics",
     _metrics.BaseDistributionByCycleMetrics: "picard.analysis.BaseDistributionByCycleMetrics",
     _metrics.CpcgMetrics: "picard.analysis.CollectOxoGMetrics$CpcgMetrics",
     _metrics.QualityYieldMetrics: "picard.analysis.CollectQualityYieldMetrics$QualityYieldMetrics",
-    _metrics.QualityYieldMetricsFlow: (
-        "picard.analysis.CollectQualityYieldMetricsFlow$QualityYieldMetricsFlow"
-    ),
-    _metrics.QualityYieldMetricsSnvq: (
-        "picard.analysis.CollectQualityYieldMetricsSNVQ$QualityYieldMetrics"
-    ),
+    _metrics.QualityYieldMetricsFlow: "picard.analysis.CollectQualityYieldMetricsFlow$QualityYieldMetricsFlow",
+    _metrics.QualityYieldMetricsSnvq: "picard.analysis.CollectQualityYieldMetricsSNVQ$QualityYieldMetrics",
     _metrics.RawWgsMetrics: "picard.analysis.CollectRawWgsMetrics$RawWgsMetrics",
-    _metrics.WgsMetricsWithNonZeroCoverage: (
-        "picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage"
-    ),
-    _metrics.MetricComparisonDifferences: (
-        "picard.analysis.CompareMetrics$MetricComparisonDifferences"
-    ),
+    _metrics.WgsMetricsWithNonZeroCoverage: "picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage",
+    _metrics.MetricComparisonDifferences: "picard.analysis.CompareMetrics$MetricComparisonDifferences",
     _metrics.FingerprintingDetailMetrics: "picard.analysis.FingerprintingDetailMetrics",
     _metrics.FingerprintingSummaryMetrics: "picard.analysis.FingerprintingSummaryMetrics",
     _metrics.GcBiasDetailMetrics: "picard.analysis.GcBiasDetailMetrics",
@@ -35,18 +28,10 @@ JAVA_NAMES: dict[type[Any], str] = {
     _metrics.TheoreticalSensitivityMetrics: "picard.analysis.TheoreticalSensitivityMetrics",
     _metrics.WgsMetrics: "picard.analysis.WgsMetrics",
     _metrics.ErrorSummaryMetrics: "picard.analysis.artifacts.ErrorSummaryMetrics",
-    _metrics.BaitBiasDetailMetrics: (
-        "picard.analysis.artifacts.SequencingArtifactMetrics$BaitBiasDetailMetrics"
-    ),
-    _metrics.BaitBiasSummaryMetrics: (
-        "picard.analysis.artifacts.SequencingArtifactMetrics$BaitBiasSummaryMetrics"
-    ),
-    _metrics.PreAdapterDetailMetrics: (
-        "picard.analysis.artifacts.SequencingArtifactMetrics$PreAdapterDetailMetrics"
-    ),
-    _metrics.PreAdapterSummaryMetrics: (
-        "picard.analysis.artifacts.SequencingArtifactMetrics$PreAdapterSummaryMetrics"
-    ),
+    _metrics.BaitBiasDetailMetrics: "picard.analysis.artifacts.SequencingArtifactMetrics$BaitBiasDetailMetrics",
+    _metrics.BaitBiasSummaryMetrics: "picard.analysis.artifacts.SequencingArtifactMetrics$BaitBiasSummaryMetrics",
+    _metrics.PreAdapterDetailMetrics: "picard.analysis.artifacts.SequencingArtifactMetrics$PreAdapterDetailMetrics",
+    _metrics.PreAdapterSummaryMetrics: "picard.analysis.artifacts.SequencingArtifactMetrics$PreAdapterSummaryMetrics",
     _metrics.HsMetrics: "picard.analysis.directed.HsMetrics",
     _metrics.PanelMetricsBase: "picard.analysis.directed.PanelMetricsBase",
     _metrics.TargetMetrics: "picard.analysis.directed.TargetMetrics",
@@ -54,18 +39,10 @@ JAVA_NAMES: dict[type[Any], str] = {
     _metrics.TargetedPcrMetrics: "picard.analysis.directed.TargetedPcrMetrics",
     _metrics.IndependentReplicateMetric: "picard.analysis.replicates.IndependentReplicateMetric",
     _metrics.BafRegressMetrics: "picard.arrays.BafRegressMetrics",
-    _metrics.ArraysControlCodesSummaryMetrics: (
-        "picard.arrays.CollectArraysVariantCallingMetrics$ArraysControlCodesSummaryMetrics"
-    ),
-    _metrics.ArraysVariantCallingDetailMetrics: (
-        "picard.arrays.CollectArraysVariantCallingMetrics$ArraysVariantCallingDetailMetrics"
-    ),
-    _metrics.ArraysVariantCallingSummaryMetrics: (
-        "picard.arrays.CollectArraysVariantCallingMetrics$ArraysVariantCallingSummaryMetrics"
-    ),
-    _metrics.VerifyIDIntensityContaminationMetrics: (
-        "picard.arrays.VerifyIDIntensityContaminationMetrics"
-    ),
+    _metrics.ArraysControlCodesSummaryMetrics: "picard.arrays.CollectArraysVariantCallingMetrics$ArraysControlCodesSummaryMetrics",
+    _metrics.ArraysVariantCallingDetailMetrics: "picard.arrays.CollectArraysVariantCallingMetrics$ArraysVariantCallingDetailMetrics",
+    _metrics.ArraysVariantCallingSummaryMetrics: "picard.arrays.CollectArraysVariantCallingMetrics$ArraysVariantCallingSummaryMetrics",
+    _metrics.VerifyIDIntensityContaminationMetrics: "picard.arrays.VerifyIDIntensityContaminationMetrics",
     _metrics.ClusteredCrosscheckMetric: "picard.fingerprint.ClusteredCrosscheckMetric",
     _metrics.CrosscheckMetric: "picard.fingerprint.CrosscheckMetric",
     _metrics.FingerprintMetrics: "picard.fingerprint.FingerprintMetrics",
@@ -73,12 +50,8 @@ JAVA_NAMES: dict[type[Any], str] = {
     _metrics.IlluminaBasecallingMetrics: "picard.illumina.IlluminaBasecallingMetrics",
     _metrics.IlluminaLaneMetrics: "picard.illumina.IlluminaLaneMetrics",
     _metrics.IlluminaPhasingMetrics: "picard.illumina.IlluminaPhasingMetrics",
-    _metrics.PFFailDetailedMetric: (
-        "picard.illumina.quality.CollectHiSeqXPfFailMetrics$PFFailDetailedMetric"
-    ),
-    _metrics.PFFailSummaryMetric: (
-        "picard.illumina.quality.CollectHiSeqXPfFailMetrics$PFFailSummaryMetric"
-    ),
+    _metrics.PFFailDetailedMetric: "picard.illumina.quality.CollectHiSeqXPfFailMetrics$PFFailDetailedMetric",
+    _metrics.PFFailSummaryMetric: "picard.illumina.quality.CollectHiSeqXPfFailMetrics$PFFailSummaryMetric",
     _metrics.MultilevelMetrics: "picard.metrics.MultilevelMetrics",
     _metrics.DuplicationMetrics: "picard.sam.DuplicationMetrics",
     _metrics.FlowBasedDuplicationMetrics: "picard.sam.FlowBasedDuplicationMetrics",
@@ -88,19 +61,14 @@ JAVA_NAMES: dict[type[Any], str] = {
     _metrics.IndelErrorMetric: "picard.sam.SamErrorMetric.IndelErrorMetric",
     _metrics.OverlappingErrorMetric: "picard.sam.SamErrorMetric.OverlappingErrorMetric",
     _metrics.UmiMetrics: "picard.sam.markduplicates.UmiMetrics",
-    _metrics.VariantCallingDetailMetrics: (
-        "picard.vcf.CollectVariantCallingMetrics$VariantCallingDetailMetrics"
-    ),
-    _metrics.VariantCallingSummaryMetrics: (
-        "picard.vcf.CollectVariantCallingMetrics$VariantCallingSummaryMetrics"
-    ),
-    _metrics.GenotypeConcordanceContingencyMetrics: (
-        "picard.vcf.GenotypeConcordanceContingencyMetrics"
-    ),
+    _metrics.VariantCallingDetailMetrics: "picard.vcf.CollectVariantCallingMetrics$VariantCallingDetailMetrics",
+    _metrics.VariantCallingSummaryMetrics: "picard.vcf.CollectVariantCallingMetrics$VariantCallingSummaryMetrics",
+    _metrics.GenotypeConcordanceContingencyMetrics: "picard.vcf.GenotypeConcordanceContingencyMetrics",
     _metrics.GenotypeConcordanceDetailMetrics: "picard.vcf.GenotypeConcordanceDetailMetrics",
     _metrics.GenotypeConcordanceSummaryMetrics: "picard.vcf.GenotypeConcordanceSummaryMetrics",
     _metrics.MendelianViolationMetrics: "picard.vcf.MendelianViolations.MendelianViolationMetrics",
 }
+# fmt: on
 
 COLUMN_LABELS: dict[type[Any], dict[str, str]] = {
     _metrics.IndependentReplicateMetric: {
