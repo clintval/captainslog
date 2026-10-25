@@ -171,7 +171,7 @@ respect-type-ignore-comments = false
 unused-ignore-comment = "error"
 
 [tool.ruff]
-include        = ["captainslog/**", "tests/**", "scripts/**", "conftest.py"]
+include        = ["captainslog/**/*.py", "tests/**/*.py", "scripts/**/*.py", "conftest.py"]
 line-length    = 100
 target-version = "py311"
 output-format  = "full"
