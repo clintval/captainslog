@@ -56,4 +56,5 @@ CLASSES: dict[str, type[Any]] = {
 
 def riker_class_of(path: Path) -> type[Any]:
     """The dataclass of a Riker fixture, by the suffix of its name."""
-    return CLASSES[path.stem.split(".", 1)[1]]
+    suffix = next(s for s in sorted(CLASSES, key=len, reverse=True) if path.stem.endswith("." + s))
+    return CLASSES[suffix]

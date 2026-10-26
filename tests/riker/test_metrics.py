@@ -5,9 +5,12 @@ from typing import get_type_hints
 
 import pytest
 
+from captainslog.riker import AlignmentMetrics
 from captainslog.riker import Category
 from captainslog.riker import HybcapMetrics
+from captainslog.riker import IsizeMetrics
 from captainslog.riker import PairOrientation
+from captainslog.riker import RnaInsertSize
 from captainslog.riker import RnaMetrics
 from captainslog.riker import StrandSpec
 from captainslog.riker import _metrics
@@ -46,8 +49,9 @@ def test_every_fixture_suffix_has_exactly_one_dataclass() -> None:
     assert len(CLASSES) == 20
     assert len(set(CLASSES.values())) == 20
     assert set(CLASSES.values()) == set(DATACLASSES)
-    suffixes = {path.stem.split(".", 1)[1] for path in ALL_RIKER_FIXTURES}
-    assert suffixes == set(CLASSES)
+    mapped = {riker_class_of(path) for path in ALL_RIKER_FIXTURES}
+    assert mapped == set(CLASSES.values())
+    assert len(ALL_RIKER_FIXTURES) == len(CLASSES)
 
 
 def test_alignment_categories_are_rikers() -> None:
@@ -66,23 +70,40 @@ def test_strands_are_rikers() -> None:
 
 
 def test_optional_fields_default_to_none() -> None:
-    """The columns Riker leaves blank are optional and default to None."""
-    optional = {
-        HybcapMetrics: ["hs_library_size"],
-        RnaMetrics: [
-            "ribosomal_reads",
-            "frac_ribosomal_reads",
-            "ribosomal_bases",
-            "frac_ribosomal_bases",
-        ],
+    """Exactly the columns Riker leaves blank are optional, and they default to None."""
+    expected = {
+        (HybcapMetrics, "hs_library_size"): int | None,
+        (RnaMetrics, "ribosomal_reads"): int | None,
+        (RnaMetrics, "frac_ribosomal_reads"): float | None,
+        (RnaMetrics, "ribosomal_bases"): int | None,
+        (RnaMetrics, "frac_ribosomal_bases"): float | None,
     }
-    for kind, names in optional.items():
+    found = {}
+    for kind in DATACLASSES:
         fields = {field.name: field for field in dataclasses.fields(kind)}
-        hints = get_type_hints(kind)
-        for name in names:
-            assert fields[name].default is None
-            assert isinstance(hints[name], UnionType)
-            assert type(None) in hints[name].__args__
+        for name, hint in get_type_hints(kind).items():
+            if isinstance(hint, UnionType):
+                found[(kind, name)] = hint
+                assert fields[name].default is None
+    assert found == expected
+
+
+def test_categorical_fields_are_required_enums() -> None:
+    """Each categorical column is its own enum with no default, and no other field is an enum."""
+    expected = {
+        (AlignmentMetrics, "category"): Category,
+        (IsizeMetrics, "pair_orientation"): PairOrientation,
+        (RnaInsertSize, "pair_orientation"): PairOrientation,
+        (RnaMetrics, "detected_strand"): StrandSpec,
+    }
+    found = {}
+    for kind in DATACLASSES:
+        fields = {field.name: field for field in dataclasses.fields(kind)}
+        for name, hint in get_type_hints(kind).items():
+            if hint in ENUMS:
+                found[(kind, name)] = hint
+                assert fields[name].default is dataclasses.MISSING
+    assert found == expected
 
 
 def test_every_field_type_is_one_riker_writes() -> None:

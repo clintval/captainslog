@@ -804,13 +804,13 @@ class RnaMetrics:
     """Sample name from the BAM read group SM tag, or the filename."""
 
     total_reads: int = 0
-    """Every QC-passing read except secondary alignments; i.e. mapped, unmapped, and supplementary
+    """Every QC-passing read except secondary alignments, i.e. mapped, unmapped, and supplementary
     reads. The denominator for `bases`. Because supplementary alignments are counted here but not in
     `mapped_reads`, expect `total_reads` ≥ `mapped_reads` + `unmapped_reads`.
     """
 
     mapped_reads: int = 0
-    """Mapped, non-secondary, non-supplementary reads; the "one record per read" count that is the
+    """Mapped, non-secondary, non-supplementary reads, the "one record per read" count that is the
     denominator for `duplicate_rate` and all `frac_*_reads` genomic-origin fractions.
     """
 
@@ -850,7 +850,7 @@ class RnaMetrics:
     """
 
     assigned_reads: int = 0
-    """Reads with exon overlap in exactly one gene; the "usable for quantification" set that feeds
+    """Reads with exon overlap in exactly one gene, the "usable for quantification" set that feeds
     `genes_detected` and the per-biotype counts.
     """
 
@@ -878,7 +878,7 @@ class RnaMetrics:
     """
 
     spliced_reads: int = 0
-    """Reads with at least one splice; a CIGAR N (skip) gap of at least --junction-min-intron bp."""
+    """Reads with at least one splice, a CIGAR N (skip) gap of at least --junction-min-intron bp."""
 
     frac_spliced_reads: float = 0.0
     """`spliced_reads / mapped_reads`."""
@@ -899,7 +899,7 @@ class RnaMetrics:
 
     known_juncs: int = 0
     """Distinct annotated junctions observed (each unique intron counted once, regardless of how
-    many reads spanned it); contrast the `*_splice_obs` counts, which include multiplicity.
+    many reads spanned it): contrast the `*_splice_obs` counts, which include multiplicity.
     """
 
     partial_juncs: int = 0
@@ -909,17 +909,17 @@ class RnaMetrics:
     """Distinct observed junctions with neither splice site annotated."""
 
     frac_known_juncs: float = 0.0
-    """`known_juncs / (known + partial + novel distinct junctions)`; the annotated fraction of the
+    """`known_juncs / (known + partial + novel distinct junctions)`: the annotated fraction of the
     junctions seen.
     """
 
     bases: int = 0
     """Total bases in QC-passing, non-secondary reads, including unmapped reads and soft-clips
-    (Picard PF_BASES). A base-level total; distinct from the read-level `total_reads`.
+    (Picard PF_BASES). A base-level total: distinct from the read-level `total_reads`.
     """
 
     aligned_bases: int = 0
-    """Reference-aligned bases (CIGAR M/=/X) of mapped reads; excludes soft-clips and insertions
+    """Reference-aligned bases (CIGAR M/=/X) of mapped reads: excludes soft-clips and insertions
     (Picard PF_ALIGNED_BASES). The denominator for the `frac_*_bases` composition fractions.
     """
 
@@ -957,11 +957,11 @@ class RnaMetrics:
     """`intergenic_bases / aligned_bases`."""
 
     frac_mrna_bases: float = 0.0
-    """`frac_coding_bases + frac_utr_bases`; the mRNA (exonic) fraction of aligned bases."""
+    """`frac_coding_bases + frac_utr_bases`: the mRNA (exonic) fraction of aligned bases."""
 
     frac_usable_bases: float = 0.0
     """`(coding_bases + utr_bases) / bases`. Note the denominator is **all sequenced bases**
-    (`bases`), not `aligned_bases` like the other `frac_*_bases`; this is intentional, matching
+    (`bases`), not `aligned_bases` like the other `frac_*_bases`: this is intentional, matching
     Picard's PCT_USABLE_BASES (the usable-mRNA fraction of the whole sequencing run).
     """
 
@@ -992,7 +992,7 @@ class RnaMetrics:
     """
 
     frac_r1_tx_strand_reads: float = 0.0
-    """`r1_tx_strand_reads / (r1_tx_strand_reads + r2_tx_strand_reads)`; the basis for strand
+    """`r1_tx_strand_reads / (r1_tx_strand_reads + r2_tx_strand_reads)`: the basis for strand
     auto-detection (≈0.5 unstranded, ≈1 forward, ≈0 reverse).
     """
 
@@ -1021,7 +1021,7 @@ class RnaMetrics:
     """
 
     median_tin: float = 0.0
-    """Median Transcript Integrity Number (0–100); `100·exp(−KL(coverage‖uniform))`, an
+    """Median Transcript Integrity Number (0–100): `100·exp(−KL(coverage‖uniform))`, an
     entropy-based coverage-uniformity score (100 = perfectly even). Computed over one representative
     transcript per gene (length ≥ --minimum-length, mean coverage > --tin-min-coverage). TIN is
     **scale-invariant**: it reflects relative coverage *shape*, not depth, so a deeply-sequenced
