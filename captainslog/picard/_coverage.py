@@ -42,13 +42,19 @@ class PerTargetCoverage:
     """The mean high quality depth over the bases of the target."""
 
     normalized_coverage: float = 0.0
-    """The mean coverage of the target over the mean target coverage."""
+    """The mean coverage of the target over the mean target coverage, the total high quality
+    depth over the target territory.
+    """
 
     min_normalized_coverage: float = 0.0
-    """The least depth of a base of the target over the mean target coverage."""
+    """The least depth of a base of the target over the mean target coverage, the total high
+    quality depth over the target territory.
+    """
 
     max_normalized_coverage: float = 0.0
-    """The greatest depth of a base of the target over the mean target coverage."""
+    """The greatest depth of a base of the target over the mean target coverage, the total
+    high quality depth over the target territory.
+    """
 
     min_coverage: int = 0
     """The least high quality depth of a base of the target."""
@@ -60,7 +66,9 @@ class PerTargetCoverage:
     """The fraction of the bases of the target with no coverage."""
 
     read_count: int = 0
-    """The number of reads that pass the filters and have a high quality base on the target."""
+    """The number of reads that are not duplicates, meet the minimum mapping quality and are not
+    adapter, with at least one high quality aligned base on the target.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)
