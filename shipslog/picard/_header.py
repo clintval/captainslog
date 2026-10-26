@@ -76,7 +76,17 @@ def header_lines(header: PicardHeader) -> list[str]:
 
     Args:
         header: the header to write.
+
+    Raises:
+        ValueError: if a header's class name or text holds a line break.
     """
+    for text in (
+        header.command_line,
+        header.started_on,
+        *(t for pair in header.others for t in pair),
+    ):
+        if "\r" in text or "\n" in text:
+            raise ValueError(f"A header line holds a line break: {text!r}!")
     strings = [text for java, text in header.others if java == STRING_HEADER]
     pairs: list[tuple[str, str]] = []
     if header.command_line or header.started_on or strings:

@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from dataclasses import fields
+from io import StringIO
 from math import isnan
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from shipslog.picard import PicardWriter
 from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import SamComparisonMetric
 from shipslog.picard._format import picard_rename
+from shipslog.picard._header import PicardHeader
 from shipslog.picard._header import header_lines
 from tests.compare import same
 from tests.picard import HEADER
@@ -144,6 +146,40 @@ def test_writer_refuses_a_class_that_is_not_a_picard_dataclass(tmp_path: Path) -
     with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
         _ = PicardWriter.from_path[NotPicard](path)
     assert not path.exists()
+
+
+@pytest.mark.parametrize(
+    ("header", "text"),
+    [
+        (PicardHeader(command_line="a\nb", started_on="now"), "a\nb"),
+        (PicardHeader(command_line="run", started_on="then\rnow"), "then\rnow"),
+        (PicardHeader(others=(("java.lang.String", "a\nb"),)), "a\nb"),
+        (PicardHeader(others=(("java.lang.\nString", "text"),)), "java.lang.\nString"),
+    ],
+)
+def test_writer_refuses_a_header_line_holding_a_line_break(
+    tmp_path: Path, header: PicardHeader, text: str
+) -> None:
+    """A header holding a line break is refused before anything is written, naming the text."""
+    path = tmp_path / "out.quality_yield_metrics"
+    message = f"A header line holds a line break: {text!r}!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardWriter.from_path[QualityYieldMetrics](path, header=header)
+    assert not path.exists()
+    handle = StringIO()
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardWriter[QualityYieldMetrics](handle, header=header)
+    assert handle.getvalue() == ""
+
+
+def test_writer_keeps_a_header_holding_a_tab(tmp_path: Path) -> None:
+    """A tab in a header line is written as it is, and reads back the same."""
+    header = PicardHeader(command_line="a\tb", started_on="c\td")
+    path = tmp_path / "out.quality_yield_metrics"
+    with PicardWriter.from_path[QualityYieldMetrics](path, header=header):
+        pass
+    with PicardReader.from_path[QualityYieldMetrics](path) as reader:
+        assert reader.header == header
 
 
 def test_writer_writes_the_default_header_when_given_none(tmp_path: Path) -> None:
