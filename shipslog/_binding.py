@@ -134,6 +134,10 @@ class FromPath:
 
     Once subscripted with a record type, it builds the class it is read through over that type, e.g.
     `PicardReader.from_path[HsMetrics](path)` builds a `PicardReader[HsMetrics]`.
+
+    A subclass of a reader or writer, built this way, is typed as the class it extends, such as
+    `PicardReader[T]`, so type checkers do not see its own methods. Calling its constructor
+    directly types it as itself.
     """
 
     def __init__(self) -> None:

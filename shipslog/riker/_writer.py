@@ -14,7 +14,11 @@ from shipslog.riker._reader import check_riker_class
 
 
 class RikerWriter(TsvWriter[RecordType]):
-    """A writer of a Riker metrics file, from its Riker dataclass."""
+    """A writer of a Riker metrics file, from its Riker dataclass.
+
+    Each float is written as the shortest text that reads back as the same number, such as
+    `0.30000000000000004` or `1e-7`, not rounded to Riker's fixed places. Riker reads either form.
+    """
 
     from_path: FromPath = FromPath()  # type: ignore[assignment]  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
 

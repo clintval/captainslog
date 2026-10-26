@@ -122,7 +122,11 @@ class DuplicationRoiHistogramColumns:
 
 @dataclass(frozen=True, kw_only=True)
 class HsHistogram:
-    """The coverage and base quality histogram of CollectHsMetrics and CollectTargetedPcrMetrics."""
+    """The coverage and base quality histogram of CollectHsMetrics and CollectTargetedPcrMetrics.
+
+    The histogram is read as Picard writes it, at the `ALL_READS` level. Picard throws when either
+    tool is asked for any other accumulation level.
+    """
 
     coverage_or_base_quality: int = 0
     """The depth of coverage for the coverage count, and the base quality for the base counts."""
@@ -145,7 +149,11 @@ class HsHistogramColumns:
 
 @dataclass(frozen=True, kw_only=True)
 class IndependentReplicateHistogram:
-    """The allele balance and UMI edit distances CollectIndependentReplicateMetrics writes."""
+    """The allele balance and UMI edit distances CollectIndependentReplicateMetrics writes.
+
+    The `MATRIX_OUTPUT` file of that tool has no histogram class, because Java writes its key with
+    `toString`.
+    """
 
     allele_balance: int = 0
     """The percent of a site's reads that hold its alternate allele, or a UMI edit distance."""
@@ -178,6 +186,9 @@ class InsertSizeHistogram:
     counts: NamedExtraColumns[int] = field(default_factory=dict)
     """The number of read pairs of that insert size, by accumulation level and pair orientation,
     e.g. `All_Reads.fr_count`.
+
+    A sample and a library that share a name repeat a column, such as `NA12891.fr_count`, and
+    typeline refuses the repeated name with a `ValueError` when the histogram is read.
     """
 
 
@@ -351,6 +362,9 @@ class RnaCoverageHistogram:
     normalized_coverage: NamedExtraColumns[float] = field(default_factory=dict)
     """The mean normalized coverage at that position of the most highly expressed transcripts, by
     accumulation level, e.g. `All_Reads.normalized_coverage`.
+
+    A sample and a library that share a name repeat a column, such as `NA12891.normalized_coverage`,
+    and typeline refuses the repeated name with a `ValueError` when the histogram is read.
     """
 
 

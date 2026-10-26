@@ -92,7 +92,11 @@ class _PicardTableWriter(TsvWriter[RecordType]):
 
 
 class PicardWriter(_PicardTableWriter[RecordType]):
-    """A writer of a Picard metrics file, from a Picard dataclass, and of the histogram after it."""
+    """A writer of a Picard metrics file, from a Picard dataclass, and of the histogram after it.
+
+    Each float is written as the shortest text that reads back as the same number, such as
+    `0.30000000000000004` or `1e-7`, not rounded to htsjdk's six places. htsjdk reads either form.
+    """
 
     from_path: FromPath = FromPath()
 
@@ -117,6 +121,10 @@ class PicardWriter(_PicardTableWriter[RecordType]):
         """Write the histogram after the metrics, as htsjdk does, ending the metrics table.
 
         With no bins, nothing is written, and the histogram may still be written later.
+
+        The columns a histogram keeps by name are written after its fixed columns, so a
+        `DuplicationMetrics` histogram's `optical_sets` moves to the end of the row. htsjdk reads
+        it by its label.
 
         Args:
             rows: the bins of the histogram, of a Picard histogram dataclass that files of the
@@ -161,7 +169,15 @@ class PicardWriter(_PicardTableWriter[RecordType]):
 
 
 class PicardHistogramWriter(_PicardTableWriter[RecordType]):
-    """A writer of a Picard metrics file of only a histogram, from a Picard histogram dataclass."""
+    """A writer of a Picard metrics file of only a histogram, from a Picard histogram dataclass.
+
+    Each float is written as the shortest text that reads back as the same number, such as
+    `0.30000000000000004` or `1e-7`, not rounded to htsjdk's six places. htsjdk reads either form.
+
+    The columns a histogram keeps by name are written after its fixed columns, so a
+    `DuplicationMetrics` histogram's `optical_sets` moves to the end of the row. htsjdk reads it by
+    its label.
+    """
 
     from_path: FromPath = FromPath()
 

@@ -126,13 +126,19 @@ class PicardCoverageReader(TsvReader[RecordType]):
 
         Raises:
             TypeError: if the record type is not a Picard coverage dataclass or a subclass of one.
+            ValueError: if the columns of the file differ from the record type's fields, naming
+                those missing from the file and those it does not expect.
         """
         with_table_defaults(options, coverage_rename(self._bound_record_type()))
         super().__init__(handle, **options)
 
 
 class PicardCoverageWriter(TsvWriter[RecordType]):
-    """A writer of a Picard file of per-target or per-base coverage, from its dataclass."""
+    """A writer of a Picard file of per-target or per-base coverage, from its dataclass.
+
+    Each float is written as the shortest text that reads back as the same number, such as
+    `0.30000000000000004` or `1e-7`, not rounded to htsjdk's six places. htsjdk reads either form.
+    """
 
     from_path: FromPath = FromPath()  # type: ignore[assignment]  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
 

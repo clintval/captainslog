@@ -104,6 +104,8 @@ class RikerReader(TsvReader[RecordType]):
 
         Raises:
             TypeError: if the record type is not a Riker dataclass or a subclass of one.
+            ValueError: if the columns of the file differ from the record type's fields, naming
+                those missing from the file and those it does not expect.
         """
         check_riker_class(self._bound_record_type())
         _ = options.setdefault("comment_prefixes", ())

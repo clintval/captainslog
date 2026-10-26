@@ -342,25 +342,6 @@ class MyHsMetrics(HsMetrics):
 assert round(hs.frac_bases_on_target, 4) == 0.2398
 ```
 
-### Limitations
-
-A few things shipslog does not do, or does its own way:
-
-- A file whose columns differ from its dataclass is refused with a `ValueError` that names the columns missing from the file and those it does not expect.
-- `HsMetrics` and `TargetedPcrMetrics` histograms are supported as Picard writes them, at the `ALL_READS` level.
-  Picard throws when either tool is asked for any other accumulation level.
-- An `InsertSizeMetrics` or `RnaSeqMetrics` histogram where a sample and a library share a name repeats a column name, such as `NA12891.fr_count`.
-  typeline refuses the repeated name with a `ValueError` when the histogram is read.
-- The `MATRIX_OUTPUT` file of CollectIndependentReplicateMetrics has no histogram class, because Java writes its key with `toString`.
-- Writers write each float as the shortest text that reads back as the same number, such as `0.30000000000000004` or `1e-7`.
-  They do not round to htsjdk's six places or to Riker's fixed places, and htsjdk reads either form.
-- Writers put the columns a histogram keeps by name after its fixed columns.
-  A `DuplicationMetrics` histogram's `optical_sets` therefore moves to the end of the row, and htsjdk reads it by its label.
-- A `RikerWriter` path ending in `.bgz` is written uncompressed.
-  Name gzipped Riker files `.gz`, as Riker itself does.
-- A subclass of a reader or writer, built with `from_path[...]`, is typed as the class it extends, such as `PicardReader[T]`, so type checkers do not see its own methods.
-  Calling its constructor directly types it as itself.
-
 ## Development and Testing
 
 See the [contributing guide](./CONTRIBUTING.md) for more information.

@@ -328,8 +328,10 @@ class PicardReader(_PicardTableReader[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
             ValueError: if the file holds another class or only a histogram, is not a Picard
-                metrics file, breaks its lines with lone carriage returns, or holds no rows after
-                its `## METRICS CLASS` line, so may be cut short.
+                metrics file, breaks its lines with lone carriage returns, holds no rows after
+                its `## METRICS CLASS` line, so may be cut short, or has columns that differ from
+                the record type's fields, naming those missing from the file and those it does
+                not expect.
         """
         record_type = self._bound_record_type()
         java = java_name(record_type)
@@ -359,8 +361,10 @@ class PicardHistogramReader(_PicardTableReader[RecordType]):
             TypeError: if the record type is not a Picard histogram dataclass or a subclass of one.
             ValueError: if the file holds metrics whose files hold no such histogram, holds only a
                 histogram where the histogram follows metrics, is not a Picard metrics file,
-                breaks its lines with lone carriage returns, or holds no rows after its
-                `## HISTOGRAM` line, so may be cut short.
+                breaks its lines with lone carriage returns, holds no rows after its
+                `## HISTOGRAM` line, so may be cut short, or has columns that differ from the
+                record type's fields, naming those missing from the file and those it does not
+                expect.
         """
         record_type = self._bound_record_type()
         histogram = histogram_of(record_type)
