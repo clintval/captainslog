@@ -8,6 +8,8 @@ DATA = Path(__file__).parents[1] / "data" / "picard"
 
 METRICS_CLASS = "## METRICS CLASS\t"
 
+HISTOGRAM = "## HISTOGRAM"
+
 LINES = [
     "## htsjdk.samtools.metrics.StringHeader",
     "# CollectQualityYieldMetrics I=in.bam O=out.txt",
@@ -29,6 +31,13 @@ def _metrics_class_line(path: Path) -> str | None:
 
 
 PICARD_METRICS_FIXTURES = sorted(path for path in DATA.glob("*") if _metrics_class_line(path))
+
+
+def _holds_a_histogram(path: Path) -> bool:
+    return any(line.startswith(HISTOGRAM) for line in path.read_text().splitlines())
+
+
+PICARD_HISTOGRAM_FIXTURES = sorted(path for path in DATA.glob("*") if _holds_a_histogram(path))
 
 
 def class_named_in(path: Path) -> type[Any]:

@@ -10,7 +10,9 @@ from typeline import RecordType
 
 from captainslog._binding import FromPath
 from captainslog.picard import HsMetrics
+from captainslog.picard import InsertSizeHistogram
 from captainslog.picard import PicardHeader
+from captainslog.picard import PicardHistogramReader
 from captainslog.picard import PicardReader
 from captainslog.picard import PicardWriter
 from captainslog.picard import QualityYieldMetrics
@@ -35,6 +37,12 @@ class SecondReader(PicardReader[RecordType]):
     """A reader that holds the same `from_path` as another reader."""
 
     from_path: FromPath = SHARED
+
+
+class OwnHistogramReader(PicardHistogramReader[RecordType]):
+    """A user's subclass of the histogram reader that holds its own `from_path`."""
+
+    from_path: FromPath = FromPath()
 
 
 class Lonely:
@@ -64,6 +72,15 @@ def test_from_path_types_the_reader_as_the_subscripted_picard_reader() -> None:
         _ = assert_type(reader, PicardReader[QualityYieldMetrics])
         _ = assert_type(reader.header, PicardHeader)
         assert type(reader).__name__ == "PicardReader[QualityYieldMetrics]"
+
+
+def test_from_path_types_the_histogram_reader_as_the_subscripted_histogram_reader() -> None:
+    """Type checkers see the histogram reader's `from_path` build it over its record type."""
+    path = DATA / "cmm.insert_size_metrics"
+    with PicardHistogramReader.from_path[InsertSizeHistogram](path) as reader:
+        _ = assert_type(reader, PicardHistogramReader[InsertSizeHistogram])
+        _ = assert_type(reader.header, PicardHeader)
+        assert type(reader).__name__ == "PicardHistogramReader[InsertSizeHistogram]"
 
 
 def test_from_path_types_the_writer_as_the_subscripted_picard_writer(tmp_path: Path) -> None:
@@ -114,6 +131,15 @@ def test_from_path_on_a_subclass_of_the_reader_builds_the_subclass() -> None:
     reader = OwnReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics")
     assert isinstance(reader, OwnReader)
     assert type(reader).__name__ == "OwnReader[QualityYieldMetrics]"
+    assert list(reader)
+
+
+def test_from_path_of_a_subclass_of_the_histogram_reader_builds_the_subclass() -> None:
+    """A user's subclass of the histogram reader, with its own `from_path`, builds itself."""
+    path = DATA / "cmm.insert_size_metrics"
+    reader = OwnHistogramReader.from_path[InsertSizeHistogram](path)
+    assert isinstance(reader, OwnHistogramReader)
+    assert type(reader).__name__ == "OwnHistogramReader[InsertSizeHistogram]"
     assert list(reader)
 
 

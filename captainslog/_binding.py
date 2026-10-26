@@ -11,6 +11,7 @@ from typing_extensions import Unpack
 
 if TYPE_CHECKING:
     from captainslog.picard._header import PicardHeader
+    from captainslog.picard._reader import PicardHistogramReader
     from captainslog.picard._reader import PicardReader
     from captainslog.picard._writer import PicardWriter
 
@@ -46,6 +47,16 @@ class BoundReaderFromPath(Protocol):
         ...
 
 
+class BoundHistogramReaderFromPath(Protocol):
+    """The `from_path` of a histogram reader class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "OpensPath[PicardHistogramReader[RecordType]]":
+        """Bind the record type, giving a constructor of the histogram reader over it."""
+        ...
+
+
 class BoundWriterFromPath(Protocol):
     """The `from_path` of a writer class, waiting to be subscripted with a record type."""
 
@@ -73,6 +84,11 @@ class FromPath:
 
     @overload
     def __get__(self, obj: object, owner: type["PicardReader[Any]"]) -> BoundReaderFromPath: ...
+
+    @overload
+    def __get__(
+        self, obj: object, owner: type["PicardHistogramReader[Any]"]
+    ) -> BoundHistogramReaderFromPath: ...
 
     @overload
     def __get__(self, obj: object, owner: type["PicardWriter[Any]"]) -> BoundWriterFromPath: ...

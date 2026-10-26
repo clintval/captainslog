@@ -65,6 +65,11 @@ class Table:
         self._has_row: bool = False
         self._read_head()
 
+    @property
+    def display_name(self) -> str:
+        """How an error names the file: by its name, or as `The text` when it has none."""
+        return "The text" if self.name is None else self.name
+
     def read(self, size: int = -1, /) -> str:
         """Read at most `size` characters of the table, or all that is left when it is negative.
 
@@ -77,9 +82,9 @@ class Table:
         while (step := self._step) is not None and (size < 0 or not self._ready):
             step(self._text + self._pull(), self._ended)
         if self._step is None and self.marker_line is not None and not self._has_row:
-            name = "The text" if self.name is None else self.name
             raise ValueError(
-                f"{name} holds no rows after its '{self.marker_line}' line, so it may be cut short!"
+                f"{self.display_name} holds no rows after its '{self.marker_line}' line,"
+                + " so it may be cut short!"
             )
         size = len(self._ready) if size < 0 else size
         text, self._ready = self._ready[:size], self._ready[size:]
