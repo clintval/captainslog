@@ -1,5 +1,5 @@
 import re
-from dataclasses import FrozenInstanceError
+from dataclasses import fields
 from typing import Any
 
 import pytest
@@ -22,7 +22,7 @@ from shipslog.picard import library_complexity_series
 from shipslog.picard import rna_coverage_series
 
 NAMES = [None, "NA12891", "Pond-492101", "NormPond-544932", "NA12891.r1", "NA12891.r2"]
-SUFFIXES = ["All_Reads", *[name for name in NAMES if name]]
+PREFIXES = ["All_Reads", *[name for name in NAMES if name]]
 
 
 def test_insert_size_series_of_the_fixture() -> None:
@@ -34,7 +34,7 @@ def test_insert_size_series_of_the_fixture() -> None:
     _ = assert_type(series, list[InsertSizeSeries])
     assert [s.name for s in series] == NAMES
     assert all(s.orientation is PairOrientation.FR for s in series)
-    assert [s.counts for s in series] == [hist.counts[f"{p}.fr_count"] for p in SUFFIXES]
+    assert [s.counts for s in series] == [hist.counts[f"{p}.fr_count"] for p in PREFIXES]
 
 
 def test_rna_coverage_series_of_the_fixture() -> None:
@@ -45,7 +45,7 @@ def test_rna_coverage_series_of_the_fixture() -> None:
     series = rna_coverage_series(hist)
     _ = assert_type(series, list[RnaCoverageSeries])
     assert [s.name for s in series] == NAMES
-    expected = [hist.normalized_coverage[f"{p}.normalized_coverage"] for p in SUFFIXES]
+    expected = [hist.normalized_coverage[f"{p}.normalized_coverage"] for p in PREFIXES]
     assert [s.normalized_coverage for s in series] == expected
 
 
@@ -124,10 +124,7 @@ def test_library_complexity_series_names_the_library_by_the_column() -> None:
 
 def test_series_are_frozen_and_keyword_only() -> None:
     """The series are built by keyword and cannot change."""
-    series = InsertSizeSeries(name=None, orientation=PairOrientation.FR, counts=())
-    with pytest.raises(FrozenInstanceError):
-        setattr(series, "name", "x")  # noqa: B010
     kinds: list[Any] = [InsertSizeSeries, RnaCoverageSeries, LibraryComplexitySeries]
     for kind in kinds:
-        with pytest.raises(TypeError):
-            kind(None, ())
+        assert kind.__dataclass_params__.frozen, kind
+        assert all(f.kw_only is True for f in fields(kind)), kind
