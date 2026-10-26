@@ -44,6 +44,15 @@ def test_section_stream_never_writes_a_label_row_without_rows() -> None:
     assert handle.closed
 
 
+def test_section_stream_starts_with_its_first_row() -> None:
+    """The section starts with its first row, and not with a label row alone."""
+    stream = SectionStream(StringIO(), "## SECTION")
+    _ = stream.write("BIN\tVALUE\n")
+    assert not stream.started
+    _ = stream.write("1\t2\n")
+    assert stream.started
+
+
 def test_section_stream_refuses_a_row_after_its_end_and_writes_nothing() -> None:
     """A row after the section ends is refused, and nothing is written."""
     handle = StringIO()

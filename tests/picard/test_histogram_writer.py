@@ -89,12 +89,18 @@ def test_writer_writes_the_histogram_after_the_metrics_as_htsjdk_does(tmp_path: 
     assert path.read_text().split("\n") == [*alone[:-2], *BIN_LINES, "", ""]
 
 
-def test_writer_writes_a_histogram_after_no_metrics_as_htsjdk_does(tmp_path: Path) -> None:
-    """A histogram after no metric rows is written as a file of only that histogram."""
-    path = tmp_path / "out.insert_size_metrics"
-    with PicardWriter.from_path[InsertSizeMetrics](path, header=HEADER) as writer:
+def test_writer_refuses_a_histogram_before_any_metrics() -> None:
+    """A histogram before any metric row is refused and writes nothing, but no bins are allowed."""
+    handle = StringIO()
+    writer = PicardWriter[InsertSizeMetrics](handle, header=HEADER)
+    before = handle.getvalue()
+    writer.write_histogram([])
+    with pytest.raises(ValueError, match=r"^Write the metrics before their histogram!$"):
         writer.write_histogram([BIN])
-    assert path.read_text() == histogram_alone(*BIN_LINES)
+    assert handle.getvalue() == before
+    writer.write(METRIC)
+    writer.write_histogram([BIN])
+    assert handle.getvalue().split("\n")[-4:] == [*BIN_LINES, ""]
 
 
 def test_histogram_only_writer_writes_the_layout_htsjdk_writes(tmp_path: Path) -> None:
@@ -265,17 +271,11 @@ def test_writer_refuses_a_second_histogram(rows: list[InsertSizeHistogram]) -> N
     assert handle.getvalue() == before
 
 
-@pytest.mark.parametrize(
-    "metrics", [[METRIC], [], None], ids=["rows", "write_all-of-no-rows", "no-call"]
-)
-def test_writer_refuses_metrics_after_the_histogram(
-    metrics: list[InsertSizeMetrics] | None,
-) -> None:
+def test_writer_refuses_metrics_after_the_histogram() -> None:
     """Metrics after the histogram are refused and write nothing, while no metrics write nothing."""
     handle = StringIO()
     writer = PicardWriter[InsertSizeMetrics](handle, header=HEADER)
-    if metrics is not None:
-        writer.write_all(metrics)
+    writer.write_all([METRIC])
     writer.write_histogram([BIN])
     before = handle.getvalue()
     message = r"^Cannot write metrics after the histogram!$"

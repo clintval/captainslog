@@ -125,7 +125,7 @@ class PicardWriter(_PicardTableWriter[RecordType]):
         Raises:
             TypeError: if the bins are not of a Picard histogram dataclass, or are of one that the
                 files of the metrics class do not hold.
-            ValueError: if the histogram is already written.
+            ValueError: if the histogram is already written, or no metrics are written before it.
         """
         if self._stream.ended:
             raise ValueError("The histogram is already written!")
@@ -138,6 +138,8 @@ class PicardWriter(_PicardTableWriter[RecordType]):
         histogram = histogram_of(kind)
         if self._java not in histogram.owners:
             raise TypeError(f"{kind.__name__} is not a histogram of {self._java} files!")
+        if not self._stream.started:
+            raise ValueError("Write the metrics before their histogram!")
         # Type checkers refuse `TsvWriter[kind]` for a class known only when the program runs.
         bound: type[TsvWriter[Any]] = TsvWriter.__class_getitem__(kind)
         writer = bound(self._file, **table_options(histogram.labels))

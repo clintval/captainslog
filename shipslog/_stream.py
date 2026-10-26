@@ -20,6 +20,11 @@ class SectionStream:
         self._ended: bool = False
 
     @property
+    def started(self) -> bool:
+        """Whether a row has been written, and with it the section line and the label row."""
+        return self._started
+
+    @property
     def ended(self) -> bool:
         """Whether the section has ended, so no row may follow."""
         return self._ended
