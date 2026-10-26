@@ -13,8 +13,10 @@ from captainslog.picard import HsMetrics
 from captainslog.picard import InsertSizeHistogram
 from captainslog.picard import PicardHeader
 from captainslog.picard import PicardHistogramReader
+from captainslog.picard import PicardHistogramWriter
 from captainslog.picard import PicardReader
 from captainslog.picard import PicardWriter
+from captainslog.picard import QualityScoreDistribution
 from captainslog.picard import QualityYieldMetrics
 from tests.compare import same
 from tests.picard import DATA
@@ -41,6 +43,12 @@ class SecondReader(PicardReader[RecordType]):
 
 class OwnHistogramReader(PicardHistogramReader[RecordType]):
     """A user's subclass of the histogram reader that holds its own `from_path`."""
+
+    from_path: FromPath = FromPath()
+
+
+class OwnHistogramWriter(PicardHistogramWriter[RecordType]):
+    """A user's subclass of the histogram writer that holds its own `from_path`."""
 
     from_path: FromPath = FromPath()
 
@@ -96,6 +104,23 @@ def test_from_path_of_the_writer_takes_only_a_header(tmp_path: Path) -> None:
         _ = PicardWriter.from_path[QualityYieldMetrics](tmp_path / "out.txt", quoting=True)  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue, reportUnknownVariableType]  # ty: ignore[unknown-argument]
 
 
+def test_from_path_types_the_histogram_writer_as_the_subscripted_histogram_writer(
+    tmp_path: Path,
+) -> None:
+    """Type checkers see the histogram writer's `from_path` build it over its record type."""
+    path = tmp_path / "out.txt"
+    with PicardHistogramWriter.from_path[QualityScoreDistribution](path, header=HEADER) as writer:
+        _ = assert_type(writer, PicardHistogramWriter[QualityScoreDistribution])
+        assert type(writer).__name__ == "PicardHistogramWriter[QualityScoreDistribution]"
+
+
+def test_from_path_of_the_histogram_writer_takes_only_a_header(tmp_path: Path) -> None:
+    """The histogram writer's `from_path` refuses an option the Picard format fixes."""
+    path = tmp_path / "out.txt"
+    with pytest.raises(TypeError):
+        _ = PicardHistogramWriter.from_path[QualityScoreDistribution](path, quoting=True)  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue, reportUnknownVariableType]  # ty: ignore[unknown-argument]
+
+
 def test_from_path_reads_a_gzipped_file_as_the_plain_file(tmp_path: Path) -> None:
     """A gzipped file reads as the same records and header as the plain file."""
     plain = DATA / "hs.hs_metrics"
@@ -128,28 +153,42 @@ def test_from_path_closes_the_file_when_the_reader_refuses_it(opened: list[Any])
 
 def test_from_path_on_a_subclass_of_the_reader_builds_the_subclass() -> None:
     """A user's subclass of the reader builds itself from a path."""
-    reader = OwnReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics")
-    assert isinstance(reader, OwnReader)
-    assert type(reader).__name__ == "OwnReader[QualityYieldMetrics]"
-    assert list(reader)
+    with OwnReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics") as reader:
+        assert isinstance(reader, OwnReader)
+        assert type(reader).__name__ == "OwnReader[QualityYieldMetrics]"
+        assert list(reader)
 
 
 def test_from_path_of_a_subclass_of_the_histogram_reader_builds_the_subclass() -> None:
     """A user's subclass of the histogram reader, with its own `from_path`, builds itself."""
     path = DATA / "cmm.insert_size_metrics"
-    reader = OwnHistogramReader.from_path[InsertSizeHistogram](path)
-    assert isinstance(reader, OwnHistogramReader)
-    assert type(reader).__name__ == "OwnHistogramReader[InsertSizeHistogram]"
-    assert list(reader)
+    with OwnHistogramReader.from_path[InsertSizeHistogram](path) as reader:
+        assert isinstance(reader, OwnHistogramReader)
+        assert type(reader).__name__ == "OwnHistogramReader[InsertSizeHistogram]"
+        assert list(reader)
+
+
+def test_from_path_of_a_subclass_of_the_histogram_writer_builds_the_subclass(
+    tmp_path: Path,
+) -> None:
+    """A user's subclass of the histogram writer, with its own `from_path`, builds itself."""
+    path = tmp_path / "out.quality_distribution_metrics"
+    row = QualityScoreDistribution(quality=30, count_of_q=5)
+    with OwnHistogramWriter.from_path[QualityScoreDistribution](path, header=HEADER) as writer:
+        assert isinstance(writer, OwnHistogramWriter)
+        assert type(writer).__name__ == "OwnHistogramWriter[QualityScoreDistribution]"
+        writer.write(row)
+    with PicardHistogramReader.from_path[QualityScoreDistribution](path) as reader:
+        assert list(reader) == [row]
 
 
 def test_from_path_held_by_two_classes_builds_each() -> None:
     """One `from_path` held by two classes builds whichever class it is read through."""
     path = DATA / "cmm.quality_yield_metrics"
     for kind in (FirstReader, SecondReader):
-        reader = kind.from_path[QualityYieldMetrics](path)
-        assert type(reader).__name__ == f"{kind.__name__}[QualityYieldMetrics]"
-        assert list(reader)
+        with kind.from_path[QualityYieldMetrics](path) as reader:
+            assert type(reader).__name__ == f"{kind.__name__}[QualityYieldMetrics]"
+            assert list(reader)
 
 
 def test_from_path_without_an_inherited_from_path_is_refused() -> None:

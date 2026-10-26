@@ -12,6 +12,7 @@ from captainslog.picard._reader import PicardHistogramReader
 from captainslog.picard._reader import PicardReader
 from captainslog.picard._reader import histogram_class
 from captainslog.picard._reader import metrics_class
+from captainslog.picard._writer import PicardHistogramWriter
 from captainslog.picard._writer import PicardWriter
 
 __all__: list[str] = [
@@ -19,6 +20,7 @@ __all__: list[str] = [
     "Multilevel",
     "PicardHeader",
     "PicardHistogramReader",
+    "PicardHistogramWriter",
     "PicardReader",
     "PicardWriter",
     "accumulation_level",

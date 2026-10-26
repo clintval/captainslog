@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from captainslog.picard._header import PicardHeader
     from captainslog.picard._reader import PicardHistogramReader
     from captainslog.picard._reader import PicardReader
+    from captainslog.picard._writer import PicardHistogramWriter
     from captainslog.picard._writer import PicardWriter
 
 BuiltType_co = TypeVar("BuiltType_co", covariant=True)
@@ -67,6 +68,16 @@ class BoundWriterFromPath(Protocol):
         ...
 
 
+class BoundHistogramWriterFromPath(Protocol):
+    """The `from_path` of a histogram writer class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "WritesPath[PicardHistogramWriter[RecordType]]":
+        """Bind the record type, giving a constructor of the histogram writer over it."""
+        ...
+
+
 class FromPath:
     """The typeline `from_path` a class inherits, which type checkers see build that class.
 
@@ -92,6 +103,11 @@ class FromPath:
 
     @overload
     def __get__(self, obj: object, owner: type["PicardWriter[Any]"]) -> BoundWriterFromPath: ...
+
+    @overload
+    def __get__(
+        self, obj: object, owner: type["PicardHistogramWriter[Any]"]
+    ) -> BoundHistogramWriterFromPath: ...
 
     @overload
     def __get__(self, obj: object, owner: type[object]) -> object: ...

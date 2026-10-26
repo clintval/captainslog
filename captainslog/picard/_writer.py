@@ -1,10 +1,15 @@
 import os
+from collections.abc import Iterable
+from collections.abc import Mapping
+from itertools import chain
+from typing import Any
 from typing import TextIO
 from typing import cast
 
 from typeline import Comment
 from typeline import RecordType
 from typeline import TsvWriter
+from typeline import WriterOptions
 from typing_extensions import override
 
 from captainslog._binding import FromPath
@@ -13,30 +18,63 @@ from captainslog.picard._format import picard_rename
 from captainslog.picard._header import PicardHeader
 from captainslog.picard._header import default_header
 from captainslog.picard._header import header_lines
+from captainslog.picard._reader import histogram_of
 from captainslog.picard._reader import java_name
+from captainslog.picard._table import HISTOGRAM
 from captainslog.picard._table import METRICS_CLASS
 
 
-class _MetricsStream:
-    """A text stream that opens the metrics section before the first text written through it."""
+class _SectionStream:
+    """A text stream that starts a section of a Picard metrics file once a row follows its labels.
 
-    def __init__(self, handle: TextIO, opening: tuple[str, str]) -> None:
+    typeline writes the label row first, and alone when no row follows it, so the label row is
+    held back until a row follows it, then written after the section line. A label row with no row
+    after it never reaches the file, as htsjdk writes no section without rows.
+    """
+
+    def __init__(self, handle: TextIO, section: str) -> None:
         self._handle: TextIO = handle
-        self._opening: tuple[str, str] | None = opening
+        self._section: str = section
+        self._labels: str = ""
+        self._started: bool = False
+        self._ended: bool = False
+
+    @property
+    def ended(self) -> bool:
+        """Whether the section has ended, so no row may follow."""
+        return self._ended
 
     def write(self, text: str) -> int:
-        if text and self._opening is not None:
-            for line in self._opening:
-                _ = self._handle.write(f"{line}{os.linesep}")
-            self._opening = None
-        return self._handle.write(text)
+        """Hold the label row, then write the section line, the label row, and each row after it.
+
+        Raises:
+            ValueError: if a row is written after the section has ended.
+        """
+        rows = text
+        if not self._labels.endswith("\n"):
+            labels, newline, rows = text.partition("\n")
+            self._labels += labels + newline
+        if not rows:
+            return len(text)
+        if self._ended:
+            raise ValueError("Cannot write metrics after the histogram!")
+        if not self._started:
+            _ = self._handle.write(f"{self._section}{os.linesep}{self._labels}")
+            self._started = True
+        _ = self._handle.write(rows)
+        return len(text)
+
+    def end(self) -> None:
+        """End the section, refusing any row after it and dropping a label row still held."""
+        self._ended = True
 
     def close(self) -> None:
+        """Close the handle, dropping a label row still held."""
         self._handle.close()
 
 
-def as_text_io(stream: _MetricsStream) -> TextIO:
-    """Type a metrics stream as the text a typeline writer takes, of which it uses `write`, `close`.
+def as_text_io(stream: _SectionStream) -> TextIO:
+    """Type a section stream as the text a typeline writer takes, of which it uses `write`, `close`.
 
     Args:
         stream: the stream to write through.
@@ -44,44 +82,47 @@ def as_text_io(stream: _MetricsStream) -> TextIO:
     return cast(TextIO, cast(object, stream))
 
 
-class PicardWriter(TsvWriter[RecordType]):
-    """A writer of the metrics table of a Picard metrics file, from a Picard dataclass."""
+def table_options(rename: Mapping[str, str]) -> WriterOptions:
+    """The options typeline writes a table of a Picard metrics file with: its labels, then its rows.
+
+    No cell starts with a line break, so no row is mistaken for a comment.
+
+    Args:
+        rename: the label of the column of each field, by field name.
+    """
+    return {
+        "codecs": PICARD_CODECS,
+        "comment_prefixes": ("\n",),
+        "header": True,
+        "quoting": False,
+        "rename": rename,
+    }
+
+
+class _PicardTableWriter(TsvWriter[RecordType]):
+    """A writer of one table of a Picard metrics file, below the header htsjdk writes at its top."""
 
     from_path: FromPath = FromPath()  # type: ignore[assignment]  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
 
-    def __init__(self, handle: TextIO, /, *, header: PicardHeader | None = None) -> None:
-        """Write the header of a Picard metrics file, then its table with the first record.
+    def __init__(
+        self, handle: TextIO, section: str, rename: Mapping[str, str], header: PicardHeader | None
+    ) -> None:
+        """Write the header of a Picard metrics file and the blank line after it.
 
-        With no record written, no table is written, as htsjdk writes none for no rows.
+        The table's section line and labels are written with its first row.
 
         Args:
             handle: a text stream to write the file to, opened with `newline=""`.
+            section: the line that starts the table, e.g. its `## METRICS CLASS` line.
+            rename: the label of the column of each field, by field name.
             header: the header to write at the top, or None to write `default_header()`.
-
-        Raises:
-            TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
         """
-        record_type = self._bound_record_type()
-        rename = picard_rename(record_type)
-        opening = (f"{METRICS_CLASS}\t{java_name(record_type)}", "\t".join(rename.values()))
-        # No cell starts with a line break, so no row is mistaken for a comment.
-        super().__init__(
-            as_text_io(_MetricsStream(handle, opening)),
-            codecs=PICARD_CODECS,
-            comment_prefixes=("\n",),
-            header=False,
-            quoting=False,
-            rename=rename,
-        )
+        self._stream: _SectionStream = _SectionStream(handle, section)
+        super().__init__(as_text_io(self._stream), **table_options(rename))
         self._file: TextIO = handle
-        lines = header_lines(default_header() if header is None else header)
-        for line in lines:
+        for line in header_lines(default_header() if header is None else header):
             _ = handle.write(f"{line}{os.linesep}")
         _ = handle.write(os.linesep)
-
-    @override
-    def write_header(self) -> None:
-        """Write nothing: the column header is written with the first record, as htsjdk does."""
 
     @override
     def write_comment(self, comment: str | Comment) -> None:
@@ -96,13 +137,111 @@ class PicardWriter(TsvWriter[RecordType]):
 
     @override
     def close(self) -> None:
-        """Write the blank line that ends the metrics section and the last blank line, and close.
+        """Write the blank line that ends the file, and close.
 
         Closing a writer that is already closed does nothing.
         """
         try:
             if not self._file.closed:
                 _ = self._file.write(os.linesep)
+        finally:
+            super().close()
+
+
+class PicardWriter(_PicardTableWriter[RecordType]):
+    """A writer of a Picard metrics file, from a Picard dataclass, and of the histogram after it."""
+
+    from_path: FromPath = FromPath()
+
+    def __init__(self, handle: TextIO, /, *, header: PicardHeader | None = None) -> None:
+        """Write the header of a Picard metrics file, then its table with the first record.
+
+        With no record written, no table is written, as htsjdk writes none for no rows.
+
+        Args:
+            handle: a text stream to write the file to, opened with `newline=""`.
+            header: the header to write at the top, or None to write `default_header()`.
+
+        Raises:
+            TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
+        """
+        record_type = self._bound_record_type()
+        self._java: str = java_name(record_type)
+        section = f"{METRICS_CLASS}\t{self._java}"
+        super().__init__(handle, section, picard_rename(record_type), header)
+
+    def write_histogram(self, rows: Iterable[object], /) -> None:
+        """Write the histogram after the metrics, as htsjdk does, ending the metrics table.
+
+        With no bins, nothing is written, and the histogram may still be written later.
+
+        Args:
+            rows: the bins of the histogram, of a Picard histogram dataclass that files of the
+                metrics class hold, or of a subclass of one.
+
+        Raises:
+            TypeError: if the bins are not of a Picard histogram dataclass, or are of one that the
+                files of the metrics class do not hold.
+            ValueError: if the histogram is already written.
+        """
+        if self._stream.ended:
+            raise ValueError("The histogram is already written!")
+        bins = iter(rows)
+        try:
+            first = next(bins)
+        except StopIteration:
+            return
+        kind: type[Any] = type(first)
+        histogram = histogram_of(kind)
+        if self._java not in histogram.owners:
+            raise TypeError(f"{kind.__name__} is not a histogram of {self._java} files!")
+        # Type checkers refuse `TsvWriter[kind]` for a class known only when the program runs.
+        bound: type[TsvWriter[Any]] = TsvWriter.__class_getitem__(kind)
+        writer = bound(self._file, **table_options(histogram.labels))
+        self._stream.end()
+        _ = self._file.write(f"{os.linesep}{HISTOGRAM}\t{histogram.key}{os.linesep}")
+        writer.write_all(chain([first], bins))
+
+    @override
+    def close(self) -> None:
+        """End the metrics table with a blank line, unless the histogram has, then the file.
+
+        Closing a writer that is already closed does nothing.
+        """
+        try:
+            if not self._stream.ended and not self._file.closed:
                 _ = self._file.write(os.linesep)
         finally:
             super().close()
+
+
+class PicardHistogramWriter(_PicardTableWriter[RecordType]):
+    """A writer of a Picard metrics file of only a histogram, from a Picard histogram dataclass."""
+
+    from_path: FromPath = FromPath()
+
+    def __init__(self, handle: TextIO, /, *, header: PicardHeader | None = None) -> None:
+        """Write the header of a Picard metrics file of only a histogram, then its bins.
+
+        With no bin written, no histogram is written, as htsjdk writes none for no bins.
+
+        Args:
+            handle: a text stream to write the file to, opened with `newline=""`.
+            header: the header to write at the top, or None to write `default_header()`.
+
+        Raises:
+            TypeError: if the record type is not a Picard histogram dataclass or a subclass of one,
+                or is one that Picard writes after metrics.
+        """
+        record_type = self._bound_record_type()
+        histogram = histogram_of(record_type)
+        if histogram.owners:
+            owners = " or ".join(sorted(histogram.owners))
+            raise TypeError(
+                f"{record_type.__name__} belongs in {owners} files!"
+                + " Write it with PicardWriter.write_histogram."
+            )
+        section = f"{HISTOGRAM}\t{histogram.key}"
+        super().__init__(handle, section, histogram.labels, header)
+        # htsjdk ends the metrics section with a blank line even when it holds no metrics.
+        _ = handle.write(os.linesep)

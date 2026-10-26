@@ -1,6 +1,5 @@
 import gzip
 import re
-from dataclasses import dataclass
 from dataclasses import fields
 from dataclasses import replace
 from io import StringIO
@@ -18,14 +17,9 @@ from captainslog.picard import DuplicationRoiHistogram
 from captainslog.picard import HsHistogram
 from captainslog.picard import InsertSizeHistogram
 from captainslog.picard import InsertSizeMetrics
-from captainslog.picard import LibraryComplexityHistogram
 from captainslog.picard import MeanQualityByCycle
 from captainslog.picard import PicardHistogramReader
-from captainslog.picard import QualityScoreDistribution
-from captainslog.picard import ReadLengthHistogram
 from captainslog.picard import RnaCoverageHistogram
-from captainslog.picard import WgsHistogram
-from captainslog.picard import WgsNonZeroCoverageHistogram
 from captainslog.picard import _histograms
 from captainslog.picard import histogram_class
 from captainslog.picard._histograms import HISTOGRAMS
@@ -33,11 +27,14 @@ from captainslog.picard._java import JAVA_NAMES
 from captainslog.picard._reader import histogram_classes
 from tests.compare import same
 from tests.picard import DATA
+from tests.picard import FIXTURE_CLASSES
 from tests.picard import HEADER
 from tests.picard import HISTOGRAM
 from tests.picard import LINES
 from tests.picard import METRICS_CLASS
 from tests.picard import PICARD_HISTOGRAM_FIXTURES
+from tests.picard import DerivedHistogram
+from tests.picard import NotHistogram
 
 KEY_TYPES: dict[str, type[Any]] = {
     "java.lang.Byte": int,
@@ -47,38 +44,6 @@ KEY_TYPES: dict[str, type[Any]] = {
 }
 
 EXTRA_TYPES: tuple[Any, ...] = (NamedExtraColumns[int], NamedExtraColumns[float])
-
-FIXTURE_CLASSES: dict[str, type[Any]] = {
-    "cmm.alignment_summary_metrics": ReadLengthHistogram,
-    "cmm.insert_size_metrics": InsertSizeHistogram,
-    "cmm.quality_by_cycle_metrics": MeanQualityByCycle,
-    "cmm.quality_distribution_metrics": QualityScoreDistribution,
-    "dup.duplication_metrics": DuplicateSetSizeHistogram,
-    "elc.duplication_metrics": LibraryComplexityHistogram,
-    "hs.hs_metrics": HsHistogram,
-    "nonzero.wgs_metrics": WgsNonZeroCoverageHistogram,
-    "one_library.duplication_metrics": DuplicationRoiHistogram,
-    "pcr.targeted_pcr_metrics": HsHistogram,
-    "raw.raw_wgs_metrics": WgsHistogram,
-    "rna.rna_metrics": RnaCoverageHistogram,
-    "wgs.wgs_metrics": WgsHistogram,
-}
-
-
-@dataclass(frozen=True)
-class Plain:
-    """A dataclass that is not a Picard histogram dataclass."""
-
-    insert_size: int
-
-
-class Derived(InsertSizeHistogram):
-    """A user's subclass of a Picard histogram that derives a count."""
-
-    @property
-    def all_reads(self) -> int:
-        """The number of read pairs of the insert size, over all reads in FR orientation."""
-        return self.counts["All_Reads.fr_count"]
 
 
 def snake_case(label: str) -> str:
@@ -367,8 +332,8 @@ def test_reader_reads_a_crlf_histogram_as_the_lf_histogram(tmp_path: Path) -> No
 def test_reader_refuses_a_record_type_that_is_not_a_picard_histogram() -> None:
     """A dataclass that is not a Picard histogram dataclass is refused before the file is read."""
     handle = StringIO((DATA / "cmm.insert_size_metrics").read_text())
-    with pytest.raises(TypeError, match=r"^Plain is not a Picard histogram dataclass!$"):
-        _ = PicardHistogramReader[Plain](handle)
+    with pytest.raises(TypeError, match=r"^NotHistogram is not a Picard histogram dataclass!$"):
+        _ = PicardHistogramReader[NotHistogram](handle)
     message = r"^InsertSizeMetrics is not a Picard histogram dataclass!$"
     with pytest.raises(TypeError, match=message):
         _ = PicardHistogramReader[InsertSizeMetrics](handle)
@@ -377,7 +342,7 @@ def test_reader_refuses_a_record_type_that_is_not_a_picard_histogram() -> None:
 
 def test_reader_reads_a_users_subclass_of_a_histogram() -> None:
     """A subclass of the histogram a file holds reads the file into the subclass."""
-    bins = list(PicardHistogramReader.from_path[Derived](DATA / "cmm.insert_size_metrics"))
+    bins = list(PicardHistogramReader.from_path[DerivedHistogram](DATA / "cmm.insert_size_metrics"))
     assert bins
-    assert all(isinstance(b, Derived) for b in bins)
+    assert all(isinstance(b, DerivedHistogram) for b in bins)
     assert bins[0].all_reads == bins[0].counts["All_Reads.fr_count"]
