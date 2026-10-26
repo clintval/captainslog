@@ -137,7 +137,7 @@ class PicardCoverageWriter(TsvWriter[RecordType]):
     """A writer of a Picard file of per-target or per-base coverage, from its dataclass.
 
     Each float is written as the shortest text that reads back as the same number, such as
-    `0.30000000000000004` or `1e-7`, not rounded to htsjdk's six places. htsjdk reads either form.
+    `0.30000000000000004` or `1e-7`, not rounded to Picard's six places.
     """
 
     from_path: FromPath = FromPath()  # type: ignore[assignment]  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
