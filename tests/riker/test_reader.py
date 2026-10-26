@@ -7,12 +7,12 @@ from typing import assert_type
 
 import pytest
 
-from captainslog.riker import AlignmentMetrics
-from captainslog.riker import HybcapPerBase
-from captainslog.riker import RikerReader
-from captainslog.riker import RnaBiotype
-from captainslog.riker import metrics_class
-from captainslog.riker._reader import SUFFIXES
+from shipslog.riker import AlignmentMetrics
+from shipslog.riker import HybcapPerBase
+from shipslog.riker import RikerReader
+from shipslog.riker import RnaBiotype
+from shipslog.riker import metrics_class
+from shipslog.riker._reader import SUFFIXES
 from tests.riker import ALL_RIKER_FIXTURES
 from tests.riker import DATA
 from tests.riker import riker_class_of

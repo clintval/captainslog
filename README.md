@@ -1,10 +1,10 @@
-![Banner for captainslog](https://raw.githubusercontent.com/clintval/captainslog/main/.github/img/captainslog_banner.svg)
+![Banner for shipslog](https://raw.githubusercontent.com/clintval/shipslog/main/.github/img/shipslog_banner.svg)
 
 ---
 
-[![PyPi Release](https://badge.fury.io/py/captainslog.svg)](https://badge.fury.io/py/captainslog)
-[![CI](https://github.com/clintval/captainslog/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/clintval/captainslog/actions/workflows/tests.yml?query=branch%3Amain)
-[![Python Versions](https://img.shields.io/badge/python-3.11_|_3.12_|_3.13_|_3.14-blue)](https://github.com/clintval/captainslog)
+[![PyPi Release](https://badge.fury.io/py/shipslog.svg)](https://badge.fury.io/py/shipslog)
+[![CI](https://github.com/clintval/shipslog/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/clintval/shipslog/actions/workflows/tests.yml?query=branch%3Amain)
+[![Python Versions](https://img.shields.io/badge/python-3.11_|_3.12_|_3.13_|_3.14-blue)](https://github.com/clintval/shipslog)
 [![basedpyright](https://img.shields.io/badge/basedpyright-checked-42b983)](https://docs.basedpyright.com/latest/)
 [![mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://docs.astral.sh/uv/)
@@ -22,7 +22,7 @@ The readers and writers are built on [typeline](https://github.com/clintval/type
 The package can be installed with `pip`:
 
 ```console
-pip install captainslog
+pip install shipslog
 ```
 
 ## At a Glance
@@ -33,10 +33,10 @@ Find the type of a Picard file, derive a coverage metric that Picard does not re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from captainslog import picard
-from captainslog.picard import PicardHistogramReader
-from captainslog.picard import PicardReader
-from captainslog.picard import PicardWriter
+from shipslog import picard
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import PicardReader
+from shipslog.picard import PicardWriter
 
 path = Path("tests/data/picard/hs.hs_metrics")
 metrics_type = picard.metrics_class(path)
@@ -69,22 +69,22 @@ assert list(PicardHistogramReader.from_path[histogram_type](out)) == bins
 `metrics_class` names the dataclass of a file from its `## METRICS CLASS` line, and `histogram_class` names the dataclass of its histogram from its label row.
 Picard reports the fraction of target bases at fixed depths, such as 50x and 100x, so the fraction at 60x comes from the depth histogram, which `columns` turns into one tuple per column.
 The fraction at 50x, found the same way, equals the one Picard wrote.
-The new file holds the header, the metrics, and the histogram, and reads back as the same records in captainslog and in htsjdk.
+The new file holds the header, the metrics, and the histogram, and reads back as the same records in shipslog and in htsjdk.
 
-## Why captainslog
+## Why shipslog
 
 Pipelines and QC scripts read Picard and Riker metrics, often to derive new metrics from them, and many write their own parsers to do it.
 [crimson](https://github.com/bow/crimson) parses Picard metrics into dictionaries: by default it reads the first 1 MiB of a file, it returns a dictionary for one row and a list for several, and it leaves `?`, `Y`, and `N` as text.
 [MultiQC](https://github.com/MultiQC/MultiQC) reads Riker outputs inside its report modules.
-Riker computes many of Picard's metrics in files of its own shape, so captainslog reads and writes the files of both tools, side by side.
+Riker computes many of Picard's metrics in files of its own shape, so shipslog reads and writes the files of both tools, side by side.
 
 ## Quickstart
 
 ### Reading Picard Metrics
 
 ```python
-from captainslog.picard import HsMetrics
-from captainslog.picard import PicardReader
+from shipslog.picard import HsMetrics
+from shipslog.picard import PicardReader
 
 with PicardReader.from_path[HsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
     [hs] = list(reader)
@@ -105,8 +105,8 @@ Picard writes NaN and infinity as `?`, which reads back as NaN, and negative inf
 ```python
 from math import isnan
 
-from captainslog.picard import JumpingLibraryMetrics
-from captainslog.picard import PicardReader
+from shipslog.picard import JumpingLibraryMetrics
+from shipslog.picard import PicardReader
 
 [jumps] = list(PicardReader.from_path[JumpingLibraryMetrics]("tests/data/picard/jump.jumping_metrics"))
 
@@ -126,11 +126,11 @@ A reader from `from_path` closes its file once it is read to the end, so reading
 ### Accumulation Levels
 
 ```python
-from captainslog import picard
-from captainslog.picard import AccumulationLevel
-from captainslog.picard import InsertSizeMetrics
-from captainslog.picard import PairOrientation
-from captainslog.picard import PicardReader
+from shipslog import picard
+from shipslog.picard import AccumulationLevel
+from shipslog.picard import InsertSizeMetrics
+from shipslog.picard import PairOrientation
+from shipslog.picard import PicardReader
 
 rows = list(PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics"))
 
@@ -157,9 +157,9 @@ The GC bias metrics name their level in an `accumulation_level` column instead, 
 ### Histograms and Columns
 
 ```python
-from captainslog import picard
-from captainslog.picard import InsertSizeHistogram
-from captainslog.picard import PicardHistogramReader
+from shipslog import picard
+from shipslog.picard import InsertSizeHistogram
+from shipslog.picard import PicardHistogramReader
 
 bins = list(PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics"))
 
@@ -181,8 +181,8 @@ A histogram whose columns depend on the data, like one count per level and pair 
 Some Picard files hold only a histogram, like those of `MeanQualityByCycle` and `QualityScoreDistribution`, and are read the same way:
 
 ```python
-from captainslog.picard import PicardHistogramReader
-from captainslog.picard import QualityScoreDistribution
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import QualityScoreDistribution
 
 qualities = list(PicardHistogramReader.from_path[QualityScoreDistribution]("tests/data/picard/cmm.quality_distribution_metrics"))
 
@@ -192,10 +192,10 @@ assert qualities[0] == QualityScoreDistribution(quality=1, count_of_q=2, counts=
 ### Finding the Class of a File
 
 ```python
-from captainslog import picard
-from captainslog.picard import HsHistogram
-from captainslog.picard import HsMetrics
-from captainslog.picard import MeanQualityByCycle
+from shipslog import picard
+from shipslog.picard import HsHistogram
+from shipslog.picard import HsMetrics
+from shipslog.picard import MeanQualityByCycle
 
 assert picard.metrics_class("tests/data/picard/hs.hs_metrics") is HsMetrics
 assert picard.histogram_class("tests/data/picard/hs.hs_metrics") is HsHistogram
@@ -214,13 +214,13 @@ A class that Picard 3.5.0 does not write, like one that an older Picard named an
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from captainslog.picard import InsertSizeHistogram
-from captainslog.picard import InsertSizeMetrics
-from captainslog.picard import PairOrientation
-from captainslog.picard import PicardHeader
-from captainslog.picard import PicardHistogramReader
-from captainslog.picard import PicardReader
-from captainslog.picard import PicardWriter
+from shipslog.picard import InsertSizeHistogram
+from shipslog.picard import InsertSizeMetrics
+from shipslog.picard import PairOrientation
+from shipslog.picard import PicardHeader
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import PicardReader
+from shipslog.picard import PicardWriter
 
 temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.insert_size_metrics"
@@ -247,7 +247,7 @@ assert list(PicardHistogramReader.from_path[InsertSizeHistogram](path)) == inser
 
 A `PicardWriter` writes a file as htsjdk does: the header, the `## METRICS CLASS` line, the column labels, and a row for each record.
 `write_histogram` then ends the metrics and writes the histogram after them, so one writer writes a complete file.
-Without a `header`, a writer writes `captainslog` as the command line, and the local time the writer was made as the start time.
+Without a `header`, a writer writes `shipslog` as the command line, and the local time the writer was made as the start time.
 NaN and infinity are written as `?`, negative infinity as `-?`, and booleans as `Y` and `N`.
 A path ending in `.gz`, `.bz2`, or `.xz` is written compressed.
 Writing is also a quick way to make realistic Picard files for unit tests.
@@ -258,9 +258,9 @@ A file of only a histogram is written with a `PicardHistogramWriter`:
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from captainslog.picard import PicardHeader
-from captainslog.picard import PicardHistogramWriter
-from captainslog.picard import QualityScoreDistribution
+from shipslog.picard import PicardHeader
+from shipslog.picard import PicardHistogramWriter
+from shipslog.picard import QualityScoreDistribution
 
 temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.quality_distribution_metrics"
@@ -294,9 +294,9 @@ assert path.read_text() == (
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from captainslog.picard import PerTargetCoverage
-from captainslog.picard import PicardCoverageReader
-from captainslog.picard import PicardCoverageWriter
+from shipslog.picard import PerTargetCoverage
+from shipslog.picard import PicardCoverageReader
+from shipslog.picard import PicardCoverageWriter
 
 targets = list(PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt"))
 
@@ -323,11 +323,11 @@ The `%gc` column is the `pct_gc` field.
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from captainslog import riker
-from captainslog.riker import HybcapMetrics
-from captainslog.riker import IsizeHistogram
-from captainslog.riker import RikerReader
-from captainslog.riker import RikerWriter
+from shipslog import riker
+from shipslog.riker import HybcapMetrics
+from shipslog.riker import IsizeHistogram
+from shipslog.riker import RikerReader
+from shipslog.riker import RikerWriter
 
 assert riker.metrics_class("tests/data/riker/s.hybcap-metrics.txt") is HybcapMetrics
 
@@ -364,8 +364,8 @@ For example, `total_reads` counts every read examined in Picard's `HsMetrics`, b
 ### Deriving Metrics
 
 ```python
-from captainslog.picard import HsMetrics
-from captainslog.picard import PicardReader
+from shipslog.picard import HsMetrics
+from shipslog.picard import PicardReader
 
 class MyHsMetrics(HsMetrics):
     @property
@@ -383,9 +383,9 @@ Add no dataclass fields, since every field is a column, and a file must hold onl
 
 ### Supported Versions
 
-captainslog 0.1.0 reads and writes the files of Picard 3.5.0 and Riker 0.5.0.
+shipslog 0.1.0 reads and writes the files of Picard 3.5.0 and Riker 0.5.0.
 A file whose columns differ, from an older or a newer release, is refused with a `ValueError` that names the columns missing from the file and those it does not expect.
-A release of captainslog that follows a newer Picard or Riker names it here.
+A release of shipslog that follows a newer Picard or Riker names it here.
 
 ### Limitations
 

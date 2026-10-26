@@ -5,11 +5,11 @@ from typing import TextIO
 
 import pytest
 
-from captainslog._files import open_text
-from captainslog.picard import PicardReader
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard import _reader as reader
-from captainslog.picard import metrics_class
+from shipslog._files import open_text
+from shipslog.picard import PicardReader
+from shipslog.picard import QualityYieldMetrics
+from shipslog.picard import _reader as reader
+from shipslog.picard import metrics_class
 from tests.picard import DATA
 from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES

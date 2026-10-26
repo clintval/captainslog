@@ -8,20 +8,20 @@ from typing import assert_type
 import pytest
 from typeline import RecordType
 
-from captainslog._binding import FromPath
-from captainslog.picard import HsMetrics
-from captainslog.picard import InsertSizeHistogram
-from captainslog.picard import PerBaseCoverage
-from captainslog.picard import PerTargetCoverage
-from captainslog.picard import PicardCoverageReader
-from captainslog.picard import PicardCoverageWriter
-from captainslog.picard import PicardHeader
-from captainslog.picard import PicardHistogramReader
-from captainslog.picard import PicardHistogramWriter
-from captainslog.picard import PicardReader
-from captainslog.picard import PicardWriter
-from captainslog.picard import QualityScoreDistribution
-from captainslog.picard import QualityYieldMetrics
+from shipslog._binding import FromPath
+from shipslog.picard import HsMetrics
+from shipslog.picard import InsertSizeHistogram
+from shipslog.picard import PerBaseCoverage
+from shipslog.picard import PerTargetCoverage
+from shipslog.picard import PicardCoverageReader
+from shipslog.picard import PicardCoverageWriter
+from shipslog.picard import PicardHeader
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import PicardHistogramWriter
+from shipslog.picard import PicardReader
+from shipslog.picard import PicardWriter
+from shipslog.picard import QualityScoreDistribution
+from shipslog.picard import QualityYieldMetrics
 from tests.compare import same
 from tests.picard import DATA
 from tests.picard import HEADER

@@ -10,21 +10,21 @@ from typeline import RecordType
 from typeline import TsvReader
 from typing_extensions import Unpack
 
-from captainslog._binding import FromPath
-from captainslog._files import open_text
-from captainslog.picard._format import PICARD_CODECS
-from captainslog.picard._format import picard_rename
-from captainslog.picard._header import HeaderParser
-from captainslog.picard._header import PicardHeader
-from captainslog.picard._histograms import HISTOGRAMS
-from captainslog.picard._histograms import Histogram
-from captainslog.picard._java import JAVA_NAMES
-from captainslog.picard._table import CHUNK
-from captainslog.picard._table import HISTOGRAM
-from captainslog.picard._table import METRICS_CLASS
-from captainslog.picard._table import NOT_BLANK
-from captainslog.picard._table import Table
-from captainslog.picard._table import as_text_io
+from shipslog._binding import FromPath
+from shipslog._files import open_text
+from shipslog.picard._format import PICARD_CODECS
+from shipslog.picard._format import picard_rename
+from shipslog.picard._header import HeaderParser
+from shipslog.picard._header import PicardHeader
+from shipslog.picard._histograms import HISTOGRAMS
+from shipslog.picard._histograms import Histogram
+from shipslog.picard._java import JAVA_NAMES
+from shipslog.picard._table import CHUNK
+from shipslog.picard._table import HISTOGRAM
+from shipslog.picard._table import METRICS_CLASS
+from shipslog.picard._table import NOT_BLANK
+from shipslog.picard._table import Table
+from shipslog.picard._table import as_text_io
 
 
 def java_name(record_type: type[Any]) -> str:
@@ -237,9 +237,7 @@ def histogram_class(path: Path | str) -> type[Any]:
         raise ValueError(f"{path} holds no histogram!")
     kinds = histogram_classes(section_java(line), labels)
     if not kinds:
-        raise ValueError(
-            f"{path} holds a histogram captainslog does not know: {', '.join(labels)}!"
-        )
+        raise ValueError(f"{path} holds a histogram shipslog does not know: {', '.join(labels)}!")
     return kinds[0]
 
 

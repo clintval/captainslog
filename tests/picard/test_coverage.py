@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 from typeline import RecordType
 
-from captainslog.picard import PerBaseCoverage
-from captainslog.picard import PerTargetCoverage
-from captainslog.picard import PicardCoverageReader
-from captainslog.picard import PicardCoverageWriter
+from shipslog.picard import PerBaseCoverage
+from shipslog.picard import PerTargetCoverage
+from shipslog.picard import PicardCoverageReader
+from shipslog.picard import PicardCoverageWriter
 from tests.compare import same
 from tests.picard import DATA
 

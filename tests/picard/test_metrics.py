@@ -7,17 +7,17 @@ from typing import get_type_hints
 
 import pytest
 
-from captainslog.picard import AlignmentSummaryMetrics
-from captainslog.picard import Category
-from captainslog.picard import GenotypeConcordanceSummaryMetrics
-from captainslog.picard import HsMetrics
-from captainslog.picard import IndependentReplicateMetric
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard import QualityYieldMetricsSnvq
-from captainslog.picard import VariantType
-from captainslog.picard import _metrics
-from captainslog.picard._java import COLUMN_LABELS
-from captainslog.picard._java import JAVA_NAMES
+from shipslog.picard import AlignmentSummaryMetrics
+from shipslog.picard import Category
+from shipslog.picard import GenotypeConcordanceSummaryMetrics
+from shipslog.picard import HsMetrics
+from shipslog.picard import IndependentReplicateMetric
+from shipslog.picard import QualityYieldMetrics
+from shipslog.picard import QualityYieldMetricsSnvq
+from shipslog.picard import VariantType
+from shipslog.picard import _metrics
+from shipslog.picard._java import COLUMN_LABELS
+from shipslog.picard._java import JAVA_NAMES
 from tests.picard import METRICS_CLASS
 from tests.picard import PICARD_METRICS_FIXTURES
 from tests.picard import class_named_in

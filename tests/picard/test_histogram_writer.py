@@ -8,23 +8,23 @@ from typing import Any
 import pytest
 from typeline import NamedExtraColumns
 
-from captainslog.picard import ClippedBasesHistogram
-from captainslog.picard import DuplicateSetSizeHistogram
-from captainslog.picard import DuplicationMetrics
-from captainslog.picard import InsertSizeHistogram
-from captainslog.picard import InsertSizeMetrics
-from captainslog.picard import PairOrientation
-from captainslog.picard import PicardHistogramReader
-from captainslog.picard import PicardHistogramWriter
-from captainslog.picard import PicardReader
-from captainslog.picard import PicardWriter
-from captainslog.picard import QualityScoreDistribution
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard import SamComparisonHistogram
-from captainslog.picard import SamComparisonMetric
-from captainslog.picard import histogram_class
-from captainslog.picard._header import header_lines
-from captainslog.picard._histograms import HISTOGRAMS
+from shipslog.picard import ClippedBasesHistogram
+from shipslog.picard import DuplicateSetSizeHistogram
+from shipslog.picard import DuplicationMetrics
+from shipslog.picard import InsertSizeHistogram
+from shipslog.picard import InsertSizeMetrics
+from shipslog.picard import PairOrientation
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import PicardHistogramWriter
+from shipslog.picard import PicardReader
+from shipslog.picard import PicardWriter
+from shipslog.picard import QualityScoreDistribution
+from shipslog.picard import QualityYieldMetrics
+from shipslog.picard import SamComparisonHistogram
+from shipslog.picard import SamComparisonMetric
+from shipslog.picard import histogram_class
+from shipslog.picard._header import header_lines
+from shipslog.picard._histograms import HISTOGRAMS
 from tests.compare import same
 from tests.picard import FIXTURE_CLASSES
 from tests.picard import HEADER
@@ -425,10 +425,10 @@ def test_histogram_only_writer_refuses_a_comment() -> None:
 
 
 def test_histogram_only_writer_writes_the_default_header_when_given_none(tmp_path: Path) -> None:
-    """Without a header, the command line is `captainslog`, then the start time follows."""
+    """Without a header, the command line is `shipslog`, then the start time follows."""
     path = tmp_path / "out.quality_distribution_metrics"
     with PicardHistogramWriter.from_path[QualityScoreDistribution](path):
         pass
     lines = path.read_text().split("\n")
-    assert lines[:2] == ["## htsjdk.samtools.metrics.StringHeader", "# captainslog"]
+    assert lines[:2] == ["## htsjdk.samtools.metrics.StringHeader", "# shipslog"]
     assert lines[3].startswith("# Started on: ")

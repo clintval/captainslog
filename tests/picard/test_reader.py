@@ -8,13 +8,13 @@ from pathlib import Path
 import pytest
 from typeline import Comment
 
-from captainslog.picard import AlignmentSummaryMetrics
-from captainslog.picard import DuplicationMetrics
-from captainslog.picard import HsMetrics
-from captainslog.picard import JumpingLibraryMetrics
-from captainslog.picard import PicardReader
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard._reader import java_name
+from shipslog.picard import AlignmentSummaryMetrics
+from shipslog.picard import DuplicationMetrics
+from shipslog.picard import HsMetrics
+from shipslog.picard import JumpingLibraryMetrics
+from shipslog.picard import PicardReader
+from shipslog.picard import QualityYieldMetrics
+from shipslog.picard._reader import java_name
 from tests.compare import same
 from tests.picard import DATA
 from tests.picard import HEADER

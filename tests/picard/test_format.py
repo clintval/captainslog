@@ -1,9 +1,9 @@
 from math import isnan
 
-from captainslog.picard import IndependentReplicateMetric
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard._format import PICARD_CODECS
-from captainslog.picard._format import picard_rename
+from shipslog.picard import IndependentReplicateMetric
+from shipslog.picard import QualityYieldMetrics
+from shipslog.picard._format import PICARD_CODECS
+from shipslog.picard._format import picard_rename
 
 
 def test_picard_codecs_read_and_write_booleans_and_floats_as_picard_does() -> None:

@@ -7,27 +7,27 @@ from typeline import RecordType
 from typeline import TsvReader
 from typing_extensions import Unpack
 
-from captainslog._binding import FromPath
-from captainslog.riker._metrics import AlignmentMetrics
-from captainslog.riker._metrics import BaseDistributionByCycle
-from captainslog.riker._metrics import ErrorIndel
-from captainslog.riker._metrics import ErrorMismatch
-from captainslog.riker._metrics import ErrorOverlap
-from captainslog.riker._metrics import GcbiasDetail
-from captainslog.riker._metrics import GcbiasSummary
-from captainslog.riker._metrics import HybcapMetrics
-from captainslog.riker._metrics import HybcapPerBase
-from captainslog.riker._metrics import HybcapPerTarget
-from captainslog.riker._metrics import IsizeHistogram
-from captainslog.riker._metrics import IsizeMetrics
-from captainslog.riker._metrics import MeanQualityByCycle
-from captainslog.riker._metrics import QualityScoreDistribution
-from captainslog.riker._metrics import RnaBiotype
-from captainslog.riker._metrics import RnaInsertSize
-from captainslog.riker._metrics import RnaInsertSizeHistogram
-from captainslog.riker._metrics import RnaMetrics
-from captainslog.riker._metrics import WgsCoverage
-from captainslog.riker._metrics import WgsMetrics
+from shipslog._binding import FromPath
+from shipslog.riker._metrics import AlignmentMetrics
+from shipslog.riker._metrics import BaseDistributionByCycle
+from shipslog.riker._metrics import ErrorIndel
+from shipslog.riker._metrics import ErrorMismatch
+from shipslog.riker._metrics import ErrorOverlap
+from shipslog.riker._metrics import GcbiasDetail
+from shipslog.riker._metrics import GcbiasSummary
+from shipslog.riker._metrics import HybcapMetrics
+from shipslog.riker._metrics import HybcapPerBase
+from shipslog.riker._metrics import HybcapPerTarget
+from shipslog.riker._metrics import IsizeHistogram
+from shipslog.riker._metrics import IsizeMetrics
+from shipslog.riker._metrics import MeanQualityByCycle
+from shipslog.riker._metrics import QualityScoreDistribution
+from shipslog.riker._metrics import RnaBiotype
+from shipslog.riker._metrics import RnaInsertSize
+from shipslog.riker._metrics import RnaInsertSizeHistogram
+from shipslog.riker._metrics import RnaMetrics
+from shipslog.riker._metrics import WgsCoverage
+from shipslog.riker._metrics import WgsMetrics
 
 # fmt: off
 SUFFIXES: dict[str, type[Any]] = {

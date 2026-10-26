@@ -5,8 +5,8 @@ from typeline import Codecs
 from typeline.codecs import boolean
 from typeline.codecs import nan
 
-from captainslog.picard._java import COLUMN_LABELS
-from captainslog.picard._java import JAVA_NAMES
+from shipslog.picard._java import COLUMN_LABELS
+from shipslog.picard._java import JAVA_NAMES
 
 PICARD_CODECS: Codecs = {bool: boolean(true="Y", false="N"), float: nan("?", inf="?", neg_inf="-?")}
 """How Picard writes booleans, as `Y` and `N`, and floats, with `?` for NaN and the infinities."""

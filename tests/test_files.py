@@ -7,8 +7,8 @@ from typing import NoReturn
 
 import pytest
 
-from captainslog._files import DECOMPRESSORS
-from captainslog._files import open_text
+from shipslog._files import DECOMPRESSORS
+from shipslog._files import open_text
 
 TEXT = "## htsjdk.samtools.metrics.StringHeader\r\n# Started on: today\n\u00b5\t\u03b2\n"
 

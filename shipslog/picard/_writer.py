@@ -11,18 +11,18 @@ from typeline import TsvWriter
 from typeline import WriterOptions
 from typing_extensions import override
 
-from captainslog._binding import FromPath
-from captainslog._stream import SectionStream
-from captainslog._stream import as_text_io
-from captainslog.picard._format import PICARD_CODECS
-from captainslog.picard._format import picard_rename
-from captainslog.picard._header import PicardHeader
-from captainslog.picard._header import default_header
-from captainslog.picard._header import header_lines
-from captainslog.picard._reader import histogram_of
-from captainslog.picard._reader import java_name
-from captainslog.picard._table import HISTOGRAM
-from captainslog.picard._table import METRICS_CLASS
+from shipslog._binding import FromPath
+from shipslog._stream import SectionStream
+from shipslog._stream import as_text_io
+from shipslog.picard._format import PICARD_CODECS
+from shipslog.picard._format import picard_rename
+from shipslog.picard._header import PicardHeader
+from shipslog.picard._header import default_header
+from shipslog.picard._header import header_lines
+from shipslog.picard._reader import histogram_of
+from shipslog.picard._reader import java_name
+from shipslog.picard._table import HISTOGRAM
+from shipslog.picard._table import METRICS_CLASS
 
 
 def table_options(rename: Mapping[str, str]) -> WriterOptions:

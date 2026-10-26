@@ -217,7 +217,7 @@ def java_module(schema: dict[str, Any], classes: dict[str, str]) -> str:
         HEADER.format(schema["picard"]),
         "from typing import Any",
         "",
-        "from captainslog.picard import _metrics",
+        "from shipslog.picard import _metrics",
         "",
         '__all__ = ["COLUMN_LABELS", "JAVA_NAMES"]',
         "",

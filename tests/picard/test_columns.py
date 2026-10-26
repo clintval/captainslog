@@ -9,14 +9,14 @@ from typing import cast
 import pytest
 from typing_extensions import assert_type
 
-from captainslog._columns import transpose
-from captainslog.picard import InsertSizeHistogram
-from captainslog.picard import InsertSizeHistogramColumns
-from captainslog.picard import PicardHistogramReader
-from captainslog.picard import SamComparisonHistogram
-from captainslog.picard import SamComparisonHistogramColumns
-from captainslog.picard import columns
-from captainslog.picard._histograms import HISTOGRAMS
+from shipslog._columns import transpose
+from shipslog.picard import InsertSizeHistogram
+from shipslog.picard import InsertSizeHistogramColumns
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import SamComparisonHistogram
+from shipslog.picard import SamComparisonHistogramColumns
+from shipslog.picard import columns
+from shipslog.picard._histograms import HISTOGRAMS
 from tests.picard import FIXTURE_CLASSES
 from tests.picard import PICARD_HISTOGRAM_FIXTURES
 from tests.picard import DerivedHistogram

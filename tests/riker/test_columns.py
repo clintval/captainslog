@@ -9,14 +9,14 @@ from typing import get_type_hints
 import pytest
 from typing_extensions import assert_type
 
-from captainslog.riker import AlignmentMetrics
-from captainslog.riker import Category
-from captainslog.riker import IsizeHistogram
-from captainslog.riker import IsizeHistogramColumns
-from captainslog.riker import RikerReader
-from captainslog.riker import _metrics
-from captainslog.riker import columns
-from captainslog.riker._columns import HISTOGRAMS
+from shipslog.riker import AlignmentMetrics
+from shipslog.riker import Category
+from shipslog.riker import IsizeHistogram
+from shipslog.riker import IsizeHistogramColumns
+from shipslog.riker import RikerReader
+from shipslog.riker import _metrics
+from shipslog.riker import columns
+from shipslog.riker._columns import HISTOGRAMS
 from tests.riker import RIKER_FIXTURES
 from tests.riker import riker_class_of
 

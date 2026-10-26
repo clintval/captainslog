@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from captainslog.picard import DuplicationMetrics
-from captainslog.picard import PicardReader
-from captainslog.picard import PicardWriter
-from captainslog.picard import QualityYieldMetrics
-from captainslog.picard import SamComparisonMetric
-from captainslog.picard._format import picard_rename
-from captainslog.picard._header import header_lines
+from shipslog.picard import DuplicationMetrics
+from shipslog.picard import PicardReader
+from shipslog.picard import PicardWriter
+from shipslog.picard import QualityYieldMetrics
+from shipslog.picard import SamComparisonMetric
+from shipslog.picard._format import picard_rename
+from shipslog.picard._header import header_lines
 from tests.compare import same
 from tests.picard import HEADER
 from tests.picard import PICARD_METRICS_FIXTURES
@@ -147,14 +147,14 @@ def test_writer_refuses_a_class_that_is_not_a_picard_dataclass(tmp_path: Path) -
 
 
 def test_writer_writes_the_default_header_when_given_none(tmp_path: Path) -> None:
-    """Without a header, the command line is `captainslog`, then the start time follows."""
+    """Without a header, the command line is `shipslog`, then the start time follows."""
     path = tmp_path / "out.quality_yield_metrics"
     with PicardWriter.from_path[QualityYieldMetrics](path):
         pass
     lines = path.read_text().split("\n")
     assert lines[:3] == [
         "## htsjdk.samtools.metrics.StringHeader",
-        "# captainslog",
+        "# shipslog",
         "## htsjdk.samtools.metrics.StringHeader",
     ]
     assert lines[3].startswith("# Started on: ")

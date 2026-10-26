@@ -9,9 +9,9 @@ from typeline import Comment
 from typeline import TsvReader
 from typing_extensions import override
 
-from captainslog._files import open_text
-from captainslog.picard._table import Table
-from captainslog.picard._table import as_text_io
+from shipslog._files import open_text
+from shipslog.picard._table import Table
+from shipslog.picard._table import as_text_io
 from tests.picard import DATA
 from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES

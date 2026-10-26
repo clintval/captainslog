@@ -11,15 +11,15 @@ from typeline import WriterOptions
 from typing_extensions import Unpack
 
 if TYPE_CHECKING:
-    from captainslog.picard._coverage import PicardCoverageReader
-    from captainslog.picard._coverage import PicardCoverageWriter
-    from captainslog.picard._header import PicardHeader
-    from captainslog.picard._reader import PicardHistogramReader
-    from captainslog.picard._reader import PicardReader
-    from captainslog.picard._writer import PicardHistogramWriter
-    from captainslog.picard._writer import PicardWriter
-    from captainslog.riker._reader import RikerReader
-    from captainslog.riker._writer import RikerWriter
+    from shipslog.picard._coverage import PicardCoverageReader
+    from shipslog.picard._coverage import PicardCoverageWriter
+    from shipslog.picard._header import PicardHeader
+    from shipslog.picard._reader import PicardHistogramReader
+    from shipslog.picard._reader import PicardReader
+    from shipslog.picard._writer import PicardHistogramWriter
+    from shipslog.picard._writer import PicardWriter
+    from shipslog.riker._reader import RikerReader
+    from shipslog.riker._writer import RikerWriter
 
 BuiltType_co = TypeVar("BuiltType_co", covariant=True)
 """The reader or writer a `from_path` builds."""

@@ -1,5 +1,5 @@
 [workspace]
-name = "captainslog-fixtures"
+name = "shipslog-fixtures"
 channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64", "osx-arm64"]
 

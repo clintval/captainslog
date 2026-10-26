@@ -3,10 +3,10 @@ import re
 import pytest
 from typeline import Comment
 
-from captainslog.picard._header import HeaderParser
-from captainslog.picard._header import PicardHeader
-from captainslog.picard._header import default_header
-from captainslog.picard._header import header_lines
+from shipslog.picard._header import HeaderParser
+from shipslog.picard._header import PicardHeader
+from shipslog.picard._header import default_header
+from shipslog.picard._header import header_lines
 from tests.picard import HEADER
 from tests.picard import LINES
 
@@ -96,9 +96,9 @@ def test_header_lines_read_back_as_the_same_header(header: PicardHeader) -> None
     assert parser.header == header
 
 
-def test_default_header_names_captainslog_and_the_time_it_starts() -> None:
-    """The default header names captainslog, and the local time as htsjdk writes it."""
+def test_default_header_names_shipslog_and_the_time_it_starts() -> None:
+    """The default header names shipslog, and the local time as htsjdk writes it."""
     header = default_header()
-    assert header.command_line == "captainslog"
+    assert header.command_line == "shipslog"
     assert re.fullmatch(r"\w{3} \w{3} \d{2} \d{2}:\d{2}:\d{2} .+ \d{4}", header.started_on)
     assert header.others == ()

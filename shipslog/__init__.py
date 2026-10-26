@@ -1,6 +1,6 @@
 """Typed dataclasses and typeline readers and writers for Picard and Riker metrics files."""
 
-from captainslog import picard
-from captainslog import riker
+from shipslog import picard
+from shipslog import riker
 
 __all__ = ["picard", "riker"]
