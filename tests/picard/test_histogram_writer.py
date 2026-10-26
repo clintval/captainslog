@@ -23,11 +23,13 @@ from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import SamComparisonHistogram
 from shipslog.picard import SamComparisonMetric
 from shipslog.picard import histogram_class
+from shipslog.picard._header import STRING_HEADER
 from shipslog.picard._header import header_lines
 from shipslog.picard._histograms import HISTOGRAMS
 from tests.compare import same
 from tests.picard import FIXTURE_CLASSES
 from tests.picard import HEADER
+from tests.picard import LINES
 from tests.picard import PICARD_HISTOGRAM_FIXTURES
 from tests.picard import PICARD_METRICS_FIXTURES
 from tests.picard import DerivedHistogram
@@ -43,6 +45,10 @@ BIN = InsertSizeHistogram(insert_size=1, counts={"All_Reads.fr_count": 3})
 BIN_LINES = ["## HISTOGRAM\tjava.lang.Integer", "insert_size\tAll_Reads.fr_count", "1\t3"]
 
 QUALITY = QualityScoreDistribution(quality=30, count_of_q=5, counts={"COUNT_OF_OQ": 2})
+
+STRING_HEADER_LINE = "## htsjdk.samtools.metrics.StringHeader"
+
+TOO_LATE = "Write comments before the first row, since a Picard file holds them only in its header!"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -411,15 +417,51 @@ def test_histogram_only_writer_refuses_write_header_before_the_first_bin_of_name
     assert handle.getvalue() == before
 
 
-def test_histogram_only_writer_refuses_a_comment() -> None:
-    """A comment is refused, and nothing is written."""
+@pytest.mark.parametrize(
+    ("rows", "lines"),
+    [
+        (
+            [QUALITY],
+            ["## HISTOGRAM\tjava.lang.Byte", "QUALITY\tCOUNT_OF_Q\tCOUNT_OF_OQ", "30\t5\t2"],
+        ),
+        ([], []),
+    ],
+    ids=["bins", "no-bins"],
+)
+def test_histogram_only_writer_writes_comments_into_the_header(
+    tmp_path: Path, rows: list[QualityScoreDistribution], lines: list[str]
+) -> None:
+    """Comments are string headers after the header's own, with or without bins, read back."""
+    path = tmp_path / "out.quality_distribution_metrics"
+    with PicardHistogramWriter.from_path[QualityScoreDistribution](path, header=HEADER) as writer:
+        writer.write_comment("one\ntwo")
+        writer.write_all(rows)
+    comments = [STRING_HEADER_LINE, "# one", STRING_HEADER_LINE, "# two"]
+    assert path.read_text() == "\n".join([*LINES, *comments, "", "", *lines, "", ""])
+    with PicardHistogramReader.from_path[QualityScoreDistribution](path) as reader:
+        assert same(list(reader), rows)
+    assert reader.header.others == (*HEADER.others, (STRING_HEADER, "one"), (STRING_HEADER, "two"))
+
+
+def test_histogram_only_writer_refuses_a_comment_after_the_first_bin() -> None:
+    """A comment after the header is written is refused, and nothing is written."""
     handle = StringIO()
     writer = PicardHistogramWriter[QualityScoreDistribution](handle, header=HEADER)
+    writer.write(QUALITY)
     before = handle.getvalue()
-    message = (
-        "A Picard metrics file holds no comments: give its header lines as the writer's header!"
-    )
-    with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
+    with pytest.raises(ValueError, match=f"^{re.escape(TOO_LATE)}$"):
+        writer.write_comment("x")
+    assert handle.getvalue() == before
+
+
+def test_writer_refuses_a_comment_after_the_histogram() -> None:
+    """A comment after the histogram is refused, and nothing is written."""
+    handle = StringIO()
+    writer = PicardWriter[InsertSizeMetrics](handle, header=HEADER)
+    writer.write(METRIC)
+    writer.write_histogram([BIN])
+    before = handle.getvalue()
+    with pytest.raises(ValueError, match=f"^{re.escape(TOO_LATE)}$"):
         writer.write_comment("x")
     assert handle.getvalue() == before
 

@@ -92,3 +92,16 @@ def test_section_stream_without_a_section_writes_no_leading_line() -> None:
     stream = SectionStream(handle, None)
     _ = stream.write("BIN\tVALUE\n1\t2\n")
     assert handle.getvalue() == "BIN\tVALUE\n1\t2\n"
+
+
+def test_section_stream_runs_its_start_hook_once_before_its_first_write_to_the_handle() -> None:
+    """The hook runs before the section line, not for a label row held back, and only once."""
+    handle = StringIO()
+    starts: list[str] = []
+    stream = SectionStream(handle, "## SECTION", on_start=lambda: starts.append(handle.getvalue()))
+    _ = stream.write("BIN\tVALUE\n")
+    assert starts == []
+    _ = stream.write("1\t2\n")
+    _ = stream.write("3\t4\n")
+    assert starts == [""]
+    assert handle.getvalue() == "## SECTION\nBIN\tVALUE\n1\t2\n3\t4\n"

@@ -1,6 +1,7 @@
 import os
 from collections.abc import Iterable
 from collections.abc import Mapping
+from dataclasses import replace
 from itertools import chain
 from typing import Any
 from typing import TextIO
@@ -16,6 +17,7 @@ from shipslog._stream import SectionStream
 from shipslog._stream import as_text_io
 from shipslog.picard._format import PICARD_CODECS
 from shipslog.picard._format import picard_rename
+from shipslog.picard._header import STRING_HEADER
 from shipslog.picard._header import PicardHeader
 from shipslog.picard._header import default_header
 from shipslog.picard._header import header_lines
@@ -48,44 +50,86 @@ class _PicardTableWriter(TsvWriter[RecordType]):
     from_path: FromPath = FromPath()  # type: ignore[assignment]  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
 
     def __init__(
-        self, handle: TextIO, section: str, rename: Mapping[str, str], header: PicardHeader | None
+        self,
+        handle: TextIO,
+        section: str,
+        rename: Mapping[str, str],
+        header: PicardHeader | None,
+        blank_lines: int = 1,
     ) -> None:
-        """Write the header of a Picard metrics file and the blank line after it.
+        """Start a Picard metrics file, whose header is written before anything else reaches it.
 
-        The table's section line and labels are written with its first row.
+        The header and the blank lines after it are written before the table's first row, or at
+        `close` when no row is written, so comments written before then join the header. The
+        table's section line and labels are written with its first row.
 
         Args:
             handle: a text stream to write the file to, opened with `newline=""`.
             section: the line that starts the table, e.g. its `## METRICS CLASS` line.
             rename: the label of the column of each field, by field name.
             header: the header to write at the top, or None to write `default_header()`.
+            blank_lines: the number of blank lines written after the header.
+
+        Raises:
+            ValueError: if a header's class name or text holds a line break.
         """
-        self._stream: SectionStream = SectionStream(handle, section)
+        self._stream: SectionStream = SectionStream(handle, section, on_start=self._write_head)
         super().__init__(as_text_io(self._stream), **table_options(rename))
         self._file: TextIO = handle
-        for line in header_lines(default_header() if header is None else header):
-            _ = handle.write(f"{line}{os.linesep}")
-        _ = handle.write(os.linesep)
+        self._blank_lines: int = blank_lines
+        self._picard_header: PicardHeader = default_header() if header is None else header
+        self._head: str | None = self._head_of(self._picard_header)
+
+    def _head_of(self, header: PicardHeader) -> str:
+        """The text of a header's lines and the blank lines after them."""
+        lines = [*header_lines(header), *[""] * self._blank_lines]
+        return "".join(f"{line}{os.linesep}" for line in lines)
+
+    def _write_head(self) -> None:
+        """Write the header and the blank lines after it, unless they are already written."""
+        if self._head is not None:
+            _ = self._file.write(self._head)
+            self._head = None
 
     @override
     def write_comment(self, comment: str | Comment) -> None:
-        """Refuse a comment, since a Picard metrics file holds none outside its header.
+        """Add a comment to the header, as string headers after the header's own.
+
+        Each line of a string is one header, and an empty string is one header with no text. A
+        `Comment`, such as one a reader sent to `on_comment`, is one header of its text, without its
+        leading `#` characters and one space after them. The comments read back in order, at the
+        end of `reader.header.others`.
+
+        Args:
+            comment: the comment to add.
 
         Raises:
-            TypeError: always.
+            ValueError: if the header is already written, with the first row, the histogram, or at
+                `close`, or if a `Comment` holds a line break.
         """
-        raise TypeError(
-            "A Picard metrics file holds no comments: give its header lines as the writer's header!"
-        )
+        if self._head is None:
+            raise ValueError(
+                "Write comments before the first row,"
+                + " since a Picard file holds them only in its header!"
+            )
+        if isinstance(comment, str):
+            texts = comment.splitlines() or [""]
+        else:
+            texts = [comment.text.lstrip("#").removeprefix(" ")]
+        others = (*self._picard_header.others, *((STRING_HEADER, text) for text in texts))
+        header = replace(self._picard_header, others=others)
+        self._head = self._head_of(header)
+        self._picard_header = header
 
     @override
     def close(self) -> None:
-        """Write the blank line that ends the file, and close.
+        """Write the header if nothing else was, then the blank line that ends the file, and close.
 
         Closing a writer that is already closed does nothing.
         """
         try:
             if not self._file.closed:
+                self._write_head()
                 _ = self._file.write(os.linesep)
         finally:
             super().close()
@@ -101,9 +145,10 @@ class PicardWriter(_PicardTableWriter[RecordType]):
     from_path: FromPath = FromPath()
 
     def __init__(self, handle: TextIO, /, *, header: PicardHeader | None = None) -> None:
-        """Write the header of a Picard metrics file, then its table with the first record.
+        """Start a Picard metrics file, whose header and table are written with its first record.
 
-        With no record written, no table is written, as htsjdk writes none for no rows.
+        With no record written, no table is written, as htsjdk writes none for no rows, and the
+        header is written at `close`.
 
         Args:
             handle: a text stream to write the file to, opened with `newline=""`.
@@ -160,14 +205,16 @@ class PicardWriter(_PicardTableWriter[RecordType]):
     def close(self) -> None:
         """End the file as htsjdk does, and close the writer.
 
-        End the metrics table with a blank line, unless the histogram already did, then end the file
-        with another.
+        Write the header if nothing was written, end the metrics table with a blank line, unless the
+        histogram already did, then end the file with another.
 
         Closing a writer that is already closed does nothing.
         """
         try:
-            if not self._stream.ended and not self._file.closed:
-                _ = self._file.write(os.linesep)
+            if not self._file.closed:
+                self._write_head()
+                if not self._stream.ended:
+                    _ = self._file.write(os.linesep)
         finally:
             super().close()
 
@@ -186,9 +233,10 @@ class PicardHistogramWriter(_PicardTableWriter[RecordType]):
     from_path: FromPath = FromPath()
 
     def __init__(self, handle: TextIO, /, *, header: PicardHeader | None = None) -> None:
-        """Write the header of a Picard metrics file of only a histogram, then its bins.
+        """Start a Picard metrics file of only a histogram, written with its first bin.
 
-        With no bin written, no histogram is written, as htsjdk writes none for no bins.
+        With no bin written, no histogram is written, as htsjdk writes none for no bins, and the
+        header is written at `close`.
 
         Args:
             handle: a text stream to write the file to, opened with `newline=""`.
@@ -208,6 +256,5 @@ class PicardHistogramWriter(_PicardTableWriter[RecordType]):
                 + " Write it with PicardWriter.write_histogram."
             )
         section = f"{HISTOGRAM}\t{histogram.key}"
-        super().__init__(handle, section, histogram.labels, header)
         # htsjdk ends the metrics section with a blank line even when it holds no metrics.
-        _ = handle.write(os.linesep)
+        super().__init__(handle, section, histogram.labels, header, blank_lines=2)

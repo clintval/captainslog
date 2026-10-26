@@ -1,11 +1,13 @@
 import re
 from dataclasses import dataclass
 from dataclasses import fields
+from dataclasses import replace
 from io import StringIO
 from math import isnan
 from pathlib import Path
 
 import pytest
+from typeline import Comment
 
 from shipslog.picard import DuplicationMetrics
 from shipslog.picard import PicardReader
@@ -13,14 +15,20 @@ from shipslog.picard import PicardWriter
 from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import SamComparisonMetric
 from shipslog.picard._format import picard_rename
+from shipslog.picard._header import STRING_HEADER
 from shipslog.picard._header import PicardHeader
 from shipslog.picard._header import header_lines
 from tests.compare import same
 from tests.picard import HEADER
+from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES
 from tests.picard import class_named_in
 
 QUALITY_YIELD = "picard.analysis.CollectQualityYieldMetrics$QualityYieldMetrics"
+
+STRING_HEADER_LINE = "## htsjdk.samtools.metrics.StringHeader"
+
+TOO_LATE = "Write comments before the first row, since a Picard file holds them only in its header!"
 
 
 @dataclass(frozen=True)
@@ -258,17 +266,117 @@ def test_writer_write_header_writes_nothing(tmp_path: Path) -> None:
     assert called.read_text() == plain.read_text()
 
 
-def test_writer_refuses_a_comment_and_writes_nothing(tmp_path: Path) -> None:
-    """A comment is refused, and the file is as if it had not been given."""
+@pytest.mark.parametrize("use_write_all", [False, True], ids=["write", "write_all"])
+def test_writer_writes_comments_as_string_headers_after_the_header(
+    tmp_path: Path, use_write_all: bool
+) -> None:
+    """Comments are string headers after the start time and other headers, read back in order."""
+    plain, path = tmp_path / "plain", tmp_path / "out.quality_yield_metrics"
+    record = QualityYieldMetrics(total_reads=10)
+    with PicardWriter.from_path[QualityYieldMetrics](plain, header=HEADER) as writer:
+        writer.write(record)
+    with PicardWriter.from_path[QualityYieldMetrics](path, header=HEADER) as writer:
+        writer.write_comment("first")
+        writer.write_comment("second")
+        if use_write_all:
+            writer.write_all([record])
+        else:
+            writer.write(record)
+    after = plain.read_text().split("\n")[len(LINES) :]
+    assert path.read_text().split("\n") == [
+        *LINES,
+        STRING_HEADER_LINE,
+        "# first",
+        STRING_HEADER_LINE,
+        "# second",
+        *after,
+    ]
+    with PicardReader.from_path[QualityYieldMetrics](path) as reader:
+        assert same(list(reader), [record])
+    assert reader.header.others == (
+        *HEADER.others,
+        (STRING_HEADER, "first"),
+        (STRING_HEADER, "second"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("header", "lines"),
+    [(HEADER, LINES), (PicardHeader(), [STRING_HEADER_LINE, "# "])],
+    ids=["header", "empty-header"],
+)
+def test_writer_writes_a_comment_into_the_header_of_a_file_without_rows(
+    tmp_path: Path, header: PicardHeader, lines: list[str]
+) -> None:
+    """With no rows, a comment joins the header at close, and is never read as the command line."""
+    path = tmp_path / "out.quality_yield_metrics"
+    with PicardWriter.from_path[QualityYieldMetrics](path, header=header) as writer:
+        writer.write_comment("note")
+    expected = [*lines, STRING_HEADER_LINE, "# note", "", "", "", ""]
+    assert path.read_text() == "\n".join(expected)
+    with PicardReader.from_path[QualityYieldMetrics](path) as reader:
+        assert list(reader) == []
+    assert reader.header == replace(header, others=(*header.others, (STRING_HEADER, "note")))
+
+
+def test_writer_writes_a_string_header_for_each_line_of_a_comment(tmp_path: Path) -> None:
+    """Each line of a string is a header, an empty string is one, and a `Comment` drops its `#`."""
+    path = tmp_path / "out.quality_yield_metrics"
+    with PicardWriter.from_path[QualityYieldMetrics](path, header=HEADER) as writer:
+        writer.write_comment("one\ntwo\r\nthree")
+        writer.write_comment("")
+        writer.write_comment(Comment(line_number=1, text="## four"))
+        writer.write_comment(Comment(line_number=2, text="#  five"))
+    assert path.read_text().split("\n") == [
+        *LINES,
+        STRING_HEADER_LINE,
+        "# one",
+        STRING_HEADER_LINE,
+        "# two",
+        STRING_HEADER_LINE,
+        "# three",
+        STRING_HEADER_LINE,
+        "# ",
+        STRING_HEADER_LINE,
+        "# four",
+        STRING_HEADER_LINE,
+        "#  five",
+        "",
+        "",
+        "",
+        "",
+    ]
+    with PicardReader.from_path[QualityYieldMetrics](path) as reader:
+        assert list(reader) == []
+    texts = ["one", "two", "three", "", "four", " five"]
+    assert reader.header.others == (*HEADER.others, *((STRING_HEADER, text) for text in texts))
+
+
+@pytest.mark.parametrize("use_write_all", [False, True], ids=["write", "write_all"])
+def test_writer_refuses_a_comment_after_the_first_row(use_write_all: bool) -> None:
+    """A comment after the header is written is refused, and nothing is written."""
+    handle = StringIO()
+    writer = PicardWriter[QualityYieldMetrics](handle, header=HEADER)
+    record = QualityYieldMetrics(total_reads=1)
+    if use_write_all:
+        writer.write_all([record])
+    else:
+        writer.write(record)
+    before = handle.getvalue()
+    with pytest.raises(ValueError, match=f"^{re.escape(TOO_LATE)}$"):
+        writer.write_comment("x")
+    assert handle.getvalue() == before
+
+
+def test_writer_refuses_a_comment_holding_a_line_break(tmp_path: Path) -> None:
+    """A `Comment` holding a line break is refused as a header line, and is not kept."""
     plain, called = tmp_path / "plain", tmp_path / "called"
     with PicardWriter.from_path[QualityYieldMetrics](plain, header=HEADER):
         pass
-    message = (
-        "A Picard metrics file holds no comments: give its header lines as the writer's header!"
-    )
+    message = "A header line holds a line break: 'a\\nb'!"
     with (
         PicardWriter.from_path[QualityYieldMetrics](called, header=HEADER) as writer,
-        pytest.raises(TypeError, match=f"^{re.escape(message)}$"),
+        pytest.raises(ValueError, match=f"^{re.escape(message)}$"),
     ):
-        writer.write_comment("x")
+        writer.write_comment(Comment(line_number=1, text="# a\nb"))
     assert called.read_text() == plain.read_text()

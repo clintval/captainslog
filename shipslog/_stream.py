@@ -1,4 +1,5 @@
 import os
+from collections.abc import Callable
 from typing import TextIO
 from typing import cast
 
@@ -10,11 +11,16 @@ class SectionStream:
     held back until a row follows it, then written after the section line, when there is one. A
     label row with no row after it never reaches the file, as htsjdk and Riker write no section
     without rows.
+
+    An `on_start` hook runs once, before the stream first writes to its handle.
     """
 
-    def __init__(self, handle: TextIO, section: str | None) -> None:
+    def __init__(
+        self, handle: TextIO, section: str | None, on_start: Callable[[], None] | None = None
+    ) -> None:
         self._handle: TextIO = handle
         self._section: str | None = section
+        self._on_start: Callable[[], None] | None = on_start
         self._labels: str = ""
         self._started: bool = False
         self._ended: bool = False
@@ -44,6 +50,8 @@ class SectionStream:
         if self._ended:
             raise ValueError("Cannot write metrics after the histogram!")
         if not self._started:
+            if self._on_start is not None:
+                self._on_start()
             line = "" if self._section is None else f"{self._section}{os.linesep}"
             _ = self._handle.write(f"{line}{self._labels}")
             self._started = True
