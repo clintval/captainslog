@@ -84,6 +84,50 @@ uv run poe fix-all
 uv run poe fix-and-check-all
 ```
 
+## Regenerating the Test Fixtures
+
+The files in `tests/data/picard` and `tests/data/riker` are written by Picard 3.5.0 and Riker 0.5.0, from inputs in Picard's own test data.
+To write them again, install [pixi](https://pixi.sh), then run `make.sh` in the environment of `scripts/fixtures/pixi.toml`, which holds Picard, Riker, samtools, and Java:
+
+```console
+pixi run --manifest-path scripts/fixtures/pixi.toml bash scripts/fixtures/make.sh
+```
+
+The script downloads its inputs from Picard's repository at the 3.5.0 tag, runs each tool, and replaces both directories.
+
+## Regenerating the Picard Dataclasses
+
+The Picard dataclasses in `captainslog/picard/_metrics.py`, and their Java names and column labels in `captainslog/picard/_java.py`, are generated, so change the generator rather than the files.
+`scripts/picard/PicardSchema.java` prints the metrics classes of a Picard jar as JSON, with the columns htsjdk writes for each and the constants of their enums:
+
+```console
+pixi run --manifest-path scripts/fixtures/pixi.toml bash -c 'java -cp "$PICARD_JAR" scripts/picard/PicardSchema.java "$PICARD_JAR" > scripts/picard/picard-3.5.0.json'
+```
+
+`scripts/picard/generate.py` writes both modules from that JSON, with docstrings from the Javadoc of a checkout of Picard's source at the same release:
+
+```console
+git clone --depth 1 --branch 3.5.0 https://github.com/broadinstitute/picard.git /tmp/picard
+uv run python scripts/picard/generate.py --schema scripts/picard/picard-3.5.0.json --source /tmp/picard --output captainslog/picard
+```
+
+For a new Picard release, set its version in `scripts/fixtures/make.sh` and `scripts/fixtures/pixi.toml`, along with the package build that the path of `PICARD_JAR` names, then update the lock with `pixi lock --manifest-path scripts/fixtures/pixi.toml`.
+Write its schema to a new `scripts/picard/picard-X.Y.Z.json`, name that file in `pyproject.toml` and `tests/picard/test_metrics.py`, generate the modules from it, and regenerate the fixtures.
+`git grep -n -F 3.5.0 -- ':!*.lock' ':!tests/data'` lists every other place that names the release, such as the errors in `captainslog/picard/_reader.py` and the README.
+The histograms in `captainslog/picard/_histograms.py` are written by hand, so check them against the new release too.
+
+## Checking Written Files with htsjdk
+
+`scripts/fixtures/write_back.py` reads every Picard fixture with captainslog and writes it back into a directory, with its header, metrics, and histogram.
+`scripts/fixtures/ReadBack.java` then checks that htsjdk reads each written file as the metrics and histogram of its fixture:
+
+```console
+uv run python scripts/fixtures/write_back.py /tmp/written
+pixi run --manifest-path scripts/fixtures/pixi.toml bash -c 'java -cp "$PICARD_JAR" scripts/fixtures/ReadBack.java tests/data/picard /tmp/written'
+```
+
+The check needs Picard and Java, so it is run locally and not in CI.
+
 ## Releasing
 
 Commit titles follow [Conventional Commits](https://www.conventionalcommits.org), which group the release notes.
