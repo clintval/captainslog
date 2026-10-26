@@ -25,7 +25,9 @@ from shipslog.picard import RnaCoverageHistogram
 from shipslog.picard import RnaSeqMetrics
 from shipslog.picard import SamComparisonHistogram
 from shipslog.picard import SamComparisonMetric
+from shipslog.picard import ValidationErrorHistogram
 from shipslog.picard import histogram_class
+from shipslog.picard._header import PicardHeader
 from shipslog.picard._header import header_lines
 from shipslog.picard._histograms import HISTOGRAMS
 from tests.compare import same
@@ -36,6 +38,7 @@ from tests.picard import PICARD_HISTOGRAM_FIXTURES
 from tests.picard import PICARD_METRICS_FIXTURES
 from tests.picard import REPEATED_INSERT_SIZES
 from tests.picard import REPEATED_RNA_COVERAGE
+from tests.picard import VALIDATE_SAM_FILE
 from tests.picard import DerivedHistogram
 from tests.picard import NotHistogram
 from tests.picard import class_named_in
@@ -127,6 +130,20 @@ def test_histogram_only_writer_writes_the_layout_htsjdk_writes(tmp_path: Path) -
     assert path.read_text() == histogram_alone(
         "## HISTOGRAM\tjava.lang.Byte", "QUALITY\tCOUNT_OF_Q\tCOUNT_OF_OQ", "30\t5\t2"
     )
+
+
+def test_histogram_only_writer_writes_the_summary_validate_sam_file_writes(tmp_path: Path) -> None:
+    """ValidateSamFile's summary, of no header, is written back as htsjdk wrote it."""
+    path, out = tmp_path / "in.SUMMARY", tmp_path / "out.SUMMARY"
+    _ = path.write_text("\n".join([*VALIDATE_SAM_FILE, "", ""]))
+    with PicardHistogramReader.from_path[ValidationErrorHistogram](path) as reader:
+        bins = list(reader)
+    assert reader.header == PicardHeader()
+    with PicardHistogramWriter.from_path[ValidationErrorHistogram](
+        out, header=reader.header
+    ) as writer:
+        writer.write_all(bins)
+    assert out.read_bytes() == path.read_bytes()
 
 
 @pytest.mark.parametrize("use_write_all", [False, True], ids=["no-call", "write_all"])

@@ -15,6 +15,8 @@ from shipslog.picard import InsertSizeHistogramColumns
 from shipslog.picard import PicardHistogramReader
 from shipslog.picard import SamComparisonHistogram
 from shipslog.picard import SamComparisonHistogramColumns
+from shipslog.picard import ValidationErrorHistogram
+from shipslog.picard import ValidationErrorHistogramColumns
 from shipslog.picard import columns
 from shipslog.picard._histograms import HISTOGRAMS
 from tests.picard import FIXTURE_CLASSES
@@ -62,6 +64,19 @@ def test_columns_transposes_a_histogram_without_extra_columns() -> None:
     hist = columns(rows)
     _ = assert_type(hist, SamComparisonHistogramColumns)
     assert hist == SamComparisonHistogramColumns(bin=("a", "b"), value=(1, 2))
+
+
+def test_columns_transposes_the_summary_of_validate_sam_file() -> None:
+    """The errors and their counts of ValidateSamFile's summary become a tuple each."""
+    rows = [
+        ValidationErrorHistogram(error_type="ERROR:MATE_NOT_FOUND", count=1),
+        ValidationErrorHistogram(error_type="WARNING:MISSING_TAG_NM", count=3),
+    ]
+    hist = columns(rows)
+    _ = assert_type(hist, ValidationErrorHistogramColumns)
+    assert hist == ValidationErrorHistogramColumns(
+        error_type=("ERROR:MATE_NOT_FOUND", "WARNING:MISSING_TAG_NM"), count=(1, 3)
+    )
 
 
 def test_columns_transposes_a_single_row() -> None:

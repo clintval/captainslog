@@ -124,7 +124,7 @@ assert sum(all_reads.counts) == 478
 assert [s.name for s in series] == [None, "NA12891", "Pond-492101", "NormPond-544932", "NA12891.r1", "NA12891.r2"]
 ```
 
-A file that holds only a histogram, like a `QualityScoreDistribution`, is read the same way:
+A file that holds only a histogram, like a `QualityScoreDistribution` or the `ValidationErrorHistogram` of ValidateSamFile's summary, is read the same way:
 
 ```python
 from shipslog.picard import QualityScoreDistribution

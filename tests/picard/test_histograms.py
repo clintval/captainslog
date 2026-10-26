@@ -20,8 +20,10 @@ from shipslog.picard import HsHistogram
 from shipslog.picard import InsertSizeHistogram
 from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import MeanQualityByCycle
+from shipslog.picard import PicardHeader
 from shipslog.picard import PicardHistogramReader
 from shipslog.picard import RnaCoverageHistogram
+from shipslog.picard import ValidationErrorHistogram
 from shipslog.picard import _histograms
 from shipslog.picard import histogram_class
 from shipslog.picard._histograms import HISTOGRAMS
@@ -35,6 +37,7 @@ from tests.picard import HISTOGRAM
 from tests.picard import LINES
 from tests.picard import METRICS_CLASS
 from tests.picard import PICARD_HISTOGRAM_FIXTURES
+from tests.picard import VALIDATE_SAM_FILE
 from tests.picard import DerivedHistogram
 from tests.picard import NotHistogram
 
@@ -50,7 +53,7 @@ EXTRA_TYPES: tuple[Any, ...] = (NamedExtraColumns[int], NamedExtraColumns[float]
 
 def snake_case(label: str) -> str:
     """The snake_case of a column label, e.g. `coverage_mult` for `CoverageMult`."""
-    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", label).lower()
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", label).replace(" ", "_").lower()
 
 
 def histogram_line(lines: list[str]) -> int:
@@ -358,3 +361,18 @@ def test_reader_reads_a_users_subclass_of_a_histogram() -> None:
     assert bins
     assert all(isinstance(b, DerivedHistogram) for b in bins)
     assert bins[0].all_reads == bins[0].counts["All_Reads.fr_count"]
+
+
+@pytest.mark.parametrize("end", ["\n\n", "\n", ""], ids=["blank-line", "line-break", "none"])
+def test_reader_reads_the_summary_validate_sam_file_writes(tmp_path: Path, end: str) -> None:
+    """ValidateSamFile's summary, two blank lines then a histogram alone, reads however it ends."""
+    path = tmp_path / "s.ValidateSamFile.SUMMARY"
+    _ = path.write_text("\n".join(VALIDATE_SAM_FILE) + end)
+    assert histogram_class(path) is ValidationErrorHistogram
+    assert histogram_classes(None, VALIDATE_SAM_FILE[3].split("\t")) == [ValidationErrorHistogram]
+    with PicardHistogramReader.from_path[ValidationErrorHistogram](path) as reader:
+        assert list(reader) == [
+            ValidationErrorHistogram(error_type="ERROR:MATE_NOT_FOUND", count=1),
+            ValidationErrorHistogram(error_type="WARNING:MISSING_TAG_NM", count=3),
+        ]
+    assert reader.header == PicardHeader()

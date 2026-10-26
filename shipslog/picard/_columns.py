@@ -33,6 +33,8 @@ from shipslog.picard._histograms import SamComparisonHistogram
 from shipslog.picard._histograms import SamComparisonHistogramColumns
 from shipslog.picard._histograms import UmiPrevalenceHistogram
 from shipslog.picard._histograms import UmiPrevalenceHistogramColumns
+from shipslog.picard._histograms import ValidationErrorHistogram
+from shipslog.picard._histograms import ValidationErrorHistogramColumns
 from shipslog.picard._histograms import WgsHistogram
 from shipslog.picard._histograms import WgsHistogramColumns
 from shipslog.picard._histograms import WgsNonZeroCoverageHistogram
@@ -71,6 +73,8 @@ def columns(rows: Sequence[RnaCoverageHistogram], /) -> RnaCoverageHistogramColu
 def columns(rows: Sequence[SamComparisonHistogram], /) -> SamComparisonHistogramColumns: ...
 @overload
 def columns(rows: Sequence[UmiPrevalenceHistogram], /) -> UmiPrevalenceHistogramColumns: ...
+@overload
+def columns(rows: Sequence[ValidationErrorHistogram], /) -> ValidationErrorHistogramColumns: ...
 @overload
 def columns(rows: Sequence[WgsHistogram], /) -> WgsHistogramColumns: ...
 @overload

@@ -36,6 +36,8 @@ __all__ = [
     "SamComparisonHistogramColumns",
     "UmiPrevalenceHistogram",
     "UmiPrevalenceHistogramColumns",
+    "ValidationErrorHistogram",
+    "ValidationErrorHistogramColumns",
     "WgsHistogram",
     "WgsHistogramColumns",
     "WgsNonZeroCoverageHistogram",
@@ -417,6 +419,29 @@ class UmiPrevalenceHistogramColumns:
 
 
 @dataclass(frozen=True, kw_only=True)
+class ValidationErrorHistogram:
+    """The count of each type of error and warning ValidateSamFile writes with MODE=SUMMARY.
+
+    ValidateSamFile writes the histogram alone, under no header, so a `PicardHistogramWriter` given
+    `header=PicardHeader()` writes the file as it does.
+    """
+
+    error_type: str = ""
+    """The severity and type of a problem, e.g. `ERROR:MATE_NOT_FOUND`."""
+
+    count: int = 0
+    """The number of times ValidateSamFile found that problem."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class ValidationErrorHistogramColumns:
+    """The columns of a `ValidationErrorHistogram`, one tuple per field."""
+
+    error_type: tuple[str, ...] = ()
+    count: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class WgsHistogram:
     """The coverage histogram CollectWgsMetrics and CollectRawWgsMetrics write."""
 
@@ -500,6 +525,7 @@ HISTOGRAMS: dict[type[Any], Histogram] = {
     RnaCoverageHistogram: Histogram(owners=frozenset({"picard.analysis.RnaSeqMetrics"}), key="java.lang.Integer", labels={"normalized_position": "normalized_position"}, columns=RnaCoverageHistogramColumns),
     SamComparisonHistogram: Histogram(owners=frozenset({"picard.sam.SamComparisonMetric"}), key="java.lang.String", labels={"bin": "BIN", "value": "VALUE"}, columns=SamComparisonHistogramColumns),
     UmiPrevalenceHistogram: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"num_umis": "numUmis", "duplicate_sets": "duplicateSets"}, columns=UmiPrevalenceHistogramColumns),
+    ValidationErrorHistogram: Histogram(owners=frozenset(), key="java.lang.String", labels={"error_type": "Error Type", "count": "Count"}, columns=ValidationErrorHistogramColumns),
     WgsHistogram: Histogram(owners=frozenset({"picard.analysis.WgsMetrics", "picard.analysis.CollectRawWgsMetrics$RawWgsMetrics"}), key="java.lang.Integer", labels={"coverage": "coverage", "high_quality_coverage_count": "high_quality_coverage_count"}, columns=WgsHistogramColumns),
     WgsNonZeroCoverageHistogram: Histogram(owners=frozenset({"picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage"}), key="java.lang.Integer", labels={"coverage": "coverage", "count_whole_genome": "count_WHOLE_GENOME", "count_non_zero_regions": "count_NON_ZERO_REGIONS"}, columns=WgsNonZeroCoverageHistogramColumns),
 }

@@ -118,3 +118,14 @@ def with_histogram(path: Path, metric: object, lines: list[str]) -> Path:
         writer.write(metric)
     _ = path.write_text(path.read_text().removesuffix("\n") + "\n".join([*lines, "", ""]))
     return path
+
+
+VALIDATE_SAM_FILE = [
+    "",
+    "",
+    "## HISTOGRAM\tjava.lang.String",
+    "Error Type\tCount",
+    "ERROR:MATE_NOT_FOUND\t1",
+    "WARNING:MISSING_TAG_NM\t3",
+]
+"""The lines of the summary ValidateSamFile writes, of no header and a histogram alone."""
