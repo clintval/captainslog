@@ -66,11 +66,6 @@ assert list(PicardReader.from_path[metrics_type](out)) == [hs]
 assert list(PicardHistogramReader.from_path[histogram_type](out)) == bins
 ```
 
-`metrics_class` names the dataclass of a file from its `## METRICS CLASS` line, and `histogram_class` names the dataclass of its histogram from its label row.
-Picard reports the fraction of target bases at fixed depths, such as 50x and 100x, so the fraction at 60x comes from the depth histogram, which `columns` turns into one tuple per column.
-The fraction at 50x, found the same way, equals the one Picard wrote.
-The new file holds the header, the metrics, and the histogram, and reads back as the same records in shipslog and in htsjdk.
-
 ## Quickstart
 
 ### Reading Picard Metrics
