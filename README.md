@@ -1,4 +1,4 @@
-![Banner for captainslog](.github/img/captainslog_banner.svg)
+![Banner for captainslog](https://raw.githubusercontent.com/clintval/captainslog/main/.github/img/captainslog_banner.svg)
 
 ---
 
@@ -84,6 +84,7 @@ Riker computes many of Picard's metrics in files of its own shape, so captainslo
 
 ```python
 from captainslog.picard import HsMetrics
+from captainslog.picard import PicardReader
 
 with PicardReader.from_path[HsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
     [hs] = list(reader)
@@ -105,6 +106,7 @@ Picard writes NaN and infinity as `?`, which reads back as NaN, and negative inf
 from math import isnan
 
 from captainslog.picard import JumpingLibraryMetrics
+from captainslog.picard import PicardReader
 
 [jumps] = list(PicardReader.from_path[JumpingLibraryMetrics]("tests/data/picard/jump.jumping_metrics"))
 
@@ -124,9 +126,11 @@ A reader from `from_path` closes its file once it is read to the end, so reading
 ### Accumulation Levels
 
 ```python
+from captainslog import picard
 from captainslog.picard import AccumulationLevel
 from captainslog.picard import InsertSizeMetrics
 from captainslog.picard import PairOrientation
+from captainslog.picard import PicardReader
 
 rows = list(PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics"))
 
@@ -145,7 +149,7 @@ assert all_reads.read_pairs == 478
 assert all_reads.pair_orientation is PairOrientation.FR
 ```
 
-Picard writes a row for all reads, then a row for each sample, library, and read group that `METRIC_ACCUMULATION_LEVEL` asks for.
+Picard writes the rows of each level that `METRIC_ACCUMULATION_LEVEL` asks for, which is `ALL_READS` by default: one row for all reads, then one for each sample, library, and read group.
 It marks the level of a row only by which of its `sample`, `library`, and `read_group` cells are empty, and `accumulation_level` reads the level back.
 The `read_group` of a row holds the platform unit (`PU`) of its read group, not its ID.
 The GC bias metrics name their level in an `accumulation_level` column instead, and `accumulation_level` reads that column for them.
@@ -153,7 +157,9 @@ The GC bias metrics name their level in an `accumulation_level` column instead, 
 ### Histograms and Columns
 
 ```python
+from captainslog import picard
 from captainslog.picard import InsertSizeHistogram
+from captainslog.picard import PicardHistogramReader
 
 bins = list(PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics"))
 
@@ -164,16 +170,18 @@ hist = picard.columns(bins)
 
 assert hist.insert_size[:3] == (112, 128, 134)
 assert hist.counts["All_Reads.fr_count"][:3] == (1, 1, 1)
-assert sum(hist.counts["All_Reads.fr_count"]) == all_reads.read_pairs
+assert sum(hist.counts["All_Reads.fr_count"]) == 478
 ```
 
 The histogram of a file is read by its own reader, so a file that holds metrics and a histogram is read once for each.
+Here the counts for all reads sum to the 478 read pairs of the all-reads row above.
 A histogram whose columns depend on the data, like one count per level and pair orientation, keeps them in a dict field by column name.
 `columns` transposes the bins of a histogram into one tuple per field, and a dict of tuples for the columns kept by name, with a typed result for each histogram.
 
 Some Picard files hold only a histogram, like those of `MeanQualityByCycle` and `QualityScoreDistribution`, and are read the same way:
 
 ```python
+from captainslog.picard import PicardHistogramReader
 from captainslog.picard import QualityScoreDistribution
 
 qualities = list(PicardHistogramReader.from_path[QualityScoreDistribution]("tests/data/picard/cmm.quality_distribution_metrics"))
@@ -184,7 +192,9 @@ assert qualities[0] == QualityScoreDistribution(quality=1, count_of_q=2, counts=
 ### Finding the Class of a File
 
 ```python
+from captainslog import picard
 from captainslog.picard import HsHistogram
+from captainslog.picard import HsMetrics
 from captainslog.picard import MeanQualityByCycle
 
 assert picard.metrics_class("tests/data/picard/hs.hs_metrics") is HsMetrics
@@ -201,8 +211,18 @@ A class that Picard 3.5.0 does not write, like one that an older Picard named an
 ### Writing Picard Metrics
 
 ```python
-from captainslog.picard import PicardHeader
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from captainslog.picard import InsertSizeHistogram
+from captainslog.picard import InsertSizeMetrics
+from captainslog.picard import PairOrientation
+from captainslog.picard import PicardHeader
+from captainslog.picard import PicardHistogramReader
+from captainslog.picard import PicardReader
+from captainslog.picard import PicardWriter
+
+temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.insert_size_metrics"
 header = PicardHeader(
     command_line="CollectInsertSizeMetrics INPUT=s.bam OUTPUT=s.insert_size_metrics",
@@ -235,8 +255,14 @@ Writing is also a quick way to make realistic Picard files for unit tests.
 A file of only a histogram is written with a `PicardHistogramWriter`:
 
 ```python
-from captainslog.picard import PicardHistogramWriter
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from captainslog.picard import PicardHeader
+from captainslog.picard import PicardHistogramWriter
+from captainslog.picard import QualityScoreDistribution
+
+temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.quality_distribution_metrics"
 header = PicardHeader(
     command_line="QualityScoreDistribution INPUT=s.bam OUTPUT=s.quality_distribution_metrics",
@@ -265,6 +291,9 @@ assert path.read_text() == (
 ### Per-Target and Per-Base Coverage
 
 ```python
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from captainslog.picard import PerTargetCoverage
 from captainslog.picard import PicardCoverageReader
 from captainslog.picard import PicardCoverageWriter
@@ -274,6 +303,7 @@ targets = list(PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/pic
 assert targets[0].name == "rs7555566"
 assert targets[0].pct_gc == 0.41
 
+temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.per_target_coverage.txt"
 
 with PicardCoverageWriter.from_path[PerTargetCoverage](path) as writer:
@@ -283,13 +313,16 @@ assert path.read_text().startswith("chrom\tstart\tend\tlength\tname\t%gc\tmean_c
 assert list(PicardCoverageReader.from_path[PerTargetCoverage](path)) == targets
 ```
 
-CollectHsMetrics writes the coverage of each target to `PER_TARGET_COVERAGE`, and of each target base to `PER_BASE_COVERAGE`, as plain tables without a Picard header.
+CollectHsMetrics and CollectTargetedPcrMetrics write the coverage of each target to `PER_TARGET_COVERAGE`, and of each target base to `PER_BASE_COVERAGE`, as plain tables without a Picard header.
 They are read into `PerTargetCoverage` and `PerBaseCoverage` with a `PicardCoverageReader`, and written with a `PicardCoverageWriter`.
 The `%gc` column is the `pct_gc` field.
 
 ### Reading and Writing Riker Metrics
 
 ```python
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from captainslog import riker
 from captainslog.riker import HybcapMetrics
 from captainslog.riker import IsizeHistogram
@@ -308,6 +341,7 @@ isize = riker.columns(list(RikerReader.from_path[IsizeHistogram]("tests/data/rik
 assert isize.insert_size[:3] == (112, 128, 134)
 assert isize.fr_count[:3] == (1, 1, 1)
 
+temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.hybcap-metrics.txt"
 
 with RikerWriter.from_path[HybcapMetrics](path) as writer:
@@ -330,6 +364,9 @@ For example, `total_reads` counts every read examined in Picard's `HsMetrics`, b
 ### Deriving Metrics
 
 ```python
+from captainslog.picard import HsMetrics
+from captainslog.picard import PicardReader
+
 class MyHsMetrics(HsMetrics):
     @property
     def frac_bases_on_target(self) -> float:
@@ -346,14 +383,14 @@ Add no dataclass fields, since every field is a column, and a file must hold onl
 
 ### Supported Versions
 
-The Picard dataclasses match Picard 3.5.0, and the Riker dataclasses match Riker 0.5.0.
+captainslog 0.1.0 reads and writes the files of Picard 3.5.0 and Riker 0.5.0.
 A file whose columns differ, from an older or a newer release, is refused with a `ValueError` that names the columns missing from the file and those it does not expect.
 A release of captainslog that follows a newer Picard or Riker names it here.
 
 ### Limitations
 
-- An `HsMetrics` or `TargetedPcrMetrics` histogram written at more than one accumulation level repeats its column names.
-  `histogram_class` raises a `ValueError` for it, as a histogram captainslog does not know.
+- `HsMetrics` and `TargetedPcrMetrics` histograms are supported as Picard 3.5.0 writes them, at the `ALL_READS` level.
+  Picard 3.5.0 throws when either tool is asked for any other accumulation level.
 - An `InsertSizeMetrics` or `RnaSeqMetrics` histogram where a sample and a library share a name repeats a column name, such as `NA12891.fr_count`.
   typeline refuses the repeated name with a `ValueError` when the histogram is read.
 - The `MATRIX_OUTPUT` file of CollectIndependentReplicateMetrics has no histogram class, because Java writes its key with `toString`.
