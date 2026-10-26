@@ -7,9 +7,9 @@ from typing import TextIO
 import pytest
 from typeline import Comment
 from typeline import TsvReader
+from typeline import open_for_reading
 from typing_extensions import override
 
-from shipslog._files import open_text
 from shipslog.picard._table import Table
 from shipslog.picard._table import as_text_io
 from tests.picard import DATA
@@ -109,7 +109,7 @@ def test_table_names_a_line_in_the_whole_file_and_its_path(tmp_path: Path) -> No
     path = tmp_path / "example.metrics"
     _ = path.write_text(picard_file("a\t1", "b\tmany"))
     with (
-        open_text(path) as handle,
+        open_for_reading(path) as handle,
         pytest.raises(ValueError, match=re.escape(f"'many' on line 11 of '{path}'!")),
     ):
         _ = metrics(handle)
@@ -119,7 +119,7 @@ def test_table_names_its_file_when_its_handle_is_named(tmp_path: Path) -> None:
     """A table is named after its handle's file, and has no name when its handle has none."""
     path = tmp_path / "example.metrics"
     _ = path.write_text(TEXT)
-    with open_text(path) as handle:
+    with open_for_reading(path) as handle:
         assert Table(handle, marker="## METRICS CLASS").name == str(path)
     assert Table(StringIO(TEXT), marker="## METRICS CLASS").name is None
 
@@ -352,7 +352,7 @@ def test_table_of_a_file_cut_short_names_the_file(tmp_path: Path) -> None:
     _ = path.write_text("\n".join([*LINES, "", METRICS, "sample\treads", ""]))
     message = "^" + re.escape(f"{path} holds no rows after its '{METRICS}' line")
     with (
-        open_text(path) as handle,
+        open_for_reading(path) as handle,
         pytest.raises(ValueError, match=message),
     ):
         _ = metrics(handle)
@@ -365,7 +365,7 @@ def test_table_of_a_file_cut_short_names_the_file(tmp_path: Path) -> None:
 )
 def test_table_of_each_picard_histogram_is_whole(path: Path) -> None:
     """No histogram Picard wrote is refused as cut short."""
-    with open_text(path) as handle:
+    with open_for_reading(path) as handle:
         assert Table(handle, marker="## HISTOGRAM").read().strip("\n")
 
 
@@ -383,7 +383,7 @@ def test_table_of_each_picard_file_is_its_metrics_table(path: Path) -> None:
     at = next(index for index, line in enumerate(lines) if line.startswith("## METRICS CLASS"))
     blank = [not line.strip() and "\t" not in line for line in lines]
     stop = next(index for index in range(at + 2, len(lines)) if blank[index])
-    with open_text(path) as handle:
+    with open_for_reading(path) as handle:
         text = Table(handle, marker="## METRICS CLASS").read()
     assert text == "\n" * (at + 1) + "".join(f"{line}\n" for line in lines[at + 1 : stop])
 

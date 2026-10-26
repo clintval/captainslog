@@ -158,7 +158,7 @@ class PicardWriter(_PicardTableWriter[RecordType]):
             TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
             ValueError: if a header's class name or text holds a line break.
         """
-        record_type = self._bound_record_type()
+        record_type = self.record_type
         self._java: str = java_name(record_type)
         section = f"{METRICS_CLASS}\t{self._java}"
         super().__init__(handle, section, picard_rename(record_type), header)
@@ -247,7 +247,7 @@ class PicardHistogramWriter(_PicardTableWriter[RecordType]):
                 or is one that Picard writes after metrics.
             ValueError: if a header's class name or text holds a line break.
         """
-        record_type = self._bound_record_type()
+        record_type = self.record_type
         histogram = histogram_of(record_type)
         if histogram.owners:
             owners = " or ".join(sorted(histogram.owners))

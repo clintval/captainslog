@@ -8,10 +8,10 @@ from typing import TextIO
 from typeline import ReaderOptions
 from typeline import RecordType
 from typeline import TsvReader
+from typeline import open_for_reading
 from typing_extensions import Unpack
 
 from shipslog._binding import FromPath
-from shipslog._files import open_text
 from shipslog.picard._format import PICARD_CODECS
 from shipslog.picard._format import picard_rename
 from shipslog.picard._header import HeaderParser
@@ -229,7 +229,7 @@ def histogram_class(path: Path | str) -> type[Any]:
             Picard 3.5.0 histogram has, holds no rows after its `## HISTOGRAM` line, so may be cut
             short, is not a Picard metrics file, or breaks its lines with lone carriage returns.
     """
-    with open_text(path) as handle:
+    with open_for_reading(path) as handle:
         table = Table(handle, marker=HISTOGRAM)
         line = find_section(table, str(path))
         labels = read_labels(table)
@@ -252,7 +252,7 @@ def metrics_class(path: Path | str) -> type[Any]:
             metrics table, is not a Picard metrics file, or breaks its lines with lone carriage
             returns.
     """
-    with open_text(path) as handle:
+    with open_for_reading(path) as handle:
         found = section_java(find_section(Table(handle, marker=METRICS_CLASS), str(path)))
     if found is None:
         raise ValueError(
@@ -333,7 +333,7 @@ class PicardReader(_PicardTableReader[RecordType]):
                 the record type's fields, naming those missing from the file and those it does
                 not expect.
         """
-        record_type = self._bound_record_type()
+        record_type = self.record_type
         java = java_name(record_type)
         table = Table(handle, marker=METRICS_CLASS)
         check_section(table, java, record_type.__name__)
@@ -366,7 +366,7 @@ class PicardHistogramReader(_PicardTableReader[RecordType]):
                 record type's fields, naming those missing from the file and those it does not
                 expect.
         """
-        record_type = self._bound_record_type()
+        record_type = self.record_type
         histogram = histogram_of(record_type)
         table = Table(handle, marker=HISTOGRAM)
         check_histogram_section(table, histogram.owners, record_type.__name__)

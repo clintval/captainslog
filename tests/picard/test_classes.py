@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import TextIO
 
 import pytest
+from typeline import open_for_reading
 
-from shipslog._files import open_text
 from shipslog.picard import PicardReader
 from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import _reader as reader
@@ -118,10 +118,10 @@ def test_metrics_class_closes_the_file_when_it_refuses_it(
     opened: list[TextIO] = []
 
     def spy(where: Path | str) -> TextIO:
-        opened.append(open_text(where))
+        opened.append(open_for_reading(where))
         return opened[-1]
 
-    monkeypatch.setattr(reader, "open_text", spy)
+    monkeypatch.setattr(reader, "open_for_reading", spy)
     with pytest.raises(ValueError, match="is not a Picard metrics file!"):
         _ = metrics_class(path)
     assert [handle.closed for handle in opened] == [True]

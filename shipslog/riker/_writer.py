@@ -34,7 +34,7 @@ class RikerWriter(TsvWriter[RecordType]):
         Raises:
             TypeError: if the record type is not a Riker dataclass or a subclass of one.
         """
-        check_riker_class(self._bound_record_type())
+        check_riker_class(self.record_type)
         _ = options.setdefault("comment_prefixes", ("\n",))
         header = options.setdefault("header", True)
         super().__init__(as_text_io(SectionStream(handle, None)) if header else handle, **options)

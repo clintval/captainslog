@@ -129,7 +129,7 @@ class PicardCoverageReader(TsvReader[RecordType]):
             ValueError: if the columns of the file differ from the record type's fields, naming
                 those missing from the file and those it does not expect.
         """
-        with_table_defaults(options, coverage_rename(self._bound_record_type()))
+        with_table_defaults(options, coverage_rename(self.record_type))
         super().__init__(handle, **options)
 
 
@@ -152,7 +152,7 @@ class PicardCoverageWriter(TsvWriter[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard coverage dataclass or a subclass of one.
         """
-        defaults = table_options(coverage_rename(self._bound_record_type()))
+        defaults = table_options(coverage_rename(self.record_type))
         defaults.update(options)
         super().__init__(handle, **defaults)
 

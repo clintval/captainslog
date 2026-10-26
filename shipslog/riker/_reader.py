@@ -107,6 +107,6 @@ class RikerReader(TsvReader[RecordType]):
             ValueError: if the columns of the file differ from the record type's fields, naming
                 those missing from the file and those it does not expect.
         """
-        check_riker_class(self._bound_record_type())
+        check_riker_class(self.record_type)
         _ = options.setdefault("comment_prefixes", ())
         super().__init__(handle, **options)

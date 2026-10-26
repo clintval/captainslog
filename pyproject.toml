@@ -9,7 +9,7 @@ keywords = ["bioinformatics", "Picard", "Riker", "metrics", "NGS"]
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
-    "typeline >=3.1.0,<4",
+    "typeline >=3.2.0,<4",
     "typing-extensions >=4.12",
 ]
 classifiers = [
