@@ -1,4 +1,6 @@
-# captainslog
+![Banner for captainslog](.github/img/captainslog_banner.svg)
+
+---
 
 [![PyPi Release](https://badge.fury.io/py/captainslog.svg)](https://badge.fury.io/py/captainslog)
 [![CI](https://github.com/clintval/captainslog/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/clintval/captainslog/actions/workflows/tests.yml?query=branch%3Amain)
