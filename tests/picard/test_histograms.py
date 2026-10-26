@@ -22,6 +22,7 @@ from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import MeanQualityByCycle
 from shipslog.picard import PicardHeader
 from shipslog.picard import PicardHistogramReader
+from shipslog.picard import QualityScoreDistribution
 from shipslog.picard import RnaCoverageHistogram
 from shipslog.picard import ValidationErrorHistogram
 from shipslog.picard import _histograms
@@ -419,3 +420,42 @@ def test_reader_reads_the_summary_validate_sam_file_writes(tmp_path: Path, end: 
             ValidationErrorHistogram(error_type="WARNING:MISSING_TAG_NM", count=3),
         ]
     assert reader.header == PicardHeader()
+
+
+CONCATENATED = "holds another Picard file after its first, as a concatenation does!"
+
+
+@pytest.mark.parametrize("path", PICARD_HISTOGRAM_FIXTURES, ids=lambda path: path.name)
+def test_reader_refuses_a_histogram_fixture_written_twice_into_one_file(
+    tmp_path: Path, path: Path
+) -> None:
+    """Two Picard files written into one, as `cat` writes them, are refused once read."""
+    kind = FIXTURE_CLASSES[path.name]
+    doubled = tmp_path / path.name
+    _ = doubled.write_text(path.read_text() * 2)
+    message = f"{doubled} {CONCATENATED}"
+    with (
+        PicardHistogramReader.from_path[kind](doubled) as reader,
+        pytest.raises(ValueError, match=f"^{re.escape(message)}$"),
+    ):
+        _ = list(reader)
+
+
+@pytest.mark.parametrize("line", ["0\t1", "## HISTOGRAM\tjava.lang.Byte", "#"], ids=repr)
+def test_reader_refuses_any_line_but_a_blank_one_after_the_histogram(line: str) -> None:
+    """Only blank lines follow a histogram, which htsjdk writes last."""
+    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    with (
+        PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n \n{line}")) as reader,
+        pytest.raises(ValueError, match=f"^The text {re.escape(CONCATENATED)}$"),
+    ):
+        _ = list(reader)
+
+
+def test_reader_reads_a_histogram_followed_by_blank_lines() -> None:
+    """The blank lines after a histogram are no second file."""
+    path = DATA / "cmm.quality_distribution_metrics"
+    text = path.read_text() + " \n\n\t\n"
+    bins = list(PicardHistogramReader.from_path[QualityScoreDistribution](path))
+    assert bins
+    assert list(PicardHistogramReader[QualityScoreDistribution](StringIO(text))) == bins

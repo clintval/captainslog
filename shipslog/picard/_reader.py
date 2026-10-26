@@ -328,6 +328,10 @@ class PicardReader(_PicardTableReader[RecordType]):
         A caller's `on_comment` receives each header line here, before any record is read, then
         each line of the table that `comment_prefixes` skips, as it is read.
 
+        Once the last record is read, the rest of the file is read, and a `ValueError` refuses a
+        second Picard file in it, as a concatenation writes. Only the histogram and blank lines may
+        follow the metrics.
+
         Args:
             handle: the text of a Picard metrics file.
             options: the options of the reader, left at Picard's defaults when not given.
@@ -359,6 +363,9 @@ class PicardHistogramReader(_PicardTableReader[RecordType]):
         each line of the histogram that `comment_prefixes` skips, as it is read.
 
         A file whose metrics hold the histogram, but which holds none, reads as no bins.
+
+        Once the last bin is read, the rest of the file is read, and a `ValueError` refuses a second
+        Picard file in it, as a concatenation writes. Only blank lines may follow the histogram.
 
         Args:
             handle: the text of a Picard metrics file.

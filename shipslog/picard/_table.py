@@ -22,6 +22,9 @@ BLANK_LINE: re.Pattern[str] = re.compile(r"\n[^\S\n\t]*\n")
 NOT_BLANK: re.Pattern[str] = re.compile(r"[\S\t]")
 """A character that no blank line holds: a tab, or any that is not whitespace."""
 
+FILE_START: re.Pattern[str] = re.compile(r"^## (?:htsjdk|METRICS CLASS|HISTOGRAM)", re.MULTILINE)
+"""The start of a header line or a section line, as each Picard file holds one."""
+
 MARK: str = "\x1f"
 """The control character that keys a repeat of a histogram label, which no Picard label holds."""
 
@@ -70,6 +73,10 @@ class Table:
     A blank line holds only whitespace other than tabs, as for typeline, so a row of empty fields
     is a row.
 
+    Once the table is read, the rest of the file is read, and refused when it holds another Picard
+    file, as a concatenation does: only blank lines follow a histogram, and only blank lines and
+    one histogram follow metrics.
+
     The leading comment lines, and the first line after them that is not blank, which starts the
     file's first section, are read when the table is built, and so is whether the file ends in
     them.
@@ -101,6 +108,7 @@ class Table:
         self._step: Callable[[str, bool], None] | None = self._skip
         self._past_header: bool = False
         self._has_row: bool = False
+        self._histograms: int = 0
         self._read_head()
 
     @property
@@ -115,7 +123,8 @@ class Table:
             size: the most characters to read, or a negative number to read the rest.
 
         Raises:
-            ValueError: if the table after the marker line ends without a header and a row.
+            ValueError: if the table after the marker line ends without a header and a row, or the
+                file holds another Picard file after the table.
         """
         while (step := self._step) is not None and (size < 0 or not self._ready):
             step(self._text + self._pull(), self._ended)
@@ -124,6 +133,8 @@ class Table:
                 f"{self.display_name} holds no rows after its '{self.marker_line}' line,"
                 + " so it may be cut short!"
             )
+        if self._step is None and (size < 0 or not self._ready):
+            self._read_rest()
         size = len(self._ready) if size < 0 else size
         text, self._ready = self._ready[:size], self._ready[size:]
         return text
@@ -167,7 +178,7 @@ class Table:
         at = f"\n{text}".find(f"\n{self._marker}")
         if at < 0:
             self._ready += "\n" * text.count("\n")
-            self._text = text[text.rfind("\n") + 1 :]
+            self._text = "" if end else text[text.rfind("\n") + 1 :]
             self._step = None if end else self._skip
             return
         self._ready += "\n" * text.count("\n", 0, at)
@@ -216,7 +227,7 @@ class Table:
         if blank is not None:
             self._look_for_a_row(text, blank.start() + 1)
             self._ready += text[: blank.start() + 1]
-            self._text = ""
+            self._text = text[blank.start() + 1 :]
             self._step = None
             return
         cut = text.rfind("\n")
@@ -226,6 +237,31 @@ class Table:
         self._ready += text[:cut]
         self._text = text[cut:]
         self._step = None if end else self._rows
+
+    def _read_rest(self) -> None:
+        """Read the rest of the file after the table, a chunk at a time, refusing a second file.
+
+        Raises:
+            ValueError: if the rest holds a line that is not blank after a histogram, or a header
+                line, a metrics section, or a second histogram after metrics.
+        """
+        while True:
+            text = self._text + self._pull()
+            cut = len(text) if self._ended else text.rfind("\n") + 1
+            rest, self._text = text[:cut], text[cut:]
+            if self._marker == HISTOGRAM:
+                found = bool(rest) and not rest.isspace()
+            else:
+                starts = [start.group() for start in FILE_START.finditer(rest)]
+                self._histograms += starts.count(HISTOGRAM)
+                found = self._histograms > 1 or any(start != HISTOGRAM for start in starts)
+            if found:
+                raise ValueError(
+                    f"{self.display_name} holds another Picard file after its first,"
+                    + " as a concatenation does!"
+                )
+            if self._ended:
+                return
 
     def _look_for_a_row(self, text: str, stop: int) -> None:
         """Note whether the table's text passed on so far holds a row after its header line."""

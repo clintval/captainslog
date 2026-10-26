@@ -11,6 +11,7 @@ from typeline import Comment
 from shipslog.picard import AlignmentSummaryMetrics
 from shipslog.picard import DuplicationMetrics
 from shipslog.picard import HsMetrics
+from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import JumpingLibraryMetrics
 from shipslog.picard import PicardReader
 from shipslog.picard import QualityYieldMetrics
@@ -60,6 +61,53 @@ def test_reader_reads_every_metrics_fixture(path: Path) -> None:
     kind = class_named_in(path)
     with PicardReader.from_path[kind](path) as reader:
         assert list(reader)
+
+
+CONCATENATED = "holds another Picard file after its first, as a concatenation does!"
+
+
+@pytest.mark.parametrize("path", PICARD_METRICS_FIXTURES, ids=lambda path: path.name)
+def test_reader_refuses_a_metrics_fixture_written_twice_into_one_file(
+    tmp_path: Path, path: Path
+) -> None:
+    """Two Picard files written into one, as `cat` writes them, are refused once read."""
+    kind = class_named_in(path)
+    doubled = tmp_path / path.name
+    _ = doubled.write_text(path.read_text() * 2)
+    message = f"{doubled} {CONCATENATED}"
+    with (
+        PicardReader.from_path[kind](doubled) as reader,
+        pytest.raises(ValueError, match=f"^{re.escape(message)}$"),
+    ):
+        _ = list(reader)
+
+
+@pytest.mark.parametrize(
+    "after",
+    [
+        ["## METRICS CLASS\tpicard.analysis.InsertSizeMetrics", "PAIR_ORIENTATION", "FR"],
+        ["## HISTOGRAM\tjava.lang.Integer", "insert_size\tAll_Reads.fr_count", "1\t2"],
+        ["## htsjdk.samtools.metrics.StringHeader", "# CollectInsertSizeMetrics"],
+    ],
+    ids=["metrics", "histogram", "header"],
+)
+def test_reader_refuses_a_second_file_after_metrics_and_their_histogram(after: list[str]) -> None:
+    """After the metrics, only the histogram and blank lines may follow, however many chunks."""
+    text = (DATA / "cmm.insert_size_metrics").read_text()
+    with (
+        PicardReader[InsertSizeMetrics](StringIO("\n".join([text, *after, ""]))) as reader,
+        pytest.raises(ValueError, match=f"^The text {re.escape(CONCATENATED)}$"),
+    ):
+        _ = list(reader)
+
+
+def test_reader_reads_metrics_followed_by_their_histogram_and_blank_lines() -> None:
+    """The histogram and the blank lines htsjdk writes after the metrics are no second file."""
+    path = DATA / "cmm.insert_size_metrics"
+    text = path.read_text() + "\n \n\n"
+    rows = list(PicardReader.from_path[InsertSizeMetrics](path))
+    assert len(rows) == 6
+    assert list(PicardReader[InsertSizeMetrics](StringIO(text))) == rows
 
 
 def test_reader_reads_question_marks_as_nan() -> None:

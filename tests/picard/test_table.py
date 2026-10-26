@@ -431,6 +431,32 @@ def test_table_of_each_picard_file_is_its_metrics_table(path: Path) -> None:
     assert text == "\n" * (at + 1) + "".join(f"{line}\n" for line in lines[at + 1 : stop])
 
 
+@pytest.mark.parametrize("most", [1, 2, 3, 1000])
+@pytest.mark.parametrize("marker", ["## METRICS CLASS", "## HISTOGRAM"])
+def test_table_refuses_a_second_file_after_it_however_its_text_is_split(
+    most: int, marker: str
+) -> None:
+    """A second file after the table is found in pieces of any size, once the table is read."""
+    table = Table(Trickle(TEXT * 2, most), marker=marker)
+    pieces: list[str] = []
+    message = "^The text holds another Picard file after its first, as a concatenation does!$"
+    with pytest.raises(ValueError, match=message):
+        while piece := table.read(2):
+            pieces.append(piece)
+    assert "".join(pieces) == Table(StringIO(TEXT), marker=marker).read()
+
+
+@pytest.mark.parametrize("most", [1, 2, 3, 1000])
+@pytest.mark.parametrize("marker", ["## METRICS CLASS", "## HISTOGRAM"])
+def test_table_reads_the_blank_lines_after_a_file_however_its_text_is_split(
+    most: int, marker: str
+) -> None:
+    """Blank lines after the last table, in pieces of any size, are no second file."""
+    whole = Table(StringIO(TEXT), marker=marker).read()
+    table = Table(Trickle(f"{TEXT}\n \r\n\t\n", most), marker=marker)
+    assert "".join(iter(lambda: table.read(2), "")) == whole
+
+
 def test_close_closes_the_handle() -> None:
     """Closing a table closes its handle."""
     handle = StringIO(TEXT)
