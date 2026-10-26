@@ -83,13 +83,6 @@ assert reader.header.command_line.startswith("CollectHsMetrics BAIT_INTERVALS=")
 assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 ```
 
-A reader is subscripted with the dataclass to read, as in typeline.
-Fields are named for Picard's columns in lowercase snake case, and columns are matched to fields by name, in any order.
-An empty cell is `None` in a field Picard may leave empty, like the `sample` of a row for all reads.
-`reader.header` holds the command line and the start time of the program that wrote the file, and every other header in `others`.
-
-Picard writes NaN and infinity as `?`, which reads back as NaN, and negative infinity as `-?`, which reads back as negative infinity:
-
 ```python
 from math import isnan
 
@@ -99,12 +92,6 @@ from shipslog.picard import PicardReader
 [jumps] = list(PicardReader.from_path[JumpingLibraryMetrics]("tests/data/picard/jump.jumping_metrics"))
 
 assert isnan(jumps.jump_mean_insert_size)
-```
-
-A file of another metrics class is refused before a row is read, naming both classes, as when `hs.hs_metrics` is read as `AlignmentSummaryMetrics`:
-
-```text
-ValueError: tests/data/picard/hs.hs_metrics holds picard.analysis.directed.HsMetrics, not AlignmentSummaryMetrics!
 ```
 
 A row whose first cell starts with `#`, like a library named `#1`, is still a row, since only Picard's header lines are comments.
