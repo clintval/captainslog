@@ -190,11 +190,44 @@ def test_reader_reads_a_crlf_file_as_the_lf_file(tmp_path: Path) -> None:
         assert crlf_reader.header == lf_reader.header
 
 
-def test_reader_of_a_file_without_a_metrics_section_reads_no_records() -> None:
+@pytest.mark.parametrize("blank_lines", [1, 3])
+def test_reader_of_a_file_without_a_metrics_section_reads_no_records(blank_lines: int) -> None:
     """A file without a metrics section, as htsjdk writes for no rows, holds no records."""
-    with PicardReader[QualityYieldMetrics](StringIO("\n".join([*LINES, "", "", "", ""]))) as reader:
+    text = "\n".join([*LINES, *[""] * (blank_lines + 1)])
+    with PicardReader[QualityYieldMetrics](StringIO(text)) as reader:
         assert list(reader) == []
         assert reader.header == HEADER
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["\n".join(LINES), "\n".join(LINES) + "\n", "\r\n".join(LINES) + "\r\n"],
+    ids=["no-line-break", "lf", "crlf"],
+)
+def test_reader_refuses_a_file_that_ends_after_its_header(tmp_path: Path, text: str) -> None:
+    """A header without the blank line htsjdk writes after it may be cut short."""
+    path = tmp_path / "cut.quality_yield_metrics"
+    _ = path.write_bytes(text.encode())
+    message = f"{path} ends after its header, so it may be cut short!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardReader.from_path[QualityYieldMetrics](path)
+    message = "The text ends after its header, so it may be cut short!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardReader[QualityYieldMetrics](StringIO(text))
+
+
+@pytest.mark.parametrize("end", ["", "\n"], ids=repr)
+def test_reader_reads_a_table_the_file_ends_without_a_blank_line(end: str) -> None:
+    """A metrics table that ends the file, without a blank line after it, reads every row."""
+    path = DATA / "cmm.quality_yield_metrics"
+    text = path.read_text().rstrip("\n") + end
+    with (
+        PicardReader[QualityYieldMetrics](StringIO(text)) as cut_reader,
+        PicardReader.from_path[QualityYieldMetrics](path) as reader,
+    ):
+        rows = list(reader)
+        assert rows
+        assert list(cut_reader) == rows
 
 
 def test_reader_passes_comment_rows_of_the_table_to_the_callers_on_comment() -> None:

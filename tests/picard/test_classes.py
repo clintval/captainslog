@@ -49,14 +49,24 @@ def test_metrics_class_points_a_histogram_only_file_to_histogram_class() -> None
 
 
 def test_metrics_class_points_a_file_of_a_header_alone_to_histogram_class(tmp_path: Path) -> None:
-    """A file holding only a header is refused, pointing to `histogram_class`."""
+    """A file of only a header and its blank lines is refused, pointing to `histogram_class`."""
     path = tmp_path / "header.metrics"
-    _ = path.write_text("\n".join(LINES) + "\n")
+    _ = path.write_text("\n".join([*LINES, "", "", "", ""]))
     message = (
         rf"^{re.escape(str(path))} holds no metrics table! "
         r"If it holds only a histogram, find its type with histogram_class\.$"
     )
     with pytest.raises(ValueError, match=message):
+        _ = metrics_class(path)
+
+
+@pytest.mark.parametrize("end", ["", "\n"], ids=repr)
+def test_metrics_class_refuses_a_file_that_ends_after_its_header(tmp_path: Path, end: str) -> None:
+    """A header without the blank line htsjdk writes after it may be cut short."""
+    path = tmp_path / "cut.metrics"
+    _ = path.write_text("\n".join(LINES) + end)
+    message = f"{path} ends after its header, so it may be cut short!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
         _ = metrics_class(path)
 
 

@@ -216,6 +216,26 @@ def test_table_holds_the_first_line_after_its_comments_that_is_not_blank(
     assert table.section_line == section
 
 
+@pytest.mark.parametrize(
+    ("text", "ends"),
+    [
+        ("\n".join(LINES), True),
+        ("\n".join(LINES) + "\n", True),
+        ("\r\n".join(LINES) + "\r\n", True),
+        ("\n".join([*LINES, ""]) + "\n", False),
+        ("\n".join([*LINES, " "]), False),
+        ("\n".join([*LINES, HISTOGRAM]), False),
+        ("", False),
+        ("\n", False),
+    ],
+    ids=["no-line-break", "lf", "crlf", "blank-line", "whitespace", "section", "empty", "blank"],
+)
+def test_table_notes_a_file_that_ends_in_its_comments(text: str, ends: bool) -> None:
+    """A file ends in its comments when no blank line or section line follows them."""
+    for most in (1, 1000):
+        assert Table(Trickle(text, most), marker="## METRICS CLASS").ends_in_comments is ends
+
+
 @pytest.mark.parametrize("line", [METRICS, HISTOGRAM])
 def test_table_ends_its_comments_at_a_section_without_a_blank_line_before_it(line: str) -> None:
     """A section line that follows the comments directly is a section line, not a comment."""

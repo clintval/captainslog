@@ -188,12 +188,55 @@ def test_reader_reads_no_rows_from_an_owner_file_without_its_histogram(tmp_path:
         assert reader.header.command_line.startswith("CollectMultipleMetrics")
 
 
-def test_reader_of_a_file_without_a_section_reads_no_records() -> None:
+@pytest.mark.parametrize("blank_lines", [1, 3])
+def test_reader_of_a_file_without_a_section_reads_no_records(blank_lines: int) -> None:
     """A file with a header and no section, as htsjdk writes for no data, holds no bins."""
-    text = "\n".join([*LINES, "", "", "", ""])
+    text = "\n".join([*LINES, *[""] * (blank_lines + 1)])
     with PicardHistogramReader[InsertSizeHistogram](StringIO(text)) as reader:
         assert list(reader) == []
         assert reader.header == HEADER
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["\n".join(LINES), "\n".join(LINES) + "\n", "\r\n".join(LINES) + "\r\n"],
+    ids=["no-line-break", "lf", "crlf"],
+)
+def test_reader_and_histogram_class_refuse_a_file_that_ends_after_its_header(
+    tmp_path: Path, text: str
+) -> None:
+    """A header without the blank line htsjdk writes after it may be cut short."""
+    path = tmp_path / "cut.quality_distribution_metrics"
+    _ = path.write_bytes(text.encode())
+    message = f"{path} ends after its header, so it may be cut short!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = PicardHistogramReader.from_path[MeanQualityByCycle](path)
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = histogram_class(path)
+
+
+def test_histogram_class_refuses_a_header_and_its_blank_lines_as_no_histogram(
+    tmp_path: Path,
+) -> None:
+    """A header and the blank lines after it, as htsjdk writes for no data, hold no histogram."""
+    path = tmp_path / "empty.quality_distribution_metrics"
+    _ = path.write_text("\n".join([*LINES, "", ""]))
+    with pytest.raises(ValueError, match=f"^{re.escape(str(path))} holds no histogram!$"):
+        _ = histogram_class(path)
+
+
+@pytest.mark.parametrize("end", ["", "\n"], ids=repr)
+def test_reader_reads_a_histogram_the_file_ends_without_a_blank_line(end: str) -> None:
+    """A histogram that ends the file, without a blank line after it, reads every bin."""
+    path = DATA / "cmm.quality_by_cycle_metrics"
+    text = path.read_text().rstrip("\n") + end
+    with (
+        PicardHistogramReader[MeanQualityByCycle](StringIO(text)) as cut_reader,
+        PicardHistogramReader.from_path[MeanQualityByCycle](path) as reader,
+    ):
+        bins = list(reader)
+        assert bins
+        assert same(list(cut_reader), bins)
 
 
 def test_reader_reads_the_header_of_a_histogram_only_file() -> None:

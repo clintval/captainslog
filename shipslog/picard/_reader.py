@@ -55,7 +55,8 @@ def find_section(table: Table, name: str) -> str | None:
         section for no rows.
 
     Raises:
-        ValueError: if the file breaks its lines with lone carriage returns, or is not a Picard
+        ValueError: if the file breaks its lines with lone carriage returns, ends after its header,
+            without the blank line htsjdk writes after it, so may be cut short, or is not a Picard
             metrics file: it has neither a header nor a section, or its first line after the
             header starts no section.
     """
@@ -63,6 +64,8 @@ def find_section(table: Table, name: str) -> str | None:
     head = [comment.text for comment in table.comments] + ([] if line is None else [line])
     if any("\r" in text for text in head):
         raise ValueError(f"{name} breaks its lines with lone carriage returns, not line feeds!")
+    if table.ends_in_comments:
+        raise ValueError(f"{name} ends after its header, so it may be cut short!")
     if line is None and table.comments:
         return None
     if line is None or not line.startswith((f"{METRICS_CLASS}\t", HISTOGRAM)):
@@ -96,9 +99,10 @@ def check_section(table: Table, java: str, record_name: str) -> None:
         record_name: the name of the dataclass to read the rows into.
 
     Raises:
-        ValueError: if the file breaks its lines with lone carriage returns, holds metrics of
-            another Java class or only a histogram, or is not a Picard metrics file: it has
-            neither a header nor a section, or its first line after the header starts no section.
+        ValueError: if the file breaks its lines with lone carriage returns, ends after its header,
+            so may be cut short, holds metrics of another Java class or only a histogram, or is not
+            a Picard metrics file: it has neither a header nor a section, or its first line after
+            the header starts no section.
     """
     name = table.display_name
     line = find_section(table, name)
@@ -140,9 +144,9 @@ def check_histogram_section(table: Table, owners: frozenset[str], record_name: s
         record_name: the name of the dataclass to read the bins into.
 
     Raises:
-        ValueError: if the file breaks its lines with lone carriage returns, holds metrics of a
-            class whose files hold no such histogram, holds only a histogram where the histogram
-            follows metrics, or is not a Picard metrics file.
+        ValueError: if the file breaks its lines with lone carriage returns, ends after its header,
+            so may be cut short, holds metrics of a class whose files hold no such histogram, holds
+            only a histogram where the histogram follows metrics, or is not a Picard metrics file.
     """
     name = table.display_name
     line = find_section(table, name)
@@ -228,8 +232,9 @@ def histogram_class(path: Path | str) -> type[Any]:
 
     Raises:
         ValueError: if the file holds no histogram, holds one of a shape or metrics class no
-            Picard 3.5.0 histogram has, holds no rows after its `## HISTOGRAM` line, so may be cut
-            short, is not a Picard metrics file, or breaks its lines with lone carriage returns.
+            Picard 3.5.0 histogram has, ends after its header or holds no rows after its
+            `## HISTOGRAM` line, so may be cut short, is not a Picard metrics file, or breaks its
+            lines with lone carriage returns.
     """
     with open_for_reading(path) as handle:
         table = Table(handle, marker=HISTOGRAM)
@@ -251,8 +256,8 @@ def metrics_class(path: Path | str) -> type[Any]:
 
     Raises:
         ValueError: if the file holds a class that is not a Picard 3.5.0 metrics class, holds no
-            metrics table, is not a Picard metrics file, or breaks its lines with lone carriage
-            returns.
+            metrics table, ends after its header, so may be cut short, is not a Picard metrics
+            file, or breaks its lines with lone carriage returns.
     """
     with open_for_reading(path) as handle:
         found = section_java(find_section(Table(handle, marker=METRICS_CLASS), str(path)))
@@ -330,10 +335,10 @@ class PicardReader(_PicardTableReader[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
             ValueError: if the file holds another class or only a histogram, is not a Picard
-                metrics file, breaks its lines with lone carriage returns, holds no rows after
-                its `## METRICS CLASS` line, so may be cut short, or has columns that differ from
-                the record type's fields, naming those missing from the file and those it does
-                not expect.
+                metrics file, breaks its lines with lone carriage returns, ends after its header or
+                holds no rows after its `## METRICS CLASS` line, so may be cut short, or has
+                columns that differ from the record type's fields, naming those missing from the
+                file and those it does not expect.
         """
         record_type = self.record_type
         java = java_name(record_type)
@@ -363,9 +368,9 @@ class PicardHistogramReader(_PicardTableReader[RecordType]):
             TypeError: if the record type is not a Picard histogram dataclass or a subclass of one.
             ValueError: if the file holds metrics whose files hold no such histogram, holds only a
                 histogram where the histogram follows metrics, is not a Picard metrics file,
-                breaks its lines with lone carriage returns, holds no rows after its
-                `## HISTOGRAM` line, so may be cut short, or has columns that differ from the
-                record type's fields, naming those missing from the file and those it does not
+                breaks its lines with lone carriage returns, ends after its header or holds no rows
+                after its `## HISTOGRAM` line, so may be cut short, or has columns that differ from
+                the record type's fields, naming those missing from the file and those it does not
                 expect.
         """
         record_type = self.record_type

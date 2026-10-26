@@ -71,7 +71,8 @@ class Table:
     is a row.
 
     The leading comment lines, and the first line after them that is not blank, which starts the
-    file's first section, are read when the table is built.
+    file's first section, are read when the table is built, and so is whether the file ends in
+    them.
     """
 
     def __init__(self, handle: TextIO, /, marker: str) -> None:
@@ -88,6 +89,8 @@ class Table:
         """The leading lines that start with `#`, up to one that does not or starts a section."""
         self.section_line: str | None = None
         """The first line after the comments that is not blank, without its line break, or None."""
+        self.ends_in_comments: bool = False
+        """Whether the file ends in its comments, with no blank line or section line after them."""
         self.marker_line: str | None = None
         """The marker line without its line break, or None until read or when there is none."""
         self._handle: TextIO = handle
@@ -151,11 +154,12 @@ class Table:
             elif NOT_BLANK.search(line) is not None:
                 self.section_line = line
                 break
-            else:
+            elif stop >= 0 or line:
                 leading = False
             if stop < 0:
                 break
             start = stop + 1
+        self.ends_in_comments = leading and bool(self.comments) and self.section_line is None
         self._text = text
 
     def _skip(self, text: str, end: bool) -> None:
