@@ -7,6 +7,7 @@ from typing import get_type_hints
 
 import pytest
 
+from shipslog import picard
 from shipslog.picard import AlignmentSummaryMetrics
 from shipslog.picard import Category
 from shipslog.picard import GcBiasDetailMetrics
@@ -43,6 +44,19 @@ def test_every_picard_dataclass_is_frozen_keyword_only_and_named_in_java_names()
     for kind in JAVA_NAMES:
         assert kind.__dataclass_params__.frozen, kind
         assert all(field.kw_only is True for field in fields(kind)), kind
+
+
+def test_no_dataclass_is_named_for_a_class_no_picard_file_holds() -> None:
+    """Base and collector classes that no Picard file holds have no dataclass of their own."""
+    held_by_no_file = {
+        "picard.analysis.directed.PanelMetricsBase",
+        "picard.analysis.directed.TargetMetrics",
+        "picard.analysis.directed.TargetMetricsBase",
+        "picard.metrics.MultilevelMetrics",
+        "picard.sam.SamErrorMetric.ErrorMetric",
+    }
+    assert held_by_no_file.isdisjoint(JAVA_NAMES.values())
+    assert "Multilevel" in picard.__all__
 
 
 def test_java_names_are_unique() -> None:

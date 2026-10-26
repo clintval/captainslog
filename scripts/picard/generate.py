@@ -63,8 +63,17 @@ STRING_ENUM_TYPES = {
 }
 # fmt: on
 
-# Its fields hold a whole metrics file and a summary bean, so htsjdk cannot write it as columns.
-SKIPPED = {"picard.metrics.GcBiasMetrics"}
+# No Picard file holds these: base classes, a collector's own metrics, and a bean of whole files.
+# fmt: off
+SKIPPED = {
+    "picard.analysis.directed.PanelMetricsBase",
+    "picard.analysis.directed.TargetMetrics",
+    "picard.analysis.directed.TargetMetricsBase",
+    "picard.metrics.GcBiasMetrics",
+    "picard.metrics.MultilevelMetrics",
+    "picard.sam.SamErrorMetric.ErrorMetric",
+}
+# fmt: on
 
 TOKENS = re.compile(
     r'/\*\*(?P<doc>.*?)\*/|/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|(?P<end>[{};])',
