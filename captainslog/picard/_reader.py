@@ -267,6 +267,19 @@ def metrics_class(path: Path | str) -> type[Any]:
     return kind
 
 
+def with_table_defaults(options: ReaderOptions, rename: Mapping[str, str]) -> None:
+    """Leave the options of a reader of a Picard table at Picard's defaults, where not given.
+
+    Args:
+        options: the options of the reader, which the defaults are set in.
+        rename: the column of each field, unless the options name their own.
+    """
+    _ = options.setdefault("codecs", PICARD_CODECS)
+    _ = options.setdefault("comment_prefixes", ())
+    _ = options.setdefault("quoting", False)
+    _ = options.setdefault("rename", rename)
+
+
 class _PicardTableReader(TsvReader[RecordType]):
     """A reader of one table of a Picard metrics file, and of the header htsjdk wrote above it."""
 
@@ -290,10 +303,7 @@ class _PicardTableReader(TsvReader[RecordType]):
             if on_comment is not None:
                 on_comment(comment)
         self._header: PicardHeader = parser.header
-        _ = options.setdefault("codecs", PICARD_CODECS)
-        _ = options.setdefault("comment_prefixes", ())
-        _ = options.setdefault("quoting", False)
-        _ = options.setdefault("rename", rename)
+        with_table_defaults(options, rename)
         super().__init__(as_text_io(table), **options)
 
     @property

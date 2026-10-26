@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from io import StringIO
 from math import isnan
 from pathlib import Path
 
@@ -31,6 +32,15 @@ class DerivedCoverage(PerBaseCoverage):
     def locus(self) -> str:
         """The contig and position of the base."""
         return f"{self.chrom}:{self.pos}"
+
+
+class DerivedTarget(PerTargetCoverage):
+    """A user's subclass of the per-target dataclass that derives a span."""
+
+    @property
+    def span(self) -> str:
+        """The contig, start and end of the target."""
+        return f"{self.chrom}:{self.start}-{self.end}"
 
 
 def test_reader_reads_the_per_target_coverage_fixture() -> None:
@@ -66,8 +76,10 @@ def test_reader_reads_the_per_base_coverage_fixture() -> None:
 
 @pytest.mark.parametrize(
     ("path", "kind"),
-    [(PER_TARGET, PerTargetCoverage), (PER_BASE, PerBaseCoverage)],
-    ids=lambda value: value.name if isinstance(value, Path) else "",
+    [
+        pytest.param(PER_TARGET, PerTargetCoverage, id=PER_TARGET.name),
+        pytest.param(PER_BASE, PerBaseCoverage, id=PER_BASE.name),
+    ],
 )
 def test_coverage_fixtures_read_back_the_same_after_writing(
     path: Path, kind: type[RecordType], tmp_path: Path
@@ -80,7 +92,7 @@ def test_coverage_fixtures_read_back_the_same_after_writing(
         writer.write_all(rows)
     with PicardCoverageReader.from_path[kind](out) as reader:
         assert same(list(reader), rows)
-    assert out.read_text().splitlines()[0] == path.read_text().splitlines()[0]
+    assert out.read_bytes().partition(b"\n")[0:2] == path.read_bytes().partition(b"\n")[0:2]
 
 
 def test_reader_and_writer_keep_a_contig_that_starts_with_a_hash(tmp_path: Path) -> None:
@@ -119,10 +131,12 @@ def test_reader_reads_nan_as_picard_writes_it(tmp_path: Path) -> None:
 
 
 def test_reader_refuses_a_class_that_is_not_a_coverage_dataclass() -> None:
-    """A record type that is no coverage dataclass is refused before any file is opened."""
+    """A record type that is no coverage dataclass is refused before the text is read."""
+    handle = StringIO(PER_BASE.read_text())
     message = "NotCoverage is not a Picard coverage dataclass!"
     with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
-        _ = PicardCoverageReader.from_path[NotCoverage](PER_BASE)
+        _ = PicardCoverageReader[NotCoverage](handle)
+    assert handle.tell() == 0
 
 
 def test_writer_refuses_a_class_that_is_not_a_coverage_dataclass(tmp_path: Path) -> None:
@@ -140,3 +154,40 @@ def test_reader_reads_a_users_subclass_of_a_coverage_dataclass() -> None:
         first = next(iter(reader))
     assert isinstance(first, DerivedCoverage)
     assert first.locus == "1:201"
+
+
+def test_reader_reads_a_subclass_of_per_target_coverage_under_its_renamed_column() -> None:
+    """A subclass of the per-target dataclass inherits the `%gc` column of its parent."""
+    with PicardCoverageReader.from_path[DerivedTarget](PER_TARGET) as reader:
+        first = next(iter(reader))
+    assert isinstance(first, DerivedTarget)
+    assert first.pct_gc == 0.41
+    assert first.span == "1:201-300"
+
+
+def test_reader_lets_a_callers_option_win_over_a_default() -> None:
+    """A rename the caller gives replaces the reader's own."""
+    text = "contig\tpos\ttarget\tcoverage\n1\t5\tt\t3\n"
+    rename = {"chrom": "contig"}
+    reader = PicardCoverageReader[PerBaseCoverage](StringIO(text), rename=rename)
+    assert list(reader) == [PerBaseCoverage(chrom="1", pos=5, target="t", coverage=3)]
+
+
+def test_writer_lets_a_callers_option_win_over_a_default() -> None:
+    """With `header=False` the writer writes no header line."""
+    handle = StringIO()
+    writer = PicardCoverageWriter[PerBaseCoverage](handle, header=False)
+    writer.write(PerBaseCoverage(chrom="1", pos=5, target="t", coverage=3))
+    assert handle.getvalue() == "1\t5\tt\t3\n"
+
+
+def test_writer_refuses_a_comment(tmp_path: Path) -> None:
+    """A Picard coverage file holds no comments, so none is written."""
+    path = tmp_path / "out.txt"
+    message = "A Picard coverage file holds no comments!"
+    with (
+        PicardCoverageWriter.from_path[PerBaseCoverage](path) as writer,
+        pytest.raises(TypeError, match=f"^{re.escape(message)}$"),
+    ):
+        writer.write_comment("note")
+    assert path.read_text() == "chrom\tpos\ttarget\tcoverage\n"

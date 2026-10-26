@@ -2,15 +2,18 @@ from dataclasses import dataclass
 from typing import Any
 from typing import TextIO
 
+from typeline import Comment
 from typeline import ReaderOptions
 from typeline import RecordType
 from typeline import TsvReader
 from typeline import TsvWriter
 from typeline import WriterOptions
 from typing_extensions import Unpack
+from typing_extensions import override
 
 from captainslog._binding import FromPath
-from captainslog.picard._format import PICARD_CODECS
+from captainslog.picard._reader import with_table_defaults
+from captainslog.picard._writer import table_options
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -18,46 +21,46 @@ class PerTargetCoverage:
     """The coverage of one target, a row of the file of per-target coverage that Picard writes."""
 
     chrom: str = ""
-    """The contig of the target"""
+    """The contig of the target."""
 
     start: int = 0
-    """The 1-based start of the target"""
+    """The 1-based start of the target."""
 
     end: int = 0
-    """The 1-based, inclusive end of the target"""
+    """The 1-based, inclusive end of the target."""
 
     length: int = 0
-    """The number of bases of the target"""
+    """The number of bases of the target."""
 
     name: str = ""
-    """The name of the target interval"""
+    """The name of the target interval."""
 
     pct_gc: float = 0.0
-    """The fraction of the bases of the target that are G or C"""
+    """The fraction of the reference bases of the target that are G or C, among A, C, G and T."""
 
     mean_coverage: float = 0.0
-    """The mean high quality depth over the bases of the target"""
+    """The mean high quality depth over the bases of the target."""
 
     normalized_coverage: float = 0.0
-    """The mean coverage of the target over the mean coverage of all targets"""
+    """The mean coverage of the target over the mean target coverage."""
 
     min_normalized_coverage: float = 0.0
-    """The least depth of a base of the target over the mean coverage of all targets"""
+    """The least depth of a base of the target over the mean target coverage."""
 
     max_normalized_coverage: float = 0.0
-    """The greatest depth of a base of the target over the mean coverage of all targets"""
+    """The greatest depth of a base of the target over the mean target coverage."""
 
     min_coverage: int = 0
-    """The least high quality depth of a base of the target"""
+    """The least high quality depth of a base of the target."""
 
     max_coverage: int = 0
-    """The greatest high quality depth of a base of the target"""
+    """The greatest high quality depth of a base of the target."""
 
     pct_0x: float = 0.0
-    """The fraction of the bases of the target with no coverage"""
+    """The fraction of the bases of the target with no coverage."""
 
     read_count: int = 0
-    """The number of reads that overlap the target"""
+    """The number of reads that pass the filters and have a high quality base on the target."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,16 +68,16 @@ class PerBaseCoverage:
     """The coverage of one base of a target, a row of the file of per-base coverage."""
 
     chrom: str = ""
-    """The contig of the target"""
+    """The contig of the target."""
 
     pos: int = 0
-    """The 1-based position of the base"""
+    """The 1-based position of the base."""
 
     target: str = ""
-    """The name of the target interval that holds the base"""
+    """The name of the target interval that holds the base."""
 
     coverage: int = 0
-    """The high quality depth at the base"""
+    """The high quality depth at the base."""
 
 
 # fmt: off
@@ -116,11 +119,7 @@ class PicardCoverageReader(TsvReader[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard coverage dataclass or a subclass of one.
         """
-        rename = coverage_rename(self._bound_record_type())
-        _ = options.setdefault("codecs", PICARD_CODECS)
-        _ = options.setdefault("comment_prefixes", ())
-        _ = options.setdefault("quoting", False)
-        _ = options.setdefault("rename", rename)
+        with_table_defaults(options, coverage_rename(self._bound_record_type()))
         super().__init__(handle, **options)
 
 
@@ -139,10 +138,15 @@ class PicardCoverageWriter(TsvWriter[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard coverage dataclass or a subclass of one.
         """
-        rename = coverage_rename(self._bound_record_type())
-        _ = options.setdefault("codecs", PICARD_CODECS)
-        _ = options.setdefault("comment_prefixes", ("\n",))
-        _ = options.setdefault("header", True)
-        _ = options.setdefault("quoting", False)
-        _ = options.setdefault("rename", rename)
-        super().__init__(handle, **options)
+        defaults = table_options(coverage_rename(self._bound_record_type()))
+        defaults.update(options)
+        super().__init__(handle, **defaults)
+
+    @override
+    def write_comment(self, comment: str | Comment) -> None:
+        """Refuse a comment, since a Picard coverage file holds none.
+
+        Raises:
+            TypeError: always.
+        """
+        raise TypeError("A Picard coverage file holds no comments!")
