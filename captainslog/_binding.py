@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from captainslog.picard._reader import PicardReader
     from captainslog.picard._writer import PicardHistogramWriter
     from captainslog.picard._writer import PicardWriter
+    from captainslog.riker._reader import RikerReader
+    from captainslog.riker._writer import RikerWriter
 
 BuiltType_co = TypeVar("BuiltType_co", covariant=True)
 """The reader or writer a `from_path` builds."""
@@ -109,6 +111,24 @@ class BoundCoverageWriterFromPath(Protocol):
         ...
 
 
+class BoundRikerReaderFromPath(Protocol):
+    """The `from_path` of a Riker reader class, waiting to be subscripted with a record type."""
+
+    def __getitem__(self, record_type: type[RecordType], /) -> "OpensPath[RikerReader[RecordType]]":
+        """Bind the record type, giving a constructor of the Riker reader over it."""
+        ...
+
+
+class BoundRikerWriterFromPath(Protocol):
+    """The `from_path` of a Riker writer class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "WritesOptions[RikerWriter[RecordType]]":
+        """Bind the record type, giving a constructor of the Riker writer over it."""
+        ...
+
+
 class FromPath:
     """The typeline `from_path` a class inherits, which type checkers see build that class.
 
@@ -149,6 +169,12 @@ class FromPath:
     def __get__(
         self, obj: object, owner: type["PicardCoverageWriter[Any]"]
     ) -> BoundCoverageWriterFromPath: ...
+
+    @overload
+    def __get__(self, obj: object, owner: type["RikerReader[Any]"]) -> BoundRikerReaderFromPath: ...
+
+    @overload
+    def __get__(self, obj: object, owner: type["RikerWriter[Any]"]) -> BoundRikerWriterFromPath: ...
 
     @overload
     def __get__(self, obj: object, owner: type[object]) -> object: ...

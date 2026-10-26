@@ -4,7 +4,6 @@ from collections.abc import Mapping
 from itertools import chain
 from typing import Any
 from typing import TextIO
-from typing import cast
 
 from typeline import Comment
 from typeline import RecordType
@@ -13,6 +12,8 @@ from typeline import WriterOptions
 from typing_extensions import override
 
 from captainslog._binding import FromPath
+from captainslog._stream import SectionStream
+from captainslog._stream import as_text_io
 from captainslog.picard._format import PICARD_CODECS
 from captainslog.picard._format import picard_rename
 from captainslog.picard._header import PicardHeader
@@ -23,63 +24,7 @@ from captainslog.picard._reader import java_name
 from captainslog.picard._table import HISTOGRAM
 from captainslog.picard._table import METRICS_CLASS
 
-
-class _SectionStream:
-    """A text stream that starts a section of a Picard metrics file once a row follows its labels.
-
-    typeline writes the label row first, and alone when no row follows it, so the label row is
-    held back until a row follows it, then written after the section line. A label row with no row
-    after it never reaches the file, as htsjdk writes no section without rows.
-    """
-
-    def __init__(self, handle: TextIO, section: str) -> None:
-        self._handle: TextIO = handle
-        self._section: str = section
-        self._labels: str = ""
-        self._started: bool = False
-        self._ended: bool = False
-
-    @property
-    def ended(self) -> bool:
-        """Whether the section has ended, so no row may follow."""
-        return self._ended
-
-    def write(self, text: str) -> int:
-        """Hold the label row, then write the section line, the label row, and each row after it.
-
-        Raises:
-            ValueError: if a row is written after the section has ended.
-        """
-        rows = text
-        if not self._labels.endswith("\n"):
-            labels, newline, rows = text.partition("\n")
-            self._labels += labels + newline
-        if not rows:
-            return len(text)
-        if self._ended:
-            raise ValueError("Cannot write metrics after the histogram!")
-        if not self._started:
-            _ = self._handle.write(f"{self._section}{os.linesep}{self._labels}")
-            self._started = True
-        _ = self._handle.write(rows)
-        return len(text)
-
-    def end(self) -> None:
-        """End the section, refusing any row after it and dropping a label row still held."""
-        self._ended = True
-
-    def close(self) -> None:
-        """Close the handle, dropping a label row still held."""
-        self._handle.close()
-
-
-def as_text_io(stream: _SectionStream) -> TextIO:
-    """Type a section stream as the text a typeline writer takes, of which it uses `write`, `close`.
-
-    Args:
-        stream: the stream to write through.
-    """
-    return cast(TextIO, cast(object, stream))
+_SectionStream = SectionStream
 
 
 def table_options(rename: Mapping[str, str]) -> WriterOptions:
@@ -117,7 +62,7 @@ class _PicardTableWriter(TsvWriter[RecordType]):
             rename: the label of the column of each field, by field name.
             header: the header to write at the top, or None to write `default_header()`.
         """
-        self._stream: _SectionStream = _SectionStream(handle, section)
+        self._stream: SectionStream = SectionStream(handle, section)
         super().__init__(as_text_io(self._stream), **table_options(rename))
         self._file: TextIO = handle
         for line in header_lines(default_header() if header is None else header):
