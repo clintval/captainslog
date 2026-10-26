@@ -1,4 +1,3 @@
-import re
 from dataclasses import fields
 from typing import Any
 
@@ -15,9 +14,6 @@ NAN: float = float("nan")
 
 NEG_INF: float = float("-inf")
 """The float Picard writes as `-?`."""
-
-FLOAT: re.Pattern[str] = re.compile(r"-?\d+(?:[.,]\d+)?(?:[eE][+-]?\d+)?")
-"""A float as typeline reads one, with a decimal point or a decimal comma."""
 
 
 def read_picard_float(text: str) -> float:
@@ -36,9 +32,19 @@ def read_picard_float(text: str) -> float:
         return NAN
     if text == "-?":
         return NEG_INF
-    if FLOAT.fullmatch(text) is None:
+    try:
+        value = float(text.replace(",", ".") if "," in text else text)
+    except ValueError:
+        value = None
+    first = text[:1]
+    if (
+        value is None
+        or not text[-1:].isdigit()
+        or "_" in text
+        or not (first.isdigit() or (first == "-" and text[1:2].isdigit()))
+    ):
         raise ValueError(f"Expected a float but found '{text}'!")
-    return float(text.replace(",", "."))
+    return value
 
 
 PICARD_FLOAT: FieldCodec[float] = FieldCodec(
