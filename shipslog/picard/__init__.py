@@ -17,11 +17,19 @@ from shipslog.picard._reader import PicardHistogramReader
 from shipslog.picard._reader import PicardReader
 from shipslog.picard._reader import histogram_class
 from shipslog.picard._reader import metrics_class
+from shipslog.picard._series import InsertSizeSeries
+from shipslog.picard._series import LibraryComplexitySeries
+from shipslog.picard._series import RnaCoverageSeries
+from shipslog.picard._series import insert_size_series
+from shipslog.picard._series import library_complexity_series
+from shipslog.picard._series import rna_coverage_series
 from shipslog.picard._writer import PicardHistogramWriter
 from shipslog.picard._writer import PicardWriter
 
 __all__: list[str] = [
     "AccumulationLevel",
+    "InsertSizeSeries",
+    "LibraryComplexitySeries",
     "Multilevel",
     "PerBaseCoverage",
     "PerTargetCoverage",
@@ -32,10 +40,14 @@ __all__: list[str] = [
     "PicardHistogramWriter",
     "PicardReader",
     "PicardWriter",
+    "RnaCoverageSeries",
     "accumulation_level",
     "columns",
     "histogram_class",
+    "insert_size_series",
+    "library_complexity_series",
     "metrics_class",
+    "rna_coverage_series",
 ]
 __all__ += _histograms.__all__
 __all__ += _metrics.__all__

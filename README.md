@@ -171,6 +171,26 @@ Here the counts for all reads sum to the 478 read pairs of the all-reads row abo
 A histogram whose columns depend on the data, like one count per level and pair orientation, keeps them in a dict field by column name.
 `columns` transposes the bins of a histogram into one tuple per field, and a dict of tuples for the columns kept by name, with a typed result for each histogram.
 
+`insert_size_series` turns the columns kept by name into typed series, one for each level and pair orientation:
+
+```python
+from shipslog.picard import InsertSizeHistogram
+from shipslog.picard import PairOrientation
+from shipslog.picard import PicardHistogramReader
+from shipslog.picard import columns
+from shipslog.picard import insert_size_series
+
+with PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics") as reader:
+    rows = list(reader)
+
+series = insert_size_series(columns(rows))
+all_reads = next(s for s in series if s.name is None and s.orientation is PairOrientation.FR)
+
+assert sum(all_reads.counts) == 478
+```
+
+`rna_coverage_series` and `library_complexity_series` do the same for their histograms.
+
 Some Picard files hold only a histogram, like those of `MeanQualityByCycle` and `QualityScoreDistribution`, and are read the same way:
 
 ```python
