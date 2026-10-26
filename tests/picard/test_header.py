@@ -55,14 +55,28 @@ def test_header_lines_of_an_empty_header_are_none() -> None:
     assert header_lines(PicardHeader()) == []
 
 
-def test_header_lines_hold_the_place_of_an_empty_command_line_before_a_start_time() -> None:
-    """An empty command line is written when a string header follows it, so it reads back."""
-    assert header_lines(PicardHeader(started_on="today")) == [
-        f"## {STRING_HEADER}",
-        "# ",
-        f"## {STRING_HEADER}",
-        "# Started on: today",
-    ]
+@pytest.mark.parametrize(
+    ("header", "text"),
+    [
+        (PicardHeader(started_on="today"), ""),
+        (PicardHeader(others=((STRING_HEADER, "note"),)), ""),
+        (PicardHeader(command_line="   ", started_on="today"), "   "),
+        (PicardHeader(command_line="tool", others=((STRING_HEADER, " \t"),)), " \t"),
+        (PicardHeader(others=((VERSION_HEADER, ""),)), ""),
+    ],
+    ids=[
+        "no-command-line",
+        "no-command-line-string",
+        "blank-command-line",
+        "blank-text",
+        "blank-other",
+    ],
+)
+def test_header_lines_refuse_a_line_holding_no_text(header: PicardHeader, text: str) -> None:
+    """A line of only whitespace, such as the place of an empty command line, is refused."""
+    message = f"A header line holds no text, which htsjdk cannot read: {text!r}!"
+    with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
+        _ = header_lines(header)
 
 
 @pytest.mark.parametrize(
@@ -70,21 +84,19 @@ def test_header_lines_hold_the_place_of_an_empty_command_line_before_a_start_tim
     [
         HEADER,
         PicardHeader(command_line="CollectQualityYieldMetrics I=in.bam O=out.txt"),
-        PicardHeader(started_on="Sat Oct 24 10:00:00 HST 2026"),
-        PicardHeader(others=((STRING_HEADER, "note"),)),
+        PicardHeader(command_line="tool", started_on="Sat Oct 24 10:00:00 HST 2026"),
         PicardHeader(others=((VERSION_HEADER, "picard\t3.5.0"),)),
-        PicardHeader(others=((STRING_HEADER, "Started on: later"),)),
         PicardHeader(command_line="tool", others=((STRING_HEADER, "Started on: later"),)),
+        PicardHeader(command_line="tool", others=((STRING_HEADER, "note"),)),
         PicardHeader(),
     ],
     ids=[
         "full",
         "command-line",
-        "start-time",
-        "string-header",
+        "command-line-and-start-time",
         "version-header",
-        "start-time-string-header",
         "command-line-and-start-time-string-header",
+        "command-line-and-string-header",
         "empty",
     ],
 )

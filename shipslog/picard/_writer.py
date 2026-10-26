@@ -1,4 +1,5 @@
 import os
+import re
 from collections.abc import Iterable
 from collections.abc import Mapping
 from dataclasses import replace
@@ -71,7 +72,7 @@ class _PicardTableWriter(TsvWriter[RecordType]):
             blank_lines: the number of blank lines written after the header.
 
         Raises:
-            ValueError: if a header's class name or text holds a line break.
+            ValueError: if a header's class name or text holds a line break, or only whitespace.
         """
         self._stream: SectionStream = SectionStream(handle, section, on_start=self._write_head)
         super().__init__(as_text_io(self._stream), **table_options(rename))
@@ -95,25 +96,28 @@ class _PicardTableWriter(TsvWriter[RecordType]):
     def write_comment(self, comment: str | Comment) -> None:
         """Add a comment to the header, as string headers after the header's own.
 
-        Each line of a string is one header, and an empty string is one header with no text. A
-        `Comment`, such as one a reader sent to `on_comment`, is one header of its text, without its
-        leading `#` characters and one space after them. The comments read back in order, at the
-        end of `reader.header.others`.
+        Each line of a string is one header. A `Comment`, such as one a reader of a plain table
+        sent to `on_comment`, is one header of its text, without its leading `#` characters and one
+        space after them; to copy a Picard file's header, pass `header=reader.header` instead.
+        The comments read back in order, at the end of `reader.header.others`, as
+        `(STRING_HEADER, text)` pairs. htsjdk trims the text of each header line when it reads it
+        back.
 
         Args:
             comment: the comment to add.
 
         Raises:
             ValueError: if the header is already written, with the first row, the histogram, or at
-                `close`, or if a `Comment` holds a line break.
+                `close`, or if a comment holds a line break in a `Comment` or only whitespace on a
+                line, which htsjdk cannot read.
         """
         if self._head is None:
             raise ValueError(
-                "Write comments before the first row,"
+                "Write comments before the first row or close,"
                 + " since a Picard file holds them only in its header!"
             )
         if isinstance(comment, str):
-            texts = comment.splitlines() or [""]
+            texts = re.split(r"\r\n|\r|\n", comment)
         else:
             texts = [comment.text.lstrip("#").removeprefix(" ")]
         others = (*self._picard_header.others, *((STRING_HEADER, text) for text in texts))
@@ -156,7 +160,7 @@ class PicardWriter(_PicardTableWriter[RecordType]):
 
         Raises:
             TypeError: if the record type is not a Picard metrics dataclass or a subclass of one.
-            ValueError: if a header's class name or text holds a line break.
+            ValueError: if a header's class name or text holds a line break, or only whitespace.
         """
         record_type = self.record_type
         self._java: str = java_name(record_type)
@@ -245,7 +249,7 @@ class PicardHistogramWriter(_PicardTableWriter[RecordType]):
         Raises:
             TypeError: if the record type is not a Picard histogram dataclass or a subclass of one,
                 or is one that Picard writes after metrics.
-            ValueError: if a header's class name or text holds a line break.
+            ValueError: if a header's class name or text holds a line break, or only whitespace.
         """
         record_type = self.record_type
         histogram = histogram_of(record_type)

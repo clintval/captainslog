@@ -7,6 +7,7 @@ from shipslog.picard._coverage import PerBaseCoverage
 from shipslog.picard._coverage import PerTargetCoverage
 from shipslog.picard._coverage import PicardCoverageReader
 from shipslog.picard._coverage import PicardCoverageWriter
+from shipslog.picard._header import STRING_HEADER
 from shipslog.picard._header import PicardHeader
 from shipslog.picard._histograms import *  # noqa: F403
 from shipslog.picard._levels import AccumulationLevel
@@ -44,6 +45,7 @@ __all__: list[str] = [
     "PicardReader",
     "PicardWriter",
     "RnaCoverageSeries",
+    "STRING_HEADER",
     "accumulation_level",
     "columns",
     "histogram_class",

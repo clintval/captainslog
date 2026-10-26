@@ -71,14 +71,14 @@ class HeaderParser:
 def header_lines(header: PicardHeader) -> list[str]:
     """Write a header as the `##` and `#` lines that htsjdk writes, in order, without line breaks.
 
-    An empty command line or start time is still written when a later string header would
-    otherwise be read back in its place, so the lines always read back as the same header.
+    A header with a start time or a string header needs a command line, since an empty one would be
+    written as a line that htsjdk cannot read.
 
     Args:
         header: the header to write.
 
     Raises:
-        ValueError: if a header's class name or text holds a line break.
+        ValueError: if a header's class name or text holds a line break, or only whitespace.
     """
     for text in (
         header.command_line,
@@ -94,6 +94,9 @@ def header_lines(header: PicardHeader) -> list[str]:
     if header.started_on or any(text.startswith(STARTED_ON) for text in strings):
         pairs.append((STRING_HEADER, f"{STARTED_ON}{header.started_on}"))
     pairs.extend(header.others)
+    for _, text in pairs:
+        if not text.strip():
+            raise ValueError(f"A header line holds no text, which htsjdk cannot read: {text!r}!")
     return [line for java, text in pairs for line in (f"## {java}", f"# {text}")]
 
 

@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from typeline import NamedExtraColumns
 
+from shipslog.picard import STRING_HEADER
 from shipslog.picard import ClippedBasesHistogram
 from shipslog.picard import DuplicateSetSizeHistogram
 from shipslog.picard import DuplicationMetrics
@@ -23,7 +24,6 @@ from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import SamComparisonHistogram
 from shipslog.picard import SamComparisonMetric
 from shipslog.picard import histogram_class
-from shipslog.picard._header import STRING_HEADER
 from shipslog.picard._header import header_lines
 from shipslog.picard._histograms import HISTOGRAMS
 from tests.compare import same
@@ -48,7 +48,10 @@ QUALITY = QualityScoreDistribution(quality=30, count_of_q=5, counts={"COUNT_OF_O
 
 STRING_HEADER_LINE = "## htsjdk.samtools.metrics.StringHeader"
 
-TOO_LATE = "Write comments before the first row, since a Picard file holds them only in its header!"
+TOO_LATE = (
+    "Write comments before the first row or close,"
+    + " since a Picard file holds them only in its header!"
+)
 
 
 @dataclass(frozen=True, kw_only=True)
