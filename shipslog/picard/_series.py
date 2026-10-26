@@ -83,8 +83,9 @@ def _rows(
     columns: dict[str, tuple[Any, ...]] = {}
     for column, values in named:
         if len(values) != len(axes[0]):
+            count, bins = len(values), len(axes[0])
             raise ValueError(
-                f"The {column} series holds {len(values)} values for {len(axes[0])} bins!"
+                f"The {column} series holds {count} values, not one per bin of {bins}!"
             )
         if column in columns:
             raise ValueError(f"Two series make the column {column}!")
@@ -169,7 +170,7 @@ def insert_size_bins(series: Sequence[InsertSizeSeries], /) -> list[InsertSizeHi
         series: the series to write, one column each, named as Picard names the column.
 
     Raises:
-        ValueError: if the series differ in insert sizes, hold a count other than one per bin,
+        ValueError: if the series differ in insert sizes, hold other than one value per bin,
             or make the same column.
     """
     rows = _rows(
@@ -187,7 +188,7 @@ def rna_coverage_bins(series: Sequence[RnaCoverageSeries], /) -> list[RnaCoverag
         series: the series to write, one column each, named as Picard names the column.
 
     Raises:
-        ValueError: if the series differ in positions, hold a coverage other than one per bin,
+        ValueError: if the series differ in positions, hold other than one value per bin,
             or make the same column.
     """
     rows = _rows(

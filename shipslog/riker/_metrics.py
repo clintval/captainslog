@@ -1071,9 +1071,9 @@ class RnaMetrics:
     """Median Transcript Integrity Number (0–100): `100·exp(−KL(coverage‖uniform))`, an
     entropy-based coverage-uniformity score (100 = perfectly even). Computed over one representative
     transcript per gene (length ≥ --minimum-length, mean coverage > --tin-min-coverage). TIN is
-    **scale-invariant**: it reflects relative coverage *shape*, not depth, so a deeply-sequenced
-    transcript with a localized low-coverage stretch still scores low. See ERRATA.md (rna) for the
-    full formula and interpretation.
+    scale-invariant: it reflects relative coverage shape, not depth, so a deeply-sequenced
+    transcript with a localized low-coverage stretch still scores low. See Riker's ERRATA.md for the
+    full formula.
     """
 
     mean_tin: float = 0.0

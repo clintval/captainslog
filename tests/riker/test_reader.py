@@ -13,8 +13,8 @@ from shipslog.riker import RikerReader
 from shipslog.riker import RnaBiotype
 from shipslog.riker import metrics_class
 from shipslog.riker._reader import SUFFIXES
-from tests.riker import ALL_RIKER_FIXTURES
 from tests.riker import DATA
+from tests.riker import RIKER_FIXTURES
 from tests.riker import riker_class_of
 
 
@@ -34,7 +34,7 @@ class DerivedBiotype(RnaBiotype):
         return f"{self.sample}:{self.biotype}"
 
 
-@pytest.mark.parametrize("path", ALL_RIKER_FIXTURES, ids=lambda path: path.name)
+@pytest.mark.parametrize("path", RIKER_FIXTURES, ids=lambda path: path.name)
 def test_metrics_class_names_the_dataclass_that_reads_every_fixture(path: Path) -> None:
     """The class that the suffix names reads the fixture."""
     kind = metrics_class(path)
@@ -42,7 +42,7 @@ def test_metrics_class_names_the_dataclass_that_reads_every_fixture(path: Path) 
         _ = list(reader)
 
 
-@pytest.mark.parametrize("path", ALL_RIKER_FIXTURES, ids=lambda path: path.name)
+@pytest.mark.parametrize("path", RIKER_FIXTURES, ids=lambda path: path.name)
 def test_suffixes_agree_with_the_classes_of_the_fixtures(path: Path) -> None:
     """Every fixture's suffix is held by the registry, under its class."""
     assert metrics_class(path) is riker_class_of(path)

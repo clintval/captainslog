@@ -14,7 +14,7 @@ Typed dataclasses for the metrics files that Picard and Riker write.
 
 Open a Picard or Riker metrics file and get a list of frozen dataclasses with typed fields, do arithmetic on them without casting, and write them back out.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enums, and Picard's `?` is NaN.
-Each metrics class and histogram that Picard writes has a dataclass, as does each table that Riker writes.
+Each metrics class that Picard writes has a dataclass, as does each histogram htsjdk can read back, and each table that Riker writes.
 
 ## Installation
 
@@ -72,7 +72,7 @@ Each example below runs as written against the test files in this repository.
 
 ### Reading Picard Metrics
 
-`PicardReader` reads a Picard metrics file, plain or compressed, into a list of dataclasses.
+`PicardReader` reads a Picard metrics file, plain or compressed, into dataclasses, one per row.
 `reader.header` holds the command line and start time of the program that wrote it.
 
 ```python

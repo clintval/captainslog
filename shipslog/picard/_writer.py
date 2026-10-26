@@ -158,7 +158,10 @@ class PicardWriter(_PicardTableWriter[RecordType]):
 
     @override
     def close(self) -> None:
-        """End the metrics table with a blank line, unless the histogram has, then the file.
+        """End the file as htsjdk does, and close the writer.
+
+        End the metrics table with a blank line, unless the histogram already did, then end the file
+        with another.
 
         Closing a writer that is already closed does nothing.
         """

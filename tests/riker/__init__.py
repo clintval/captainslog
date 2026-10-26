@@ -24,9 +24,7 @@ from shipslog.riker import WgsMetrics
 
 DATA = Path(__file__).parents[1] / "data" / "riker"
 
-ALL_RIKER_FIXTURES = sorted(DATA.glob("*.txt"))
-
-RIKER_FIXTURES = [path for path in ALL_RIKER_FIXTURES if path.read_text().strip()]
+RIKER_FIXTURES = sorted(DATA.glob("*.txt"))
 
 # fmt: off
 CLASSES: dict[str, type[Any]] = {

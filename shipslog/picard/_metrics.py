@@ -1337,6 +1337,9 @@ class GcBiasDetailMetrics:
     """
 
     accumulation_level: str = ""
+    """The level Picard accumulated the row at, as it writes it: `All Reads`, `Sample`,
+    `Library`, or `Read Group`; `accumulation_level` reads it as an `AccumulationLevel`.
+    """
 
     reads_used: ReadsUsed
     """This option is used to mark including or excluding duplicates."""
@@ -1392,6 +1395,9 @@ class GcBiasSummaryMetrics:
     """High level metrics that capture how biased the coverage in a certain lane is."""
 
     accumulation_level: str = ""
+    """The level Picard accumulated the row at, as it writes it: `All Reads`, `Sample`,
+    `Library`, or `Read Group`; `accumulation_level` reads it as an `AccumulationLevel`.
+    """
 
     reads_used: ReadsUsed
     """This option is used to mark including or excluding duplicates."""

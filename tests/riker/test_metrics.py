@@ -14,7 +14,6 @@ from shipslog.riker import RnaInsertSize
 from shipslog.riker import RnaMetrics
 from shipslog.riker import StrandSpec
 from shipslog.riker import _metrics
-from tests.riker import ALL_RIKER_FIXTURES
 from tests.riker import CLASSES
 from tests.riker import RIKER_FIXTURES
 from tests.riker import riker_class_of
@@ -49,9 +48,9 @@ def test_every_fixture_suffix_has_exactly_one_dataclass() -> None:
     assert len(CLASSES) == 20
     assert len(set(CLASSES.values())) == 20
     assert set(CLASSES.values()) == set(DATACLASSES)
-    mapped = {riker_class_of(path) for path in ALL_RIKER_FIXTURES}
+    mapped = {riker_class_of(path) for path in RIKER_FIXTURES}
     assert mapped == set(CLASSES.values())
-    assert len(ALL_RIKER_FIXTURES) == len(CLASSES)
+    assert len(RIKER_FIXTURES) == len(CLASSES)
 
 
 def test_alignment_categories_are_rikers() -> None:

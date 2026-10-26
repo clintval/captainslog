@@ -294,14 +294,16 @@ def test_bins_refuse_values_that_do_not_match_the_axis() -> None:
     insert = [
         InsertSizeSeries(name="S", orientation=PairOrientation.RF, insert_size=(1, 2), counts=(1,))
     ]
-    with pytest.raises(ValueError, match=r"^The S\.rf_count series holds 1 values for 2 bins!$"):
+    with pytest.raises(
+        ValueError, match=r"^The S\.rf_count series holds 1 values, not one per bin of 2!$"
+    ):
         _ = insert_size_bins(insert)
     rna = [RnaCoverageSeries(name=None, normalized_position=(1,), normalized_coverage=(1.0, 2.0))]
-    message = r"^The All_Reads\.normalized_coverage series holds 2 values for 1 bins!$"
+    message = r"^The All_Reads\.normalized_coverage series holds 2 values, not one per bin of 1!$"
     with pytest.raises(ValueError, match=message):
         _ = rna_coverage_bins(rna)
     lib = [LibraryComplexitySeries(library="L", duplication_group_count=(1, 2, 3), counts=())]
-    with pytest.raises(ValueError, match="^The L series holds 0 values for 3 bins!$"):
+    with pytest.raises(ValueError, match="^The L series holds 0 values, not one per bin of 3!$"):
         _ = library_complexity_bins(lib)
 
 

@@ -63,7 +63,6 @@ JAVA_NAMES: dict[type[Any], str] = {
     _metrics.GenotypeConcordanceSummaryMetrics: "picard.vcf.GenotypeConcordanceSummaryMetrics",
     _metrics.MendelianViolationMetrics: "picard.vcf.MendelianViolations.MendelianViolationMetrics",
 }
-# fmt: on
 
 COLUMN_LABELS: dict[type[Any], dict[str, str]] = {
     _metrics.IndependentReplicateMetric: {
@@ -104,3 +103,4 @@ COLUMN_LABELS: dict[type[Any], dict[str, str]] = {
         "replication_rate_from_replicate_sets": "replicationRateFromReplicateSets",
     },
 }
+# fmt: on

@@ -151,8 +151,8 @@ class HsHistogramColumns:
 class IndependentReplicateHistogram:
     """The allele balance and UMI edit distances CollectIndependentReplicateMetrics writes.
 
-    The `MATRIX_OUTPUT` file of that tool has no histogram class, because Java writes its key with
-    `toString`.
+    The `MATRIX_OUTPUT` file of that tool has no dataclass: its bins are keyed by a Java tuple that
+    htsjdk cannot read back.
     """
 
     allele_balance: int = 0

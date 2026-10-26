@@ -36,7 +36,7 @@ class PerTargetCoverage:
     """The name of the target interval."""
 
     pct_gc: float = 0.0
-    """The fraction of the reference bases of the target that are G or C, among A, C, G and T."""
+    """The fraction of the reference bases of the target that are G or C."""
 
     mean_coverage: float = 0.0
     """The mean high quality depth over the bases of the target."""
