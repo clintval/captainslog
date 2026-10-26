@@ -8,6 +8,7 @@ from shipslog.picard import HsHistogram
 from shipslog.picard import InsertSizeHistogram
 from shipslog.picard import LibraryComplexityHistogram
 from shipslog.picard import MeanQualityByCycle
+from shipslog.picard import PicardWriter
 from shipslog.picard import QualityScoreDistribution
 from shipslog.picard import ReadLengthHistogram
 from shipslog.picard import RnaCoverageHistogram
@@ -90,3 +91,30 @@ def class_named_in(path: Path) -> type[Any]:
     assert line is not None, f"{path} has no {METRICS_CLASS!r} line"
     name = line.removeprefix(METRICS_CLASS)
     return next(kind for kind, java in JAVA_NAMES.items() if java == name)
+
+
+REPEATED_INSERT_SIZES = [
+    "## HISTOGRAM\tjava.lang.Integer",
+    "insert_size\tAll_Reads.fr_count\tNA12891.fr_count\tNA12891.fr_count\tPond-2.fr_count",
+    "100\t5\t5\t3\t2",
+    "101\t7\t7\t4\t3",
+]
+"""An insert size histogram of a sample `NA12891` of two libraries, one of which shares its name."""
+
+REPEATED_RNA_COVERAGE = [
+    "## HISTOGRAM\tjava.lang.Integer",
+    "normalized_position\tAll_Reads.normalized_coverage\tNA12891.normalized_coverage"
+    + "\tNA12891.normalized_coverage",
+    "0\t0.5\t0.5\t0.25",
+    "1\t1.25\t1.25\t1.5",
+]
+"""An RNA coverage histogram of a sample `NA12891` and a library of that name."""
+
+
+def with_histogram(path: Path, metric: object, lines: list[str]) -> Path:
+    """Write a file of one metric under the test header, then a histogram of these lines."""
+    kind: type[Any] = type(metric)
+    with PicardWriter.from_path[kind](path, header=HEADER) as writer:
+        writer.write(metric)
+    _ = path.write_text(path.read_text().removesuffix("\n") + "\n".join([*lines, "", ""]))
+    return path

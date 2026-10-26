@@ -10,6 +10,7 @@ from typeline import TsvReader
 from typeline import open_for_reading
 from typing_extensions import override
 
+from shipslog.picard._table import MARK
 from shipslog.picard._table import Table
 from shipslog.picard._table import as_text_io
 from tests.picard import DATA
@@ -276,6 +277,28 @@ def test_table_reads_a_row_of_empty_fields_and_the_rows_after_it(most: int) -> N
     with TsvReader[Sample](table, comment_prefixes=(), quoting=False) as reader:
         rows = list(reader)
     assert rows == [Sample("a", 1, 0.5), Sample(None, None, None), Sample("c", 3, 1.5)]
+
+
+@pytest.mark.parametrize("most", [1, 2, 3, 1000])
+@pytest.mark.parametrize("newline", ["\n", "\r\n"], ids=["lf", "crlf"])
+def test_table_keys_each_repeat_of_a_histogram_label(most: int, newline: str) -> None:
+    """The n-th repeat of a label of a histogram reads as the label, `MARK`, and n."""
+    labels = "size\tS.count\tS.count\tT.count\tS.count"
+    rows = [labels, "1\t2\t3\t4\t5"]
+    text = newline.join([*LINES, "", METRICS, "sample\tsample", "a\tb", "", HISTOGRAM, *rows, ""])
+    marked = f"size\tS.count\tS.count{MARK}2\tT.count\tS.count{MARK}3"
+    histogram = Table(Trickle(text, most), marker="## HISTOGRAM").read().lstrip("\n")
+    assert histogram == f"{marked}{newline}1\t2\t3\t4\t5{newline}"
+    table = Table(Trickle(text, most), marker="## METRICS CLASS").read().lstrip("\n")
+    assert table == f"sample\tsample{newline}a\tb{newline}"
+
+
+@pytest.mark.parametrize("most", [1, 2, 1000])
+def test_table_keys_the_repeats_of_a_label_row_after_blank_lines(most: int) -> None:
+    """A label row after blank lines keys its repeats, in a file that ends without a line break."""
+    text = "\n".join([*LINES, "", HISTOGRAM, "", "  ", "size\tS.count\tS.count\r", "1\t2\t3"])
+    table = Table(Trickle(text, most), marker="## HISTOGRAM").read()
+    assert table.endswith(f"\n\n  \nsize\tS.count\tS.count{MARK}2\r\n1\t2\t3")
 
 
 def test_table_starts_at_a_line_holding_a_tab() -> None:

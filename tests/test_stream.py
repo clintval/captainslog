@@ -105,3 +105,13 @@ def test_section_stream_runs_its_start_hook_once_before_its_first_write_to_the_h
     _ = stream.write("3\t4\n")
     assert starts == [""]
     assert handle.getvalue() == "## SECTION\nBIN\tVALUE\n1\t2\n3\t4\n"
+
+
+def test_section_stream_relabels_its_label_row_before_writing_it() -> None:
+    """A `relabel` hook rewrites the whole label row, held across writes, and no row after it."""
+    handle = StringIO()
+    stream = SectionStream(handle, "## SECTION", relabel=str.upper)
+    _ = stream.write("bin\t")
+    _ = stream.write("value\nrow\t1\n")
+    _ = stream.write("row\t2\n")
+    assert handle.getvalue() == "## SECTION\nBIN\tVALUE\nrow\t1\nrow\t2\n"

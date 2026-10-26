@@ -9,6 +9,8 @@ from shipslog.picard._histograms import LibraryComplexityHistogramColumns
 from shipslog.picard._histograms import RnaCoverageHistogram
 from shipslog.picard._histograms import RnaCoverageHistogramColumns
 from shipslog.picard._metrics import PairOrientation
+from shipslog.picard._table import mark_repeats
+from shipslog.picard._table import unmark
 
 ALL_READS = "All_Reads"
 
@@ -59,17 +61,23 @@ class LibraryComplexitySeries:
 
 
 def _strip_suffix(column: str, suffixes: tuple[str, ...]) -> tuple[str | None, str] | None:
-    """Return the name and the matched suffix of a column, or `None` if no suffix matches."""
+    """Return the name and the matched suffix of a column, or `None` if no suffix matches.
+
+    A repeat of a column Picard wrote twice is read as the column, without its key.
+    """
+    label = unmark(column)
     for suffix in suffixes:
-        if column.endswith(suffix):
-            prefix = column.removesuffix(suffix)
+        if label.endswith(suffix):
+            prefix = label.removesuffix(suffix)
             return (None if prefix == ALL_READS else prefix), suffix
     return None
 
 
-def _column(name: str | None, suffix: str) -> str:
-    """Return the column Picard writes for a name, with `All_Reads` for no name."""
-    return f"{ALL_READS if name is None else name}{suffix}"
+def _columns(names: Sequence[tuple[str | None, str]]) -> list[str]:
+    """Return the column Picard writes for each name and suffix, keying repeats as a reader does."""
+    return mark_repeats([
+        f"{ALL_READS if name is None else name}{suffix}" for name, suffix in names
+    ])
 
 
 def _rows(
@@ -97,6 +105,10 @@ def _rows(
 def insert_size_series(hist: InsertSizeHistogramColumns, /) -> list[InsertSizeSeries]:
     """Give one series for each column of an insert size histogram, in the order of the file.
 
+    A sample and a library of one name give two series of that name and orientation, in the order
+    of the file. Picard writes all reads, then the samples, the libraries, and the read groups, so
+    the earlier is the sample's.
+
     Args:
         hist: the columns of an insert size histogram, as `columns` returns them.
 
@@ -123,6 +135,10 @@ def insert_size_series(hist: InsertSizeHistogramColumns, /) -> list[InsertSizeSe
 
 def rna_coverage_series(hist: RnaCoverageHistogramColumns, /) -> list[RnaCoverageSeries]:
     """Give one series for each column of an RNA coverage histogram, in the order of the file.
+
+    A sample and a library of one name give two series of that name, in the order of the file.
+    Picard writes all reads, then the samples, the libraries, and the read groups, so the earlier
+    is the sample's.
 
     Args:
         hist: the columns of an RNA coverage histogram, as `columns` returns them.
@@ -166,16 +182,20 @@ def library_complexity_series(
 def insert_size_bins(series: Sequence[InsertSizeSeries], /) -> list[InsertSizeHistogram]:
     """Build the bins of an insert size histogram from its series, one bin per insert size.
 
+    Two series of one name and orientation make one column twice, as Picard writes for a sample and
+    a library of one name, and the second is keyed as a reader keys it: the column, the unit
+    separator U+001F, and 2. A third is keyed with 3, and so on.
+
     Args:
         series: the series to write, one column each, named as Picard names the column.
 
     Raises:
-        ValueError: if the series differ in insert sizes, hold other than one value per bin,
-            or make the same column.
+        ValueError: if the series differ in insert sizes, or hold other than one value per bin.
     """
+    columns = _columns([(s.name, f".{s.orientation.lower()}_count") for s in series])
     rows = _rows(
         [s.insert_size for s in series],
-        [(_column(s.name, f".{s.orientation.lower()}_count"), s.counts) for s in series],
+        list(zip(columns, [s.counts for s in series], strict=True)),
         "Every series must hold the same insert sizes!",
     )
     return [InsertSizeHistogram(insert_size=size, counts=counts) for size, counts in rows]
@@ -184,16 +204,20 @@ def insert_size_bins(series: Sequence[InsertSizeSeries], /) -> list[InsertSizeHi
 def rna_coverage_bins(series: Sequence[RnaCoverageSeries], /) -> list[RnaCoverageHistogram]:
     """Build the bins of an RNA coverage histogram from its series, one bin per position.
 
+    Two series of one name make one column twice, as Picard writes for a sample and a library of
+    one name, and the second is keyed as a reader keys it: the column, the unit separator U+001F,
+    and 2. A third is keyed with 3, and so on.
+
     Args:
         series: the series to write, one column each, named as Picard names the column.
 
     Raises:
-        ValueError: if the series differ in positions, hold other than one value per bin,
-            or make the same column.
+        ValueError: if the series differ in positions, or hold other than one value per bin.
     """
+    columns = _columns([(s.name, ".normalized_coverage") for s in series])
     rows = _rows(
         [s.normalized_position for s in series],
-        [(_column(s.name, ".normalized_coverage"), s.normalized_coverage) for s in series],
+        list(zip(columns, [s.normalized_coverage for s in series], strict=True)),
         "Every series must hold the same normalized positions!",
     )
     return [

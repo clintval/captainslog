@@ -187,8 +187,9 @@ class InsertSizeHistogram:
     """The number of read pairs of that insert size, by accumulation level and pair orientation,
     e.g. `All_Reads.fr_count`.
 
-    A sample and a library that share a name repeat a column, such as `NA12891.fr_count`, and
-    typeline refuses the repeated name with a `ValueError` when the histogram is read.
+    A sample and a library that share a name repeat a column, such as `NA12891.fr_count`. The first
+    is keyed by its label, and the second by its label, the unit separator U+001F, and 2.
+    `insert_size_series` gives each a series of that name, and a writer writes each as the label.
     """
 
 
@@ -363,8 +364,9 @@ class RnaCoverageHistogram:
     """The mean normalized coverage at that position of the most highly expressed transcripts, by
     accumulation level, e.g. `All_Reads.normalized_coverage`.
 
-    A sample and a library that share a name repeat a column, such as `NA12891.normalized_coverage`,
-    and typeline refuses the repeated name with a `ValueError` when the histogram is read.
+    A sample and a library that share a name repeat a column, such as `NA12891.normalized_coverage`.
+    The first is keyed by its label, and the second by its label, the unit separator U+001F, and 2.
+    `rna_coverage_series` gives each a series of that name, and a writer writes each as the label.
     """
 
 

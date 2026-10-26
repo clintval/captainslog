@@ -21,6 +21,8 @@ from shipslog.picard import PicardReader
 from shipslog.picard import PicardWriter
 from shipslog.picard import QualityScoreDistribution
 from shipslog.picard import QualityYieldMetrics
+from shipslog.picard import RnaCoverageHistogram
+from shipslog.picard import RnaSeqMetrics
 from shipslog.picard import SamComparisonHistogram
 from shipslog.picard import SamComparisonMetric
 from shipslog.picard import histogram_class
@@ -32,9 +34,12 @@ from tests.picard import HEADER
 from tests.picard import LINES
 from tests.picard import PICARD_HISTOGRAM_FIXTURES
 from tests.picard import PICARD_METRICS_FIXTURES
+from tests.picard import REPEATED_INSERT_SIZES
+from tests.picard import REPEATED_RNA_COVERAGE
 from tests.picard import DerivedHistogram
 from tests.picard import NotHistogram
 from tests.picard import class_named_in
+from tests.picard import with_histogram
 
 QUALITY_YIELD = "picard.analysis.CollectQualityYieldMetrics$QualityYieldMetrics"
 
@@ -164,6 +169,33 @@ def test_every_histogram_fixture_reads_back_the_same_after_writing(
     with PicardHistogramReader.from_path[kind](out) as again:
         assert same(list(again), bins)
     assert again.header == reader.header
+
+
+@pytest.mark.parametrize(
+    ("metric", "kind", "lines"),
+    [
+        (METRIC, InsertSizeHistogram, REPEATED_INSERT_SIZES),
+        (RnaSeqMetrics(), RnaCoverageHistogram, REPEATED_RNA_COVERAGE),
+    ],
+    ids=["insert-size", "rna"],
+)
+def test_writer_writes_back_a_histogram_that_repeats_a_column_byte_for_byte(
+    tmp_path: Path, metric: object, kind: type[Any], lines: list[str]
+) -> None:
+    """A column Picard repeats for a sample and a library of one name is written as it was read."""
+    path = with_histogram(tmp_path / "in.metrics", metric, lines)
+    assert histogram_class(path) is kind
+    metrics: type[Any] = type(metric)
+    with (
+        PicardReader.from_path[metrics](path) as metrics_reader,
+        PicardHistogramReader.from_path[kind](path) as reader,
+    ):
+        rows, bins = list(metrics_reader), list(reader)
+    out = tmp_path / "out.metrics"
+    with PicardWriter.from_path[metrics](out, header=metrics_reader.header) as writer:
+        writer.write_all(rows)
+        writer.write_histogram(bins)
+    assert out.read_bytes() == path.read_bytes()
 
 
 def test_writer_writes_a_histogram_whose_class_has_no_extra_columns(tmp_path: Path) -> None:

@@ -26,6 +26,7 @@ from shipslog.picard._reader import histogram_of
 from shipslog.picard._reader import java_name
 from shipslog.picard._table import HISTOGRAM
 from shipslog.picard._table import METRICS_CLASS
+from shipslog.picard._table import unmark
 
 
 def table_options(rename: Mapping[str, str]) -> WriterOptions:
@@ -74,7 +75,9 @@ class _PicardTableWriter(TsvWriter[RecordType]):
         Raises:
             ValueError: if a header's class name or text holds a line break, or only whitespace.
         """
-        self._stream: SectionStream = SectionStream(handle, section, on_start=self._write_head)
+        self._stream: SectionStream = SectionStream(
+            handle, section, on_start=self._write_head, relabel=unmark
+        )
         super().__init__(as_text_io(self._stream), **table_options(rename))
         self._file: TextIO = handle
         self._blank_lines: int = blank_lines
@@ -200,9 +203,10 @@ class PicardWriter(_PicardTableWriter[RecordType]):
             raise ValueError("Write the metrics before their histogram!")
         # Type checkers refuse `TsvWriter[kind]` for a class known only when the program runs.
         bound: type[TsvWriter[Any]] = TsvWriter.__class_getitem__(kind)
-        writer = bound(self._file, **table_options(histogram.labels))
+        section = f"{os.linesep}{HISTOGRAM}\t{histogram.key}"
+        stream = SectionStream(self._file, section, relabel=unmark)
+        writer = bound(as_text_io(stream), **table_options(histogram.labels))
         self._stream.end()
-        _ = self._file.write(f"{os.linesep}{HISTOGRAM}\t{histogram.key}{os.linesep}")
         writer.write_all(chain([first], bins))
 
     @override

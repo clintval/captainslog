@@ -1,5 +1,7 @@
 import re
+from collections import Counter
 from collections.abc import Callable
+from collections.abc import Sequence
 from typing import TextIO
 from typing import cast
 
@@ -20,6 +22,35 @@ BLANK_LINE: re.Pattern[str] = re.compile(r"\n[^\S\n\t]*\n")
 NOT_BLANK: re.Pattern[str] = re.compile(r"[\S\t]")
 """A character that no blank line holds: a tab, or any that is not whitespace."""
 
+MARK: str = "\x1f"
+"""The control character that keys a repeat of a histogram label, which no Picard label holds."""
+
+MARKED: re.Pattern[str] = re.compile(f"{MARK}[0-9]+")
+"""The key of a repeat after its label: `MARK` and the repeat's count."""
+
+
+def mark_repeats(labels: Sequence[str]) -> list[str]:
+    """Key the n-th repeat of a label, for n of 2 or more, as the label, `MARK`, and n.
+
+    Args:
+        labels: the labels, in order.
+    """
+    seen: Counter[str] = Counter()
+    keys: list[str] = []
+    for label in labels:
+        seen[label] += 1
+        keys.append(label if seen[label] == 1 else f"{label}{MARK}{seen[label]}")
+    return keys
+
+
+def unmark(text: str) -> str:
+    """Remove the key of each repeat from a label, or from a row of labels.
+
+    Args:
+        text: the label or the row of labels.
+    """
+    return MARKED.sub("", text)
+
 
 class Table:
     """The text of the one table of a Picard metrics file that follows a marker line.
@@ -31,6 +62,10 @@ class Table:
 
     A table after a marker line holds a header line and at least one row, since htsjdk writes no
     empty table, so one without them is refused as cut short once its end is read.
+
+    The header line of a histogram, after a `## HISTOGRAM` line, reads with the n-th repeat of a
+    label, for n of 2 or more, keyed as the label, `MARK`, and n, since Picard repeats a column for
+    a sample and a library of one name. The first of a label keeps it.
 
     A blank line holds only whitespace other than tabs, as for typeline, so a row of empty fields
     is a row.
@@ -148,36 +183,53 @@ class Table:
         """Pass on the blank lines after the marker line, up to the first line of the table."""
         found = NOT_BLANK.search(text)
         if found is not None:
-            self._step = self._rows
-            self._rows(text, end, start=found.start())
+            start = text.rfind("\n", 0, found.start()) + 1
+            self._ready += text[:start]
+            self._step = self._header
+            self._header(text[start:], end)
             return
         self._ready += text
         self._text = ""
         self._step = None if end else self._lead
 
-    def _rows(self, text: str, end: bool, start: int = 0) -> None:
+    def _header(self, text: str, end: bool) -> None:
+        """Hold the table's first line until it is whole, then key the repeats of a histogram's."""
+        stop = text.find("\n")
+        if stop < 0 and not end:
+            self._text = text
+            return
+        if self._marker == HISTOGRAM:
+            line = text if stop < 0 else text[:stop]
+            labels = line.removesuffix("\r")
+            keyed = "\t".join(mark_repeats(labels.split("\t")))
+            text = f"{keyed}{line[len(labels) :]}{text[len(line) :]}"
+        self._step = self._rows
+        self._rows(text, end)
+
+    def _rows(self, text: str, end: bool) -> None:
         """Pass on the table's lines up to its first blank line, holding back a partial line."""
-        blank = BLANK_LINE.search(text, start)
+        blank = BLANK_LINE.search(text)
         if blank is not None:
-            self._look_for_a_row(text, start, blank.start() + 1)
+            self._look_for_a_row(text, blank.start() + 1)
             self._ready += text[: blank.start() + 1]
             self._text = ""
             self._step = None
             return
-        cut = text.rfind("\n", start)
+        cut = text.rfind("\n")
         if end or cut < 0:
             cut = len(text)
-        self._look_for_a_row(text, start, cut)
+        self._look_for_a_row(text, cut)
         self._ready += text[:cut]
         self._text = text[cut:]
         self._step = None if end else self._rows
 
-    def _look_for_a_row(self, text: str, start: int, stop: int) -> None:
+    def _look_for_a_row(self, text: str, stop: int) -> None:
         """Note whether the table's text passed on so far holds a row after its header line."""
         if self._has_row:
             return
+        start = 0
         if not self._past_header:
-            at = text.find("\n", start, stop)
+            at = text.find("\n", 0, stop)
             if at < 0:
                 return
             self._past_header = True

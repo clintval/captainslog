@@ -12,15 +12,21 @@ class SectionStream:
     label row with no row after it never reaches the file, as htsjdk and Riker write no section
     without rows.
 
-    An `on_start` hook runs once, before the stream first writes to its handle.
+    An `on_start` hook runs once, before the stream first writes to its handle, and a `relabel`
+    hook rewrites the label row before it is written.
     """
 
     def __init__(
-        self, handle: TextIO, section: str | None, on_start: Callable[[], None] | None = None
+        self,
+        handle: TextIO,
+        section: str | None,
+        on_start: Callable[[], None] | None = None,
+        relabel: Callable[[str], str] | None = None,
     ) -> None:
         self._handle: TextIO = handle
         self._section: str | None = section
         self._on_start: Callable[[], None] | None = on_start
+        self._relabel: Callable[[str], str] | None = relabel
         self._labels: str = ""
         self._started: bool = False
         self._ended: bool = False
@@ -53,7 +59,8 @@ class SectionStream:
             if self._on_start is not None:
                 self._on_start()
             line = "" if self._section is None else f"{self._section}{os.linesep}"
-            _ = self._handle.write(f"{line}{self._labels}")
+            labels = self._labels if self._relabel is None else self._relabel(self._labels)
+            _ = self._handle.write(f"{line}{labels}")
             self._started = True
         _ = self._handle.write(rows)
         return len(text)

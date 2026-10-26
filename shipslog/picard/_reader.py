@@ -25,6 +25,7 @@ from shipslog.picard._table import METRICS_CLASS
 from shipslog.picard._table import NOT_BLANK
 from shipslog.picard._table import Table
 from shipslog.picard._table import as_text_io
+from shipslog.picard._table import unmark
 
 
 def java_name(record_type: type[Any]) -> str:
@@ -197,7 +198,8 @@ def read_labels(table: Table) -> list[str] | None:
         table: the histogram table of the file.
 
     Returns:
-        The label of each column, in order, or None when the file holds no histogram.
+        The label of each column, in order, as Picard wrote it, or None when the file holds no
+        histogram.
 
     Raises:
         ValueError: if the histogram has no rows after its `## HISTOGRAM` line, so may be cut short.
@@ -212,7 +214,7 @@ def read_labels(table: Table) -> list[str] | None:
         stop = text.find("\n", found.start())
         if stop >= 0:
             start = text.rfind("\n", 0, found.start()) + 1
-            return text[start:stop].removesuffix("\r").split("\t")
+            return unmark(text[start:stop]).removesuffix("\r").split("\t")
     return None
 
 

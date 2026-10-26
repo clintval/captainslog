@@ -1,5 +1,6 @@
 import re
 from dataclasses import fields
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -7,6 +8,7 @@ from typing_extensions import assert_type
 
 from shipslog.picard import InsertSizeHistogram
 from shipslog.picard import InsertSizeHistogramColumns
+from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import InsertSizeSeries
 from shipslog.picard import LibraryComplexityHistogram
 from shipslog.picard import LibraryComplexityHistogramColumns
@@ -16,6 +18,7 @@ from shipslog.picard import PicardHistogramReader
 from shipslog.picard import RnaCoverageHistogram
 from shipslog.picard import RnaCoverageHistogramColumns
 from shipslog.picard import RnaCoverageSeries
+from shipslog.picard import RnaSeqMetrics
 from shipslog.picard import columns
 from shipslog.picard import insert_size_bins
 from shipslog.picard import insert_size_series
@@ -23,6 +26,10 @@ from shipslog.picard import library_complexity_bins
 from shipslog.picard import library_complexity_series
 from shipslog.picard import rna_coverage_bins
 from shipslog.picard import rna_coverage_series
+from shipslog.picard._table import MARK
+from tests.picard import REPEATED_INSERT_SIZES
+from tests.picard import REPEATED_RNA_COVERAGE
+from tests.picard import with_histogram
 
 NAMES = [None, "NA12891", "Pond-492101", "NormPond-544932", "NA12891.r1", "NA12891.r2"]
 PREFIXES = ["All_Reads", *[name for name in NAMES if name]]
@@ -307,18 +314,62 @@ def test_bins_refuse_values_that_do_not_match_the_axis() -> None:
         _ = library_complexity_bins(lib)
 
 
-def test_bins_refuse_two_series_of_one_column() -> None:
-    """Two series cannot make the same column."""
+def test_bins_key_each_repeat_of_a_column_as_a_reader_does() -> None:
+    """Series that make one column make it again, the n-th repeat keyed by `MARK` and n."""
     fr = PairOrientation.FR
     insert = [
-        InsertSizeSeries(name=None, orientation=fr, insert_size=(1,), counts=(1,)),
-        InsertSizeSeries(name=None, orientation=fr, insert_size=(1,), counts=(2,)),
+        InsertSizeSeries(name=None, orientation=fr, insert_size=(1,), counts=(count,))
+        for count in (1, 2, 3)
     ]
-    with pytest.raises(ValueError, match=r"^Two series make the column All_Reads\.fr_count!$"):
-        _ = insert_size_bins(insert)
+    column = "All_Reads.fr_count"
+    counts = {column: 1, f"{column}{MARK}2": 2, f"{column}{MARK}3": 3}
+    assert insert_size_bins(insert) == [InsertSizeHistogram(insert_size=1, counts=counts)]
     rna = [RnaCoverageSeries(name="S", normalized_position=(1,), normalized_coverage=(1.0,))] * 2
-    with pytest.raises(ValueError, match=r"^Two series make the column S\.normalized_coverage!$"):
-        _ = rna_coverage_bins(rna)
+    coverage = {"S.normalized_coverage": 1.0, f"S.normalized_coverage{MARK}2": 1.0}
+    assert rna_coverage_bins(rna) == [
+        RnaCoverageHistogram(normalized_position=1, normalized_coverage=coverage)
+    ]
+
+
+def test_library_complexity_bins_refuse_two_series_of_one_library() -> None:
+    """Two series of one library cannot make the same column."""
     lib = [LibraryComplexitySeries(library="L", duplication_group_count=(1,), counts=(1,))] * 2
     with pytest.raises(ValueError, match="^Two series make the column L!$"):
         _ = library_complexity_bins(lib)
+
+
+def test_insert_size_series_of_a_sample_and_a_library_of_one_name(tmp_path: Path) -> None:
+    """A column Picard repeats gives a series of its name for each, in order, which round-trip."""
+    metric = InsertSizeMetrics(pair_orientation=PairOrientation.FR)
+    path = with_histogram(tmp_path / "s.insert_size_metrics", metric, REPEATED_INSERT_SIZES)
+    with PicardHistogramReader.from_path[InsertSizeHistogram](path) as reader:
+        bins = list(reader)
+    hist = columns(bins)
+    assert list(hist.counts) == [
+        "All_Reads.fr_count",
+        "NA12891.fr_count",
+        f"NA12891.fr_count{MARK}2",
+        "Pond-2.fr_count",
+    ]
+    series = insert_size_series(hist)
+    assert [s.name for s in series] == [None, "NA12891", "NA12891", "Pond-2"]
+    assert all(s.orientation is PairOrientation.FR for s in series)
+    assert [s.counts for s in series] == [(5, 7), (5, 7), (3, 4), (2, 3)]
+    assert insert_size_bins(series) == bins
+
+
+def test_rna_coverage_series_of_a_sample_and_a_library_of_one_name(tmp_path: Path) -> None:
+    """A column Picard repeats gives a series of its name for each, in order, which round-trip."""
+    path = with_histogram(tmp_path / "s.rna_metrics", RnaSeqMetrics(), REPEATED_RNA_COVERAGE)
+    with PicardHistogramReader.from_path[RnaCoverageHistogram](path) as reader:
+        bins = list(reader)
+    hist = columns(bins)
+    assert list(hist.normalized_coverage) == [
+        "All_Reads.normalized_coverage",
+        "NA12891.normalized_coverage",
+        f"NA12891.normalized_coverage{MARK}2",
+    ]
+    series = rna_coverage_series(hist)
+    assert [s.name for s in series] == [None, "NA12891", "NA12891"]
+    assert [s.normalized_coverage for s in series] == [(0.5, 1.25), (0.5, 1.25), (0.25, 1.5)]
+    assert rna_coverage_bins(series) == bins
