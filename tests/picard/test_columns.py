@@ -1,13 +1,15 @@
 import re
+from dataclasses import dataclass
 from dataclasses import fields
-from math import isnan
 from pathlib import Path
 from typing import Any
+from typing import ClassVar
 from typing import cast
 
 import pytest
 from typing_extensions import assert_type
 
+from captainslog._columns import transpose
 from captainslog.picard import InsertSizeHistogram
 from captainslog.picard import InsertSizeHistogramColumns
 from captainslog.picard import PicardHistogramReader
@@ -19,16 +21,6 @@ from tests.picard import FIXTURE_CLASSES
 from tests.picard import PICARD_HISTOGRAM_FIXTURES
 from tests.picard import DerivedHistogram
 from tests.picard import NotHistogram
-
-
-def same_column(left: object, right: object) -> bool:
-    """Whether two columns are equal, where NaN equals NaN."""
-    if isinstance(left, tuple) and isinstance(right, tuple):
-        lefts, rights = cast(tuple[object, ...], left), cast(tuple[object, ...], right)
-        return len(lefts) == len(rights) and all(map(same_column, lefts, rights))
-    if isinstance(left, float) and isinstance(right, float) and isnan(left):
-        return isnan(right)
-    return left == right
 
 
 def test_columns_transposes_the_insert_size_histogram() -> None:
@@ -51,17 +43,17 @@ def test_columns_transposes_every_histogram_fixture(path: Path) -> None:
         rows = list(reader)
     hist: Any = columns(rows)
     assert type(hist) is HISTOGRAMS[kind].columns
+    expected: dict[str, object] = {}
     for field in fields(kind):
-        column = getattr(hist, field.name)
-        if isinstance(column, dict):
-            extras = [cast(dict[str, Any], getattr(row, field.name)) for row in rows]
-            names = {name for extra in extras for name in extra}
-            mapping = cast(dict[str, tuple[object, ...]], column)
-            assert set(mapping) == names
-            for name, values in mapping.items():
-                assert same_column(values, tuple(getattr(row, field.name)[name] for row in rows))
+        values = [getattr(row, field.name) for row in rows]
+        if isinstance(values[0], dict):
+            extras = cast(list[dict[str, Any]], values)
+            expected[field.name] = {
+                name: tuple(extra[name] for extra in extras) for name in extras[0]
+            }
         else:
-            assert same_column(column, tuple(getattr(row, field.name) for row in rows))
+            expected[field.name] = tuple(values)
+    assert hist == HISTOGRAMS[kind].columns(**expected)
 
 
 def test_columns_transposes_a_histogram_without_extra_columns() -> None:
@@ -105,15 +97,41 @@ def test_columns_refuses_no_rows() -> None:
         _ = columns(cast(list[InsertSizeHistogram], []))
 
 
-def test_columns_refuses_rows_that_name_different_extra_columns() -> None:
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [({"a": 1}, {"b": 2}), ({"a": 1}, {"a": 1, "b": 2}), ({"a": 1, "b": 2}, {"a": 1})],
+    ids=["disjoint", "superset", "subset"],
+)
+def test_columns_refuses_rows_that_name_different_extra_columns(
+    first: dict[str, int], second: dict[str, int]
+) -> None:
     """Rows that name different extra columns cannot share columns."""
     rows = [
-        InsertSizeHistogram(insert_size=1, counts={"a": 1}),
-        InsertSizeHistogram(insert_size=2, counts={"b": 2}),
+        InsertSizeHistogram(insert_size=1, counts=first),
+        InsertSizeHistogram(insert_size=2, counts=second),
     ]
     message = "Every row must name the same extra columns!"
     with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
         _ = columns(rows)
+
+
+def test_transpose_leaves_out_annotations_that_are_not_fields() -> None:
+    """A class variable of the columns dataclass is not a column."""
+
+    @dataclass(frozen=True, kw_only=True)
+    class Pairs:
+        """Columns with a class variable."""
+
+        unit: ClassVar[str] = "bp"
+        left: tuple[int, ...] = ()
+
+    @dataclass(frozen=True)
+    class Row:
+        """A row."""
+
+        left: int
+
+    assert transpose([Row(left=1), Row(left=2)], Pairs) == Pairs(left=(1, 2))
 
 
 def test_columns_refuses_rows_that_are_not_a_histogram() -> None:

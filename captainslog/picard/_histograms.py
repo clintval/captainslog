@@ -136,7 +136,7 @@ class HsHistogram:
 
 @dataclass(frozen=True, kw_only=True)
 class HsHistogramColumns:
-    """The columns of a `HsHistogram`, one tuple per field."""
+    """The columns of an `HsHistogram`, one tuple per field."""
 
     coverage_or_base_quality: tuple[int, ...] = ()
     high_quality_coverage_count: tuple[int, ...] = ()
@@ -356,7 +356,7 @@ class RnaCoverageHistogram:
 
 @dataclass(frozen=True, kw_only=True)
 class RnaCoverageHistogramColumns:
-    """The columns of a `RnaCoverageHistogram`, one tuple per field."""
+    """The columns of an `RnaCoverageHistogram`, one tuple per field."""
 
     normalized_position: tuple[int, ...] = ()
     normalized_coverage: dict[str, tuple[float, ...]] = field(default_factory=dict)
@@ -394,7 +394,7 @@ class UmiPrevalenceHistogram:
 
 @dataclass(frozen=True, kw_only=True)
 class UmiPrevalenceHistogramColumns:
-    """The columns of an `UmiPrevalenceHistogram`, one tuple per field."""
+    """The columns of a `UmiPrevalenceHistogram`, one tuple per field."""
 
     num_umis: tuple[int, ...] = ()
     duplicate_sets: tuple[int, ...] = ()
