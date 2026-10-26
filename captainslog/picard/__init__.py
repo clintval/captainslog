@@ -3,6 +3,10 @@
 from captainslog.picard import _histograms
 from captainslog.picard import _metrics
 from captainslog.picard._columns import columns
+from captainslog.picard._coverage import PerBaseCoverage
+from captainslog.picard._coverage import PerTargetCoverage
+from captainslog.picard._coverage import PicardCoverageReader
+from captainslog.picard._coverage import PicardCoverageWriter
 from captainslog.picard._header import PicardHeader
 from captainslog.picard._histograms import *  # noqa: F403
 from captainslog.picard._levels import AccumulationLevel
@@ -19,6 +23,10 @@ from captainslog.picard._writer import PicardWriter
 __all__: list[str] = [
     "AccumulationLevel",
     "Multilevel",
+    "PerBaseCoverage",
+    "PerTargetCoverage",
+    "PicardCoverageReader",
+    "PicardCoverageWriter",
     "PicardHeader",
     "PicardHistogramReader",
     "PicardHistogramWriter",

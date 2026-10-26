@@ -11,6 +11,10 @@ from typeline import RecordType
 from captainslog._binding import FromPath
 from captainslog.picard import HsMetrics
 from captainslog.picard import InsertSizeHistogram
+from captainslog.picard import PerBaseCoverage
+from captainslog.picard import PerTargetCoverage
+from captainslog.picard import PicardCoverageReader
+from captainslog.picard import PicardCoverageWriter
 from captainslog.picard import PicardHeader
 from captainslog.picard import PicardHistogramReader
 from captainslog.picard import PicardHistogramWriter
@@ -49,6 +53,12 @@ class OwnHistogramReader(PicardHistogramReader[RecordType]):
 
 class OwnHistogramWriter(PicardHistogramWriter[RecordType]):
     """A user's subclass of the histogram writer that holds its own `from_path`."""
+
+    from_path: FromPath = FromPath()
+
+
+class OwnCoverageReader(PicardCoverageReader[RecordType]):
+    """A user's subclass of the coverage reader that holds its own `from_path`."""
 
     from_path: FromPath = FromPath()
 
@@ -119,6 +129,32 @@ def test_from_path_of_the_histogram_writer_takes_only_a_header(tmp_path: Path) -
     path = tmp_path / "out.txt"
     with pytest.raises(TypeError):
         _ = PicardHistogramWriter.from_path[QualityScoreDistribution](path, quoting=True)  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue, reportUnknownVariableType]  # ty: ignore[unknown-argument]
+
+
+def test_from_path_types_the_coverage_reader_as_the_subscripted_coverage_reader() -> None:
+    """Type checkers see the coverage reader's `from_path` build it over its record type."""
+    path = DATA / "hs.per_target_coverage.txt"
+    with PicardCoverageReader.from_path[PerTargetCoverage](path) as reader:
+        _ = assert_type(reader, PicardCoverageReader[PerTargetCoverage])
+        assert type(reader).__name__ == "PicardCoverageReader[PerTargetCoverage]"
+
+
+def test_from_path_types_the_coverage_writer_as_the_subscripted_coverage_writer(
+    tmp_path: Path,
+) -> None:
+    """Type checkers see the coverage writer's `from_path` build it over its record type."""
+    with PicardCoverageWriter.from_path[PerBaseCoverage](tmp_path / "out.txt") as writer:
+        _ = assert_type(writer, PicardCoverageWriter[PerBaseCoverage])
+        assert type(writer).__name__ == "PicardCoverageWriter[PerBaseCoverage]"
+
+
+def test_from_path_of_a_subclass_of_the_coverage_reader_builds_the_subclass() -> None:
+    """A user's subclass of the coverage reader, with its own `from_path`, builds itself."""
+    path = DATA / "hs.per_base_coverage.txt"
+    with OwnCoverageReader.from_path[PerBaseCoverage](path) as reader:
+        assert isinstance(reader, OwnCoverageReader)
+        assert type(reader).__name__ == "OwnCoverageReader[PerBaseCoverage]"
+        assert list(reader)
 
 
 def test_from_path_reads_a_gzipped_file_as_the_plain_file(tmp_path: Path) -> None:

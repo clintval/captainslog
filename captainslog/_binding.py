@@ -7,9 +7,12 @@ from typing import overload
 
 from typeline import ReaderOptions
 from typeline import RecordType
+from typeline import WriterOptions
 from typing_extensions import Unpack
 
 if TYPE_CHECKING:
+    from captainslog.picard._coverage import PicardCoverageReader
+    from captainslog.picard._coverage import PicardCoverageWriter
     from captainslog.picard._header import PicardHeader
     from captainslog.picard._reader import PicardHistogramReader
     from captainslog.picard._reader import PicardReader
@@ -34,6 +37,14 @@ class WritesPath(Protocol[BuiltType_co]):
     def __call__(
         self, path: Path | str, /, *, header: "PicardHeader | None" = None
     ) -> BuiltType_co:
+        """Open the file at a path, and build its writer."""
+        ...
+
+
+class WritesOptions(Protocol[BuiltType_co]):
+    """A constructor of a writer of a plain table, from the file's path and the writer's options."""
+
+    def __call__(self, path: Path | str, /, **options: Unpack[WriterOptions]) -> BuiltType_co:
         """Open the file at a path, and build its writer."""
         ...
 
@@ -78,6 +89,26 @@ class BoundHistogramWriterFromPath(Protocol):
         ...
 
 
+class BoundCoverageReaderFromPath(Protocol):
+    """The `from_path` of a coverage reader class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "OpensPath[PicardCoverageReader[RecordType]]":
+        """Bind the record type, giving a constructor of the coverage reader over it."""
+        ...
+
+
+class BoundCoverageWriterFromPath(Protocol):
+    """The `from_path` of a coverage writer class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "WritesOptions[PicardCoverageWriter[RecordType]]":
+        """Bind the record type, giving a constructor of the coverage writer over it."""
+        ...
+
+
 class FromPath:
     """The typeline `from_path` a class inherits, which type checkers see build that class.
 
@@ -108,6 +139,16 @@ class FromPath:
     def __get__(
         self, obj: object, owner: type["PicardHistogramWriter[Any]"]
     ) -> BoundHistogramWriterFromPath: ...
+
+    @overload
+    def __get__(
+        self, obj: object, owner: type["PicardCoverageReader[Any]"]
+    ) -> BoundCoverageReaderFromPath: ...
+
+    @overload
+    def __get__(
+        self, obj: object, owner: type["PicardCoverageWriter[Any]"]
+    ) -> BoundCoverageWriterFromPath: ...
 
     @overload
     def __get__(self, obj: object, owner: type[object]) -> object: ...
