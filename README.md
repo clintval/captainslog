@@ -14,8 +14,7 @@ Typed dataclasses for the metrics files that Picard and Riker write.
 
 Open a Picard or Riker metrics file and get a list of frozen dataclasses with typed fields, do arithmetic on them without casting, and write them back out.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enums, and Picard's `?` is NaN.
-Each metrics class and histogram that Picard 3.5.0 writes has a dataclass, as does each table that Riker 0.5.0 writes, with the few exceptions under [Limitations](#limitations).
-The readers and writers are built on [typeline](https://github.com/clintval/typeline), and are used the same way.
+Each metrics class and histogram that Picard writes has a dataclass, as does each table that Riker writes.
 
 ## Installation
 
@@ -71,13 +70,6 @@ assert list(PicardHistogramReader.from_path[histogram_type](out)) == bins
 Picard reports the fraction of target bases at fixed depths, such as 50x and 100x, so the fraction at 60x comes from the depth histogram, which `columns` turns into one tuple per column.
 The fraction at 50x, found the same way, equals the one Picard wrote.
 The new file holds the header, the metrics, and the histogram, and reads back as the same records in shipslog and in htsjdk.
-
-## Why shipslog
-
-Pipelines and QC scripts read Picard and Riker metrics, often to derive new metrics from them, and many write their own parsers to do it.
-[crimson](https://github.com/bow/crimson) parses Picard metrics into dictionaries: by default it reads the first 1 MiB of a file, it returns a dictionary for one row and a list for several, and it leaves `?`, `Y`, and `N` as text.
-[MultiQC](https://github.com/MultiQC/MultiQC) reads Riker outputs inside its report modules.
-Riker computes many of Picard's metrics in files of its own shape, so shipslog reads and writes the files of both tools, side by side.
 
 ## Quickstart
 
@@ -207,7 +199,7 @@ assert picard.histogram_class("tests/data/picard/cmm.quality_by_cycle_metrics") 
 `histogram_class` finds the dataclass of a file's histogram by its label row, and by its metrics class when the file has one.
 `metrics_class` reads only the first lines of a file, while `histogram_class` reads through any metrics table to the label row of its histogram, and no further.
 For a file that holds only a histogram, `metrics_class` raises a `ValueError` that points to `histogram_class`.
-A class that Picard 3.5.0 does not write, like one that an older Picard named another way, is refused with a `ValueError`.
+A metrics class that Picard does not write is refused with a `ValueError`.
 
 ### Writing Picard Metrics
 
@@ -382,16 +374,11 @@ To derive metrics, subclass a dataclass, add properties or methods, and read int
 Readers, writers, and `columns` take a subclass as the dataclass it extends, for Picard and Riker alike.
 Add no dataclass fields, since every field is a column, and a file must hold only the columns that Picard or Riker writes.
 
-### Supported Versions
-
-shipslog 0.1.0 reads and writes the files of Picard 3.5.0 and Riker 0.5.0.
-A file whose columns differ, from an older or a newer release, is refused with a `ValueError` that names the columns missing from the file and those it does not expect.
-A release of shipslog that follows a newer Picard or Riker names it here.
-
 ### Limitations
 
-- `HsMetrics` and `TargetedPcrMetrics` histograms are supported as Picard 3.5.0 writes them, at the `ALL_READS` level.
-  Picard 3.5.0 throws when either tool is asked for any other accumulation level.
+- A file whose columns differ from its dataclass is refused with a `ValueError` that names the columns missing from the file and those it does not expect.
+- `HsMetrics` and `TargetedPcrMetrics` histograms are supported as Picard writes them, at the `ALL_READS` level.
+  Picard throws when either tool is asked for any other accumulation level.
 - An `InsertSizeMetrics` or `RnaSeqMetrics` histogram where a sample and a library share a name repeats a column name, such as `NA12891.fr_count`.
   typeline refuses the repeated name with a `ValueError` when the histogram is read.
 - The `MATRIX_OUTPUT` file of CollectIndependentReplicateMetrics has no histogram class, because Java writes its key with `toString`.
