@@ -26,44 +26,19 @@ pip install shipslog
 
 ## At a Glance
 
-Find the type of a Picard file, derive a coverage metric that Picard does not report from its histogram, and write its metrics and histogram to a new Picard file:
+Read two Picard metrics files from the same run, and combine their typed fields without casting:
 
 ```python
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
-from shipslog import picard
-from shipslog.picard import PicardHistogramReader
+from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import PicardReader
-from shipslog.picard import PicardWriter
+from shipslog.picard import QualityYieldMetrics
 
-path = Path("tests/data/picard/hs.hs_metrics")
-metrics_type = picard.metrics_class(path)
-histogram_type = picard.histogram_class(path)
+[quality] = PicardReader.from_path[QualityYieldMetrics]("tests/data/picard/cmm.quality_yield_metrics")
+[all_reads, *_] = PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics")
 
-with PicardReader.from_path[metrics_type](path) as reader:
-    [hs] = list(reader)
+frac_reads_in_fr_pairs = 2 * all_reads.read_pairs / quality.pf_reads
 
-bins = list(PicardHistogramReader.from_path[histogram_type](path))
-depth = picard.columns(bins)
-
-def frac_target_bases(min_depth: int) -> float:
-    pairs = zip(depth.coverage_or_base_quality, depth.high_quality_coverage_count, strict=True)
-    covered = sum(bases for coverage, bases in pairs if coverage >= min_depth)
-    return float(covered / hs.target_territory)
-
-assert frac_target_bases(50) == hs.pct_target_bases_50x
-assert frac_target_bases(60) == 0.862
-
-temp_dir = TemporaryDirectory()
-out = Path(temp_dir.name) / "hs.hs_metrics"
-
-with PicardWriter.from_path[metrics_type](out, header=reader.header) as writer:
-    writer.write(hs)
-    writer.write_histogram(bins)
-
-assert list(PicardReader.from_path[metrics_type](out)) == [hs]
-assert list(PicardHistogramReader.from_path[histogram_type](out)) == bins
+assert round(frac_reads_in_fr_pairs, 3) == 0.972
 ```
 
 ## Quickstart
@@ -77,7 +52,6 @@ Each example below runs as written against the test files in this repository.
 
 ```python
 from shipslog.picard import HsMetrics
-from shipslog.picard import PicardReader
 
 with PicardReader.from_path[HsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
     [hs] = list(reader)
@@ -94,7 +68,6 @@ Picard's `?` reads back as NaN:
 from math import isnan
 
 from shipslog.picard import JumpingLibraryMetrics
-from shipslog.picard import PicardReader
 
 [jumps] = list(PicardReader.from_path[JumpingLibraryMetrics]("tests/data/picard/jump.jumping_metrics"))
 
@@ -109,9 +82,7 @@ Picard writes a row for each accumulation level it is asked for: all reads, then
 ```python
 from shipslog import picard
 from shipslog.picard import AccumulationLevel
-from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import PairOrientation
-from shipslog.picard import PicardReader
 
 rows = list(PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics"))
 
@@ -136,9 +107,7 @@ assert all_reads.pair_orientation is PairOrientation.FR
 `insert_size_series`, `rna_coverage_series`, and `library_complexity_series` turn the columns Picard names after samples, libraries, and read groups into typed series, and `insert_size_bins` and its siblings turn series back into bins.
 
 ```python
-from shipslog import picard
 from shipslog.picard import InsertSizeHistogram
-from shipslog.picard import PairOrientation
 from shipslog.picard import PicardHistogramReader
 
 bins = list(PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics"))
@@ -157,7 +126,6 @@ assert [s.name for s in series] == [None, "NA12891", "Pond-492101", "NormPond-54
 A file that holds only a histogram, like a `QualityScoreDistribution`, is read the same way:
 
 ```python
-from shipslog.picard import PicardHistogramReader
 from shipslog.picard import QualityScoreDistribution
 
 qualities = list(PicardHistogramReader.from_path[QualityScoreDistribution]("tests/data/picard/cmm.quality_distribution_metrics"))
@@ -172,9 +140,7 @@ assert qualities[0].count_of_q == 2
 `histogram_class` names the dataclass of its histogram from its label row.
 
 ```python
-from shipslog import picard
 from shipslog.picard import HsHistogram
-from shipslog.picard import HsMetrics
 from shipslog.picard import MeanQualityByCycle
 
 assert picard.metrics_class("tests/data/picard/hs.hs_metrics") is HsMetrics
@@ -191,13 +157,8 @@ It is also a quick way to make realistic Picard files for unit tests.
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from shipslog.picard import InsertSizeHistogram
-from shipslog.picard import InsertSizeMetrics
 from shipslog.picard import InsertSizeSeries
-from shipslog.picard import PairOrientation
 from shipslog.picard import PicardHeader
-from shipslog.picard import PicardHistogramReader
-from shipslog.picard import PicardReader
 from shipslog.picard import PicardWriter
 from shipslog.picard import insert_size_bins
 
@@ -226,14 +187,8 @@ assert list(PicardHistogramReader.from_path[InsertSizeHistogram](path)) == inser
 A file of only a histogram is written with a `PicardHistogramWriter`:
 
 ```python
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
-from shipslog.picard import PicardHeader
 from shipslog.picard import PicardHistogramWriter
-from shipslog.picard import QualityScoreDistribution
 
-temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.quality_distribution_metrics"
 header = PicardHeader(
     command_line="QualityScoreDistribution INPUT=s.bam OUTPUT=s.quality_distribution_metrics",
@@ -265,9 +220,6 @@ CollectHsMetrics and CollectTargetedPcrMetrics can also write plain tables of co
 `PicardCoverageReader` and `PicardCoverageWriter` read and write them.
 
 ```python
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
 from shipslog.picard import PerTargetCoverage
 from shipslog.picard import PicardCoverageReader
 from shipslog.picard import PicardCoverageWriter
@@ -277,7 +229,6 @@ targets = list(PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/pic
 assert targets[0].name == "rs7555566"
 assert targets[0].pct_gc == 0.41
 
-temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.per_target_coverage.txt"
 
 with PicardCoverageWriter.from_path[PerTargetCoverage](path) as writer:
@@ -293,9 +244,6 @@ assert list(PicardCoverageReader.from_path[PerTargetCoverage](path)) == targets
 `riker.metrics_class` names the dataclass of a file by the suffix Riker gives it, and `riker.columns` transposes Riker's histograms.
 
 ```python
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
 from shipslog import riker
 from shipslog.riker import HybcapMetrics
 from shipslog.riker import IsizeHistogram
@@ -314,7 +262,6 @@ isize = riker.columns(list(RikerReader.from_path[IsizeHistogram]("tests/data/rik
 assert isize.insert_size[:3] == (112, 128, 134)
 assert isize.fr_count[:3] == (1, 1, 1)
 
-temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.hybcap-metrics.txt"
 
 with RikerWriter.from_path[HybcapMetrics](path) as writer:
@@ -329,9 +276,6 @@ To derive metrics, subclass a dataclass, add properties or methods, and read int
 Add no fields, since every field is a column of the file.
 
 ```python
-from shipslog.picard import HsMetrics
-from shipslog.picard import PicardReader
-
 class MyHsMetrics(HsMetrics):
     @property
     def frac_bases_on_target(self) -> float:
