@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import fields
 from dataclasses import is_dataclass
 from pathlib import Path
@@ -16,6 +17,7 @@ from shipslog.picard import GenotypeConcordanceSummaryMetrics
 from shipslog.picard import HsMetrics
 from shipslog.picard import IndependentReplicateMetric
 from shipslog.picard import PicardReader
+from shipslog.picard import PicardWriter
 from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import QualityYieldMetricsSnvq
 from shipslog.picard import ReadsUsed
@@ -28,7 +30,13 @@ from tests.picard import METRICS_CLASS
 from tests.picard import PICARD_METRICS_FIXTURES
 from tests.picard import class_named_in
 
-SCHEMA = Path(__file__).parents[2] / "scripts" / "picard" / "picard-3.5.0.json"
+SCRIPTS = Path(__file__).parents[2] / "scripts" / "picard"
+
+SCHEMA = SCRIPTS / "picard-3.5.0.json"
+
+UNITS: dict[str, dict[str, str]] = json.loads((SCRIPTS / "units.json").read_text())
+
+PICARD_UNIT = re.compile(r"(?<![^_])(?:PCT|PERCENT)(?![^_])")
 
 
 def column_labels(kind: type[Any]) -> list[str]:
@@ -129,12 +137,38 @@ def test_camel_case_java_fields_are_snake_case_and_keep_their_column_labels() ->
     assert COLUMN_LABELS[IndependentReplicateMetric][first.name] == "nSites"
 
 
-def test_column_labels_hold_only_mixed_case_java_names() -> None:
-    """An UPPER_SNAKE Java field keeps its name, so only mixed-case names need a column label."""
+def test_column_labels_hold_only_mixed_case_java_names_and_renamed_fractions() -> None:
+    """A label is a mixed-case Java name, or the `PCT` or `PERCENT` label of a `frac` field."""
     for kind, labels in COLUMN_LABELS.items():
         for name, label in labels.items():
             assert label != name.removesuffix("_").upper(), (kind, name)
-            assert label != label.upper(), (kind, name)
+            assert label != label.upper() or PICARD_UNIT.sub("FRAC", label) == name.upper(), name
+
+
+def test_no_picard_fraction_field_is_named_pct() -> None:
+    """A fraction is named `frac` in place of `pct`, and a field still named `pct` is not one."""
+    schema = json.loads(SCHEMA.read_text())
+    columns = {c["class"]: c["fields"] for c in schema["classes"]}
+    for kind, java in JAVA_NAMES.items():
+        for field, column in zip(fields(kind), columns[java], strict=True):
+            unit = UNITS.get(f"{column['declared_by']}.{column['name']}", {}).get("unit")
+            tokens = set(field.name.split("_"))
+            if unit == "fraction":
+                assert field.name.upper() == PICARD_UNIT.sub("FRAC", column["name"]), field.name
+            elif not tokens.isdisjoint({"pct", "percent"}):
+                assert unit in {"none", "percent", "unknown"}, (java, field.name)
+
+
+def test_a_renamed_fraction_is_written_under_picards_column_label(tmp_path: Path) -> None:
+    """A `frac` field is written and read back under Picard's own `PCT` column label."""
+    path = tmp_path / "out.alignment_summary_metrics"
+    row = AlignmentSummaryMetrics(category=Category.PAIR, frac_pf_reads_aligned=0.996951)
+    with PicardWriter.from_path[AlignmentSummaryMetrics](path) as writer:
+        writer.write(row)
+    labels = next(line for line in path.read_text().splitlines() if line.startswith("CATEGORY"))
+    assert "PCT_PF_READS_ALIGNED" in labels.split("\t")
+    assert not any(label.startswith("FRAC") for label in labels.split("\t"))
+    assert list(PicardReader.from_path[AlignmentSummaryMetrics](path)) == [row]
 
 
 def test_every_dataclass_labels_its_columns_as_htsjdk_writes_them() -> None:

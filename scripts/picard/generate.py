@@ -83,6 +83,12 @@ SKIPPED = {
 }
 # fmt: on
 
+UNITS = Path(__file__).with_name("units.json")
+UNIT_TOKENS = {"pct", "percent"}
+UNIT_CLASSES = {"fraction", "none", "percent", "unknown"}
+PERCENT_WORD = re.compile(r"\b([Pp])ercent(?:age)?(s?)\b")
+HUNDRED_TIMES = re.compile(r"\b100\s*\*\s*")
+
 TOKENS = re.compile(
     r'/\*\*(?P<doc>.*?)\*/|/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|(?P<end>[{};])',
     re.DOTALL,
@@ -196,9 +202,53 @@ def field_name(java: str) -> str:
     return f"{name}_" if keyword.iskeyword(name) else name
 
 
+def has_unit_token(java: str) -> bool:
+    """Whether the snake_case name of a Java field holds a `pct` or `percent` token."""
+    return not UNIT_TOKENS.isdisjoint(field_name(java).split("_"))
+
+
+def python_name(field: dict[str, str]) -> str:
+    """The Python name of a Java field, with `frac` for the `pct` or `percent` of a fraction."""
+    name = field_name(field["name"])
+    if field.get("unit") != "fraction":
+        return name
+    return "_".join("frac" if token in UNIT_TOKENS else token for token in name.split("_"))
+
+
+def as_fraction(word: re.Match[str]) -> str:
+    """The word `fraction` in place of a `percent` or `percentage`, keeping its case and plural."""
+    return f"{'F' if word[1] == 'P' else 'f'}raction{word[2]}"
+
+
+def field_doc(field: dict[str, str], found: list[str]) -> list[str]:
+    """The paragraphs of a field's docstring, ending with the unit of a fraction or a percent."""
+    if field.get("unit") == "fraction":
+        found = [HUNDRED_TIMES.sub("", PERCENT_WORD.sub(as_fraction, text)) for text in found]
+        return [*found, f"A fraction from 0 to 1, in Picard's `{field['name']}` column."]
+    if field.get("unit") == "percent":
+        return [*found, "A percent from 0 to 100."]
+    return found
+
+
+def classify_units(classes: list[dict[str, Any]], units: dict[str, dict[str, str]]) -> None:
+    """Mark the unit of each field whose name holds a `pct` or `percent` token, from the table."""
+    used: set[str] = set()
+    for metric in classes:
+        for field in metric["fields"]:
+            if not has_unit_token(field["name"]):
+                continue
+            key = f"{field['declared_by']}.{field['name']}"
+            if units.get(key, {}).get("unit") not in UNIT_CLASSES:
+                raise SystemExit(f"Classify {key} in {UNITS} as one of {sorted(UNIT_CLASSES)}!")
+            field["unit"] = units[key]["unit"]
+            used.add(key)
+    if stale := sorted(set(units) - used):
+        raise SystemExit(f"Remove these fields, which no class holds, from {UNITS}: {stale}")
+
+
 def column_labels(java: str, fields: list[dict[str, str]]) -> dict[str, str]:
     """The column label of each field of a Java class, by its Python name."""
-    labels = {field_name(field["name"]): field["name"] for field in fields}
+    labels = {python_name(field): field["name"] for field in fields}
     if len(labels) < len(fields):
         raise SystemExit(f"Two fields of {java} have the same Python name!")
     return labels
@@ -221,7 +271,7 @@ def metrics_module(
             annotation, default = python_type(java, field, enums)
             body += ["", f"    {attribute}: {annotation}" + (default and f" = {default}")]
             found = javadoc(source, field["declared_by"], field["name"])
-            found = found or FALLBACK_DOCS.get(field["name"], [])
+            found = field_doc(field, found or FALLBACK_DOCS.get(field["name"], []))
             if found:
                 body += docstring(found, "    ")
     imports = ["import datetime"] if any("datetime." in line for line in body) else []
@@ -283,6 +333,7 @@ def main() -> None:
             field["type"] = STRING_ENUMS.get(f"{metric['class']}.{field['name']}", field["type"])
     schema["enums"] |= {name: constants for name, (_, constants) in STRING_ENUM_TYPES.items()}
     kept = [metric for metric in schema["classes"] if metric["class"] not in SKIPPED]
+    classify_units(kept, json.loads(UNITS.read_text()))
     used = {field["type"] for metric in kept for field in metric["fields"]}
     classes = {
         metric["class"]: RENAMES.get(metric["class"], simple_name(metric["class"]))

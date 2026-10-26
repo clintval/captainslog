@@ -54,14 +54,14 @@ def test_reader_reads_the_per_target_coverage_fixture() -> None:
         end=300,
         length=100,
         name="rs7555566",
-        pct_gc=0.41,
+        frac_gc=0.41,
         mean_coverage=77.49,
         normalized_coverage=1.098526,
         min_normalized_coverage=0.921463,
         max_normalized_coverage=1.261695,
         min_coverage=65,
         max_coverage=89,
-        pct_0x=0.0,
+        frac_0x=0.0,
         read_count=140,
     )
 
@@ -161,7 +161,7 @@ def test_reader_reads_a_subclass_of_per_target_coverage_under_its_renamed_column
     with PicardCoverageReader.from_path[DerivedTarget](PER_TARGET) as reader:
         first = next(iter(reader))
     assert isinstance(first, DerivedTarget)
-    assert first.pct_gc == 0.41
+    assert first.frac_gc == 0.41
     assert first.span == "1:201-300"
 
 

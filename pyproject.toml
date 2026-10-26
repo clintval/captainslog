@@ -67,6 +67,7 @@ only-include = [
   "tests",
   "conftest.py",
   "scripts/picard/picard-3.5.0.json",
+  "scripts/picard/units.json",
   "README.md",
   "CONTRIBUTING.md",
   "LICENSE",

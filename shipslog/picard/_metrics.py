@@ -216,8 +216,11 @@ class AlignmentSummaryMetrics:
     pf_reads: int = 0
     """The number of PF reads where PF is defined as passing Illumina's filter."""
 
-    pct_pf_reads: float = 0.0
-    """The fraction of reads that are PF (PF_READS / TOTAL_READS)"""
+    frac_pf_reads: float = 0.0
+    """The fraction of reads that are PF (PF_READS / TOTAL_READS)
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_READS` column.
+    """
 
     pf_noise_reads: int = 0
     """The number of PF reads that are marked as noise reads. A noise read is one which is
@@ -230,9 +233,11 @@ class AlignmentSummaryMetrics:
     that aligned with low quality (i.e. their alignments are ambiguous).
     """
 
-    pct_pf_reads_aligned: float = 0.0
-    """The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED /
+    frac_pf_reads_aligned: float = 0.0
+    """The fraction of PF reads that aligned to the reference sequence. PF_READS_ALIGNED /
     PF_READS
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_READS_ALIGNED` column.
     """
 
     pf_aligned_bases: int = 0
@@ -314,9 +319,11 @@ class AlignmentSummaryMetrics:
     reads_aligned_in_pairs: int = 0
     """The number of aligned reads whose mate pair was also aligned to the reference."""
 
-    pct_reads_aligned_in_pairs: float = 0.0
+    frac_reads_aligned_in_pairs: float = 0.0
     """The fraction of aligned reads whose mate pair was also aligned to the reference.
     READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED
+
+    A fraction from 0 to 1, in Picard's `PCT_READS_ALIGNED_IN_PAIRS` column.
     """
 
     pf_reads_improper_pairs: int = 0
@@ -324,9 +331,11 @@ class AlignmentSummaryMetrics:
     SAM flag 0x2).
     """
 
-    pct_pf_reads_improper_pairs: float = 0.0
+    frac_pf_reads_improper_pairs: float = 0.0
     """The fraction of (primary) reads that are *not* "properly" aligned in pairs (as per SAM
     flag 0x2). PF_READS_IMPROPER_PAIRS / PF_READS_ALIGNED
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_READS_IMPROPER_PAIRS` column.
     """
 
     bad_cycles: int = 0
@@ -337,27 +346,35 @@ class AlignmentSummaryMetrics:
     of PF reads aligned to the genome.
     """
 
-    pct_chimeras: float = 0.0
+    frac_chimeras: float = 0.0
     """The fraction of read pairs with a mapping quality (MAPQ) ≥ 20 that are identified as
     chimeric by and any of the following criteria: (1) the insert size exceeds the maximum insert
     size (by default 100 kb), (2) the two ends of a read pair map to different contigs, (3) the
     paired-end orientation deviates from the expected orientation, or (4) either read in the pair
     contains an SA (supplementary alignment) tag indicating a chimeric alignment.
+
+    A fraction from 0 to 1, in Picard's `PCT_CHIMERAS` column.
     """
 
-    pct_adapter: float = 0.0
+    frac_adapter: float = 0.0
     """The fraction of PF reads that are unaligned or aligned with MQ0 and match to a known
     adapter sequence right from the start of the read (indication of adapter-dimer pairs).
+
+    A fraction from 0 to 1, in Picard's `PCT_ADAPTER` column.
     """
 
-    pct_softclip: float = 0.0
+    frac_softclip: float = 0.0
     """the fraction of PF bases that are on (primary) aligned reads and are soft-clipped, as a
     fraction of the PF_ALIGNED_BASES (even though these are not aligned!)
+
+    A fraction from 0 to 1, in Picard's `PCT_SOFTCLIP` column.
     """
 
-    pct_hardclip: float = 0.0
+    frac_hardclip: float = 0.0
     """The fraction of PF bases that are (on primary, aligned reads and) hard-clipped, as a
     fraction of the PF_ALIGNED_BASES (even though these are not aligned!)
+
+    A fraction from 0 to 1, in Picard's `PCT_HARDCLIP` column.
     """
 
     avg_pos_3prime_softclip_length: float = 0.0
@@ -442,8 +459,11 @@ class ArraysVariantCallingDetailMetrics:
     gender_concordance_pf: bool | None = None
     """Whether or not the three sexs agree"""
 
-    het_pct: float = 0.0
-    """100 * (count of hets) / (total calls) for this sample"""
+    het_frac: float = 0.0
+    """(count of hets) / (total calls) for this sample
+
+    A fraction from 0 to 1, in Picard's `HET_PCT` column.
+    """
 
     cluster_file_name: str = ""
     """The name of the cluster file used"""
@@ -505,8 +525,11 @@ class ArraysVariantCallingDetailMetrics:
     novel_snps: int = 0
     """The number of high confidence SNPS called that were not found in dbSNP"""
 
-    pct_dbsnp: float = 0.0
-    """The fraction of high confidence SNPs in dbSNP"""
+    frac_dbsnp: float = 0.0
+    """The fraction of high confidence SNPs in dbSNP
+
+    A fraction from 0 to 1, in Picard's `PCT_DBSNP` column.
+    """
 
     call_rate: float = 0.0
     """The overall call rate"""
@@ -557,8 +580,11 @@ class ArraysVariantCallingSummaryMetrics:
     novel_snps: int = 0
     """The number of high confidence SNPS called that were not found in dbSNP"""
 
-    pct_dbsnp: float = 0.0
-    """The fraction of high confidence SNPs in dbSNP"""
+    frac_dbsnp: float = 0.0
+    """The fraction of high confidence SNPs in dbSNP
+
+    A fraction from 0 to 1, in Picard's `PCT_DBSNP` column.
+    """
 
     call_rate: float = 0.0
     """The overall call rate"""
@@ -740,8 +766,11 @@ class BarcodeMetric:
     pf_one_mismatch_matches: int = 0
     """The number of PF reads matching this barcode that matched with 1 error or no-call."""
 
-    pct_matches: float = 0.0
-    """The fraction of all reads in the lane that matched to this barcode."""
+    frac_matches: float = 0.0
+    """The fraction of all reads in the lane that matched to this barcode.
+
+    A fraction from 0 to 1, in Picard's `PCT_MATCHES` column.
+    """
 
     ratio_this_barcode_to_best_barcode_pct: float = 0.0
     """The rate of all reads matching this barcode to all reads matching the most prevalent
@@ -751,8 +780,11 @@ class BarcodeMetric:
     this column gives you the fold-difference in representation between barcodes.
     """
 
-    pf_pct_matches: float = 0.0
-    """The fraction of PF reads in the lane that matched to this barcode."""
+    pf_frac_matches: float = 0.0
+    """The fraction of PF reads in the lane that matched to this barcode.
+
+    A fraction from 0 to 1, in Picard's `PF_PCT_MATCHES` column.
+    """
 
     pf_ratio_this_barcode_to_best_barcode_pct: float = 0.0
     """The rate of PF reads matching this barcode to PF reads matching the most prevalent
@@ -778,14 +810,19 @@ class BaseDistributionByCycleMetrics:
     cycle: int = 0
 
     pct_a: float = 0.0
+    """A percent from 0 to 100."""
 
     pct_c: float = 0.0
+    """A percent from 0 to 100."""
 
     pct_g: float = 0.0
+    """A percent from 0 to 100."""
 
     pct_t: float = 0.0
+    """A percent from 0 to 100."""
 
     pct_n: float = 0.0
+    """A percent from 0 to 100."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1052,8 +1089,11 @@ class DuplicationMetrics:
     always < READ_PAIR_DUPLICATES, which counts all duplicates regardless of source.
     """
 
-    percent_duplication: float | None = None
-    """The fraction of mapped sequence that is marked as duplicate."""
+    frac_duplication: float | None = None
+    """The fraction of mapped sequence that is marked as duplicate.
+
+    A fraction from 0 to 1, in Picard's `PERCENT_DUPLICATION` column.
+    """
 
     estimated_library_size: int | None = None
     """The estimated number of unique molecules in the library based on PE duplication."""
@@ -1323,8 +1363,11 @@ class FlowBasedDuplicationMetrics:
     always < READ_PAIR_DUPLICATES, which counts all duplicates regardless of source.
     """
 
-    percent_duplication: float | None = None
-    """The fraction of mapped sequence that is marked as duplicate."""
+    frac_duplication: float | None = None
+    """The fraction of mapped sequence that is marked as duplicate.
+
+    A fraction from 0 to 1, in Picard's `PERCENT_DUPLICATION` column.
+    """
 
     estimated_library_size: int | None = None
     """The estimated number of unique molecules in the library based on PE duplication."""
@@ -1612,14 +1655,18 @@ class HsMetrics:
     off_bait_bases: int = 0
     """The number of PF_BASES_ALIGNED that are mapped away from any baited region."""
 
-    pct_selected_bases: float = 0.0
+    frac_selected_bases: float = 0.0
     """The fraction of PF_BASES_ALIGNED located on or near a baited region (ON_BAIT_BASES +
     NEAR_BAIT_BASES)/PF_BASES_ALIGNED.
+
+    A fraction from 0 to 1, in Picard's `PCT_SELECTED_BASES` column.
     """
 
-    pct_off_bait: float = 0.0
+    frac_off_bait: float = 0.0
     """The fraction of PF_BASES_ALIGNED that are mapped away from any baited region,
     OFF_BAIT_BASES/PF_BASES_ALIGNED.
+
+    A fraction from 0 to 1, in Picard's `PCT_OFF_BAIT` column.
     """
 
     on_bait_vs_selected: float = 0.0
@@ -1630,13 +1677,18 @@ class HsMetrics:
     mean_bait_coverage: float = 0.0
     """The mean coverage of all baits in the experiment."""
 
-    pct_usable_bases_on_bait: float = 0.0
+    frac_usable_bases_on_bait: float = 0.0
     """The fraction of aligned, on-bait bases out of the PF bases available. (NOTE: This uses
     duplicate reads for both numerator and denominator)
+
+    A fraction from 0 to 1, in Picard's `PCT_USABLE_BASES_ON_BAIT` column.
     """
 
-    pct_usable_bases_on_target: float = 0.0
-    """The fraction of aligned, de-duped, on-target bases out of all the PF bases available."""
+    frac_usable_bases_on_target: float = 0.0
+    """The fraction of aligned, de-duped, on-target bases out of all the PF bases available.
+
+    A fraction from 0 to 1, in Picard's `PCT_USABLE_BASES_ON_TARGET` column.
+    """
 
     fold_enrichment: float = 0.0
     """The fold by which the baited region has been amplified above genomic background."""
@@ -1714,15 +1766,23 @@ class HsMetrics:
     on_target_bases: int = 0
     """The number of PF aligned bases that mapped to a targeted region of the genome."""
 
-    pct_pf_reads: float = 0.0
-    """The fraction of reads passing filter, PF_READS/TOTAL_READS."""
+    frac_pf_reads: float = 0.0
+    """The fraction of reads passing filter, PF_READS/TOTAL_READS.
 
-    pct_pf_uq_reads: float = 0.0
-    """The fraction of unique reads passing filter, PF_UNIQUE_READS/TOTAL_READS."""
+    A fraction from 0 to 1, in Picard's `PCT_PF_READS` column.
+    """
 
-    pct_pf_uq_reads_aligned: float = 0.0
+    frac_pf_uq_reads: float = 0.0
+    """The fraction of unique reads passing filter, PF_UNIQUE_READS/TOTAL_READS.
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_UQ_READS` column.
+    """
+
+    frac_pf_uq_reads_aligned: float = 0.0
     """The fraction of unique reads passing filter that align to the reference,
     PF_UQ_READS_ALIGNED/PF_UNIQUE_READS.
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_UQ_READS_ALIGNED` column.
     """
 
     mean_target_coverage: float = 0.0
@@ -1737,37 +1797,52 @@ class HsMetrics:
     min_target_coverage: int = 0
     """The minimum coverage of reads that mapped to target regions of an experiment."""
 
-    zero_cvg_targets_pct: float = 0.0
-    """The fraction of targets that did not reach coverage=1 over any base."""
+    zero_cvg_targets_frac: float = 0.0
+    """The fraction of targets that did not reach coverage=1 over any base.
 
-    pct_exc_dupe: float = 0.0
+    A fraction from 0 to 1, in Picard's `ZERO_CVG_TARGETS_PCT` column.
+    """
+
+    frac_exc_dupe: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads marked as
     duplicates.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_DUPE` column.
     """
 
-    pct_exc_adapter: float = 0.0
+    frac_exc_adapter: float = 0.0
     """The fraction of aligned bases in reads that have MQ=0 and whose 5' end consists of adapter
     sequence.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_ADAPTER` column.
     """
 
-    pct_exc_mapq: float = 0.0
+    frac_exc_mapq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with low
     mapping quality.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_MAPQ` column.
     """
 
-    pct_exc_baseq: float = 0.0
+    frac_exc_baseq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were of low base
     quality.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_BASEQ` column.
     """
 
-    pct_exc_overlap: float = 0.0
+    frac_exc_overlap: float = 0.0
     """The fraction of aligned bases that were filtered out because they were the second
     observation from an insert with overlapping reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OVERLAP` column.
     """
 
-    pct_exc_off_target: float = 0.0
+    frac_exc_off_target: float = 0.0
     """The fraction of aligned bases that were filtered out because they did not align over a
     target base.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OFF_TARGET` column.
     """
 
     fold_80_base_penalty: float = 0.0
@@ -1775,56 +1850,107 @@ class HsMetrics:
     mean coverage level in those targets.
     """
 
-    pct_target_bases_1x: float = 0.0
-    """The fraction of all target bases achieving 1X or greater coverage."""
+    frac_target_bases_1x: float = 0.0
+    """The fraction of all target bases achieving 1X or greater coverage.
 
-    pct_target_bases_2x: float = 0.0
-    """The fraction of all target bases achieving 2X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_1X` column.
+    """
 
-    pct_target_bases_10x: float = 0.0
-    """The fraction of all target bases achieving 10X or greater coverage."""
+    frac_target_bases_2x: float = 0.0
+    """The fraction of all target bases achieving 2X or greater coverage.
 
-    pct_target_bases_20x: float = 0.0
-    """The fraction of all target bases achieving 20X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_2X` column.
+    """
 
-    pct_target_bases_30x: float = 0.0
-    """The fraction of all target bases achieving 30X or greater coverage."""
+    frac_target_bases_10x: float = 0.0
+    """The fraction of all target bases achieving 10X or greater coverage.
 
-    pct_target_bases_40x: float = 0.0
-    """The fraction of all target bases achieving 40X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_10X` column.
+    """
 
-    pct_target_bases_50x: float = 0.0
-    """The fraction of all target bases achieving 50X or greater coverage."""
+    frac_target_bases_20x: float = 0.0
+    """The fraction of all target bases achieving 20X or greater coverage.
 
-    pct_target_bases_100x: float = 0.0
-    """The fraction of all target bases achieving 100X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_20X` column.
+    """
 
-    pct_target_bases_250x: float = 0.0
-    """The fraction of all target bases achieving 250X or greater coverage."""
+    frac_target_bases_30x: float = 0.0
+    """The fraction of all target bases achieving 30X or greater coverage.
 
-    pct_target_bases_500x: float = 0.0
-    """The fraction of all target bases achieving 500X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_30X` column.
+    """
 
-    pct_target_bases_1000x: float = 0.0
-    """The fraction of all target bases achieving 1000X or greater coverage."""
+    frac_target_bases_40x: float = 0.0
+    """The fraction of all target bases achieving 40X or greater coverage.
 
-    pct_target_bases_2500x: float = 0.0
-    """The fraction of all target bases achieving 2500X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_40X` column.
+    """
 
-    pct_target_bases_5000x: float = 0.0
-    """The fraction of all target bases achieving 5000X or greater coverage."""
+    frac_target_bases_50x: float = 0.0
+    """The fraction of all target bases achieving 50X or greater coverage.
 
-    pct_target_bases_10000x: float = 0.0
-    """The fraction of all target bases achieving 10000X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_50X` column.
+    """
 
-    pct_target_bases_25000x: float = 0.0
-    """The fraction of all target bases achieving 25000X or greater coverage."""
+    frac_target_bases_100x: float = 0.0
+    """The fraction of all target bases achieving 100X or greater coverage.
 
-    pct_target_bases_50000x: float = 0.0
-    """The fraction of all target bases achieving 50000X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_100X` column.
+    """
 
-    pct_target_bases_100000x: float = 0.0
-    """The fraction of all target bases achieving 100000X or greater coverage."""
+    frac_target_bases_250x: float = 0.0
+    """The fraction of all target bases achieving 250X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_250X` column.
+    """
+
+    frac_target_bases_500x: float = 0.0
+    """The fraction of all target bases achieving 500X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_500X` column.
+    """
+
+    frac_target_bases_1000x: float = 0.0
+    """The fraction of all target bases achieving 1000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_1000X` column.
+    """
+
+    frac_target_bases_2500x: float = 0.0
+    """The fraction of all target bases achieving 2500X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_2500X` column.
+    """
+
+    frac_target_bases_5000x: float = 0.0
+    """The fraction of all target bases achieving 5000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_5000X` column.
+    """
+
+    frac_target_bases_10000x: float = 0.0
+    """The fraction of all target bases achieving 10000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_10000X` column.
+    """
+
+    frac_target_bases_25000x: float = 0.0
+    """The fraction of all target bases achieving 25000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_25000X` column.
+    """
+
+    frac_target_bases_50000x: float = 0.0
+    """The fraction of all target bases achieving 50000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_50000X` column.
+    """
+
+    frac_target_bases_100000x: float = 0.0
+    """The fraction of all target bases achieving 100000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_100000X` column.
+    """
 
     at_dropout: float = 0.0
     """A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin
@@ -1902,10 +2028,16 @@ class IlluminaBasecallingMetrics:
     """The standard deviation of clusters per tile."""
 
     mean_pct_pf_clusters_per_tile: float = 0.0
-    """The mean percentage of pf clusters per tile."""
+    """The mean percentage of pf clusters per tile.
+
+    A percent from 0 to 100.
+    """
 
     sd_pct_pf_clusters_per_tile: float = 0.0
-    """The standard deviation in percentage of pf clusters per tile."""
+    """The standard deviation in percentage of pf clusters per tile.
+
+    A percent from 0 to 100.
+    """
 
     mean_pf_clusters_per_tile: float = 0.0
     """The mean number of pf clusters per tile."""
@@ -2232,8 +2364,11 @@ class JumpingLibraryMetrics:
     jump_duplicate_pairs: int = 0
     """The number of outward-facing pairs that are duplicates"""
 
-    jump_duplicate_pct: float = 0.0
-    """The fraction of outward-facing pairs that are marked as duplicates"""
+    jump_duplicate_frac: float = 0.0
+    """The fraction of outward-facing pairs that are marked as duplicates
+
+    A fraction from 0 to 1, in Picard's `JUMP_DUPLICATE_PCT` column.
+    """
 
     jump_library_size: int = 0
     """The estimated library size for outward-facing pairs"""
@@ -2250,8 +2385,11 @@ class JumpingLibraryMetrics:
     nonjump_duplicate_pairs: int = 0
     """The number of inward-facing pais that are duplicates"""
 
-    nonjump_duplicate_pct: float = 0.0
-    """The fraction of inward-facing pairs that are marked as duplicates"""
+    nonjump_duplicate_frac: float = 0.0
+    """The fraction of inward-facing pairs that are marked as duplicates
+
+    A fraction from 0 to 1, in Picard's `NONJUMP_DUPLICATE_PCT` column.
+    """
 
     nonjump_library_size: int = 0
     """The estimated library size for inward-facing pairs"""
@@ -2271,19 +2409,25 @@ class JumpingLibraryMetrics:
     fragments: int = 0
     """The number of fragments in the SAM file"""
 
-    pct_jumps: float = 0.0
+    frac_jumps: float = 0.0
     """The number of outward-facing pairs expressed as a fraction of the total of all outward
     facing pairs, inward-facing pairs, and chimeric pairs.
+
+    A fraction from 0 to 1, in Picard's `PCT_JUMPS` column.
     """
 
-    pct_nonjumps: float = 0.0
+    frac_nonjumps: float = 0.0
     """The number of inward-facing pairs expressed as a fraction of the total of all outward
     facing pairs, inward-facing pairs, and chimeric pairs.
+
+    A fraction from 0 to 1, in Picard's `PCT_NONJUMPS` column.
     """
 
-    pct_chimeras: float = 0.0
+    frac_chimeras: float = 0.0
     """The number of chimeric pairs expressed as a fraction of the total of all outward facing
     pairs, inward-facing pairs, and chimeric pairs.
+
+    A fraction from 0 to 1, in Picard's `PCT_CHIMERAS` column.
     """
 
 
@@ -2453,39 +2597,50 @@ class PFFailSummaryMetric:
     pf_fail_reads: int = 0
     """The number of non-PF reads in this tile."""
 
-    pct_pf_fail_reads: float = 0.0
-    """The fraction of PF_READS"""
+    frac_pf_fail_reads: float = 0.0
+    """The fraction of PF_READS
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_FAIL_READS` column.
+    """
 
     pf_fail_empty: int = 0
     """The number of non-PF reads in this tile that are deemed empty."""
 
-    pct_pf_fail_empty: float = 0.0
+    frac_pf_fail_empty: float = 0.0
     """The fraction of non-PF reads in this tile that are deemed empty (as fraction of all non-PF
     reads).
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_FAIL_EMPTY` column.
     """
 
     pf_fail_polyclonal: int = 0
     """The number of non-PF reads in this tile that are deemed multiclonal."""
 
-    pct_pf_fail_polyclonal: float = 0.0
+    frac_pf_fail_polyclonal: float = 0.0
     """The fraction of non-PF reads in this tile that are deemed multiclonal (as fraction of all
     non-PF reads).
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_FAIL_POLYCLONAL` column.
     """
 
     pf_fail_misaligned: int = 0
     """The number of non-PF reads in this tile that are deemed "misaligned"."""
 
-    pct_pf_fail_misaligned: float = 0.0
+    frac_pf_fail_misaligned: float = 0.0
     """The fraction of non-PF reads in this tile that are deemed "misaligned" (as fraction of all
     non-PF reads).
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_FAIL_MISALIGNED` column.
     """
 
     pf_fail_unknown: int = 0
     """The number of non-PF reads in this tile that have not been classified."""
 
-    pct_pf_fail_unknown: float = 0.0
+    frac_pf_fail_unknown: float = 0.0
     """The fraction of non-PF reads in this tile that have not been classified (as fraction of
     all non-PF reads).
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_FAIL_UNKNOWN` column.
     """
 
 
@@ -2644,14 +2799,20 @@ class QualityYieldMetricsFlow:
     pf_q20_flows: int = 0
     """The number of flows in PF reads that achieve quality score 20 or higher"""
 
-    pct_pf_q20_flows: float = 0.0
-    """The percentage of flows in all reads that achieve quality score 20 or higher"""
+    frac_pf_q20_flows: float = 0.0
+    """The fraction of flows in all reads that achieve quality score 20 or higher
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q20_FLOWS` column.
+    """
 
     pf_q30_flows: int = 0
     """The number of flows in PF reads that achieve quality score 30 or higher"""
 
-    pct_pf_q30_flows: float = 0.0
-    """The percentage of flows in all reads that achieve quality score 30 or higher"""
+    frac_pf_q30_flows: float = 0.0
+    """The fraction of flows in all reads that achieve quality score 30 or higher
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q30_FLOWS` column.
+    """
 
     pf_q20_equivalent_yield: int = 0
     """The sum of quality scores of all flows in PF reads divided by 20"""
@@ -2694,28 +2855,43 @@ class QualityYieldMetricsSnvq:
     pf_q40_bases: int = 0
     """The number of bases in PF reads that achieve quality score 40 or higher"""
 
-    pct_q20_bases: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 20 or higher"""
+    frac_q20_bases: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 20 or higher
 
-    pct_q30_bases: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 30 or higher"""
-
-    pct_q40_bases: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 40 or higher"""
-
-    pct_pf_q20_bases: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 20 or higher and
-    pass filter
+    A fraction from 0 to 1, in Picard's `PCT_Q20_BASES` column.
     """
 
-    pct_pf_q30_bases: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 30 or higher and
-    pass filter
+    frac_q30_bases: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 30 or higher
+
+    A fraction from 0 to 1, in Picard's `PCT_Q30_BASES` column.
     """
 
-    pct_pf_q40_bases: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 40 or higher and
-    pass filter
+    frac_q40_bases: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 40 or higher
+
+    A fraction from 0 to 1, in Picard's `PCT_Q40_BASES` column.
+    """
+
+    frac_pf_q20_bases: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 20 or higher and pass
+    filter
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q20_BASES` column.
+    """
+
+    frac_pf_q30_bases: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 30 or higher and pass
+    filter
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q30_BASES` column.
+    """
+
+    frac_pf_q40_bases: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 40 or higher and pass
+    filter
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q40_BASES` column.
     """
 
     total_snvq: int = 0
@@ -2742,28 +2918,43 @@ class QualityYieldMetricsSnvq:
     pf_q40_snvq: int = 0
     """The number of SNVQ values in PF reads that achieve quality score 40 or higher"""
 
-    pct_q20_snvq: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 20 or higher"""
+    frac_q20_snvq: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 20 or higher
 
-    pct_q30_snvq: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 30 or higher"""
-
-    pct_q40_snvq: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 40 or higher"""
-
-    pct_pf_q20_snvq: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 20 or higher and
-    pass filter
+    A fraction from 0 to 1, in Picard's `PCT_Q20_SNVQ` column.
     """
 
-    pct_pf_q30_snvq: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 30 or higher and
-    pass filter
+    frac_q30_snvq: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 30 or higher
+
+    A fraction from 0 to 1, in Picard's `PCT_Q30_SNVQ` column.
     """
 
-    pct_pf_q40_snvq: float = 0.0
-    """The percentage of SNVQ values in all reads that achieve quality score 40 or higher and
-    pass filter
+    frac_q40_snvq: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 40 or higher
+
+    A fraction from 0 to 1, in Picard's `PCT_Q40_SNVQ` column.
+    """
+
+    frac_pf_q20_snvq: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 20 or higher and pass
+    filter
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q20_SNVQ` column.
+    """
+
+    frac_pf_q30_snvq: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 30 or higher and pass
+    filter
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q30_SNVQ` column.
+    """
+
+    frac_pf_q40_snvq: float = 0.0
+    """The fraction of SNVQ values in all reads that achieve quality score 40 or higher and pass
+    filter
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_Q40_SNVQ` column.
     """
 
 
@@ -2786,108 +2977,155 @@ class RawWgsMetrics:
     mad_coverage: float = 0.0
     """The median absolute deviation of coverage of the genome after all filters are applied."""
 
-    pct_exc_adapter: float = 0.0
+    frac_exc_adapter: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with
     mapping quality 0 and the looked like adapter reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_ADAPTER` column.
     """
 
-    pct_exc_mapq: float = 0.0
+    frac_exc_mapq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with low
     mapping quality (lower than MIN_MAPPING_QUALITY).
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_MAPQ` column.
     """
 
-    pct_exc_dupe: float = 0.0
+    frac_exc_dupe: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads marked as
     duplicates.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_DUPE` column.
     """
 
-    pct_exc_unpaired: float = 0.0
+    frac_exc_unpaired: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads without a
     mapped mate pair.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_UNPAIRED` column.
     """
 
-    pct_exc_baseq: float = 0.0
+    frac_exc_baseq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were of low base quality
     (lower than MIN_BASE_QUALITY).
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_BASEQ` column.
     """
 
-    pct_exc_overlap: float = 0.0
+    frac_exc_overlap: float = 0.0
     """The fraction of aligned bases that were filtered out because they were the second
     observation from an insert with overlapping reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OVERLAP` column.
     """
 
-    pct_exc_capped: float = 0.0
+    frac_exc_capped: float = 0.0
     """The fraction of aligned bases that were filtered out because they would have raised
     coverage above COVERAGE_CAP.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_CAPPED` column.
     """
 
-    pct_exc_total: float = 0.0
-    """The total fraction of aligned bases excluded due to all filters."""
+    frac_exc_total: float = 0.0
+    """The total fraction of aligned bases excluded due to all filters.
 
-    pct_1x: float = 0.0
-    """The fraction of bases that attained at least 1X sequence coverage in post-filtering bases."""
+    A fraction from 0 to 1, in Picard's `PCT_EXC_TOTAL` column.
+    """
 
-    pct_5x: float = 0.0
-    """The fraction of bases that attained at least 5X sequence coverage in post-filtering bases."""
+    frac_1x: float = 0.0
+    """The fraction of bases that attained at least 1X sequence coverage in post-filtering bases.
 
-    pct_10x: float = 0.0
+    A fraction from 0 to 1, in Picard's `PCT_1X` column.
+    """
+
+    frac_5x: float = 0.0
+    """The fraction of bases that attained at least 5X sequence coverage in post-filtering bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_5X` column.
+    """
+
+    frac_10x: float = 0.0
     """The fraction of bases that attained at least 10X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_10X` column.
     """
 
-    pct_15x: float = 0.0
+    frac_15x: float = 0.0
     """The fraction of bases that attained at least 15X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_15X` column.
     """
 
-    pct_20x: float = 0.0
+    frac_20x: float = 0.0
     """The fraction of bases that attained at least 20X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_20X` column.
     """
 
-    pct_25x: float = 0.0
+    frac_25x: float = 0.0
     """The fraction of bases that attained at least 25X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_25X` column.
     """
 
-    pct_30x: float = 0.0
+    frac_30x: float = 0.0
     """The fraction of bases that attained at least 30X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_30X` column.
     """
 
-    pct_40x: float = 0.0
+    frac_40x: float = 0.0
     """The fraction of bases that attained at least 40X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_40X` column.
     """
 
-    pct_50x: float = 0.0
+    frac_50x: float = 0.0
     """The fraction of bases that attained at least 50X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_50X` column.
     """
 
-    pct_60x: float = 0.0
+    frac_60x: float = 0.0
     """The fraction of bases that attained at least 60X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_60X` column.
     """
 
-    pct_70x: float = 0.0
+    frac_70x: float = 0.0
     """The fraction of bases that attained at least 70X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_70X` column.
     """
 
-    pct_80x: float = 0.0
+    frac_80x: float = 0.0
     """The fraction of bases that attained at least 80X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_80X` column.
     """
 
-    pct_90x: float = 0.0
+    frac_90x: float = 0.0
     """The fraction of bases that attained at least 90X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_90X` column.
     """
 
-    pct_100x: float = 0.0
+    frac_100x: float = 0.0
     """The fraction of bases that attained at least 100X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_100X` column.
     """
 
     fold_80_base_penalty: float = 0.0
@@ -2972,57 +3210,77 @@ class RnaSeqMetrics:
     num_unexplained_reads: int = 0
     """The fraction of reads for which the transcription strand model could not be inferred."""
 
-    pct_r1_transcript_strand_reads: float = 0.0
+    frac_r1_transcript_strand_reads: float = 0.0
     """The fraction of reads that support the model where R1 is on the strand of transcription
     and R2 is on the opposite strand. For unpaired reads, it is the fraction of reads that are on
     the transcription strand (out of all the reads).
+
+    A fraction from 0 to 1, in Picard's `PCT_R1_TRANSCRIPT_STRAND_READS` column.
     """
 
-    pct_r2_transcript_strand_reads: float = 0.0
+    frac_r2_transcript_strand_reads: float = 0.0
     """The fraction of reads that support the model where R2 is on the strand of transcription
     and R1 is on the opposite strand. For unpaired reads, it is the fraction of reads that are on
     opposite strand than that of the the transcription strand (out of all the reads).
+
+    A fraction from 0 to 1, in Picard's `PCT_R2_TRANSCRIPT_STRAND_READS` column.
     """
 
-    pct_ribosomal_bases: float | None = None
+    frac_ribosomal_bases: float | None = None
     """Fraction of PF_ALIGNED_BASES that mapped to regions encoding ribosomal RNA,
     RIBOSOMAL_BASES/PF_ALIGNED_BASES
+
+    A fraction from 0 to 1, in Picard's `PCT_RIBOSOMAL_BASES` column.
     """
 
-    pct_coding_bases: float = 0.0
+    frac_coding_bases: float = 0.0
     """Fraction of PF_ALIGNED_BASES that mapped to protein coding regions of genes,
     CODING_BASES/PF_ALIGNED_BASES
+
+    A fraction from 0 to 1, in Picard's `PCT_CODING_BASES` column.
     """
 
-    pct_utr_bases: float = 0.0
+    frac_utr_bases: float = 0.0
     """Fraction of PF_ALIGNED_BASES that mapped to untranslated regions (UTR) of genes,
     UTR_BASES/PF_ALIGNED_BASES
+
+    A fraction from 0 to 1, in Picard's `PCT_UTR_BASES` column.
     """
 
-    pct_intronic_bases: float = 0.0
+    frac_intronic_bases: float = 0.0
     """Fraction of PF_ALIGNED_BASES that correspond to gene introns,
     INTRONIC_BASES/PF_ALIGNED_BASES
+
+    A fraction from 0 to 1, in Picard's `PCT_INTRONIC_BASES` column.
     """
 
-    pct_intergenic_bases: float = 0.0
+    frac_intergenic_bases: float = 0.0
     """Fraction of PF_ALIGNED_BASES that mapped to intergenic regions of genomic DNA,
     INTERGENIC_BASES/PF_ALIGNED_BASES
+
+    A fraction from 0 to 1, in Picard's `PCT_INTERGENIC_BASES` column.
     """
 
-    pct_mrna_bases: float = 0.0
+    frac_mrna_bases: float = 0.0
     """Sum of bases mapped to regions corresponding to UTRs and coding regions of mRNA
     transcripts, PCT_UTR_BASES + PCT_CODING_BASES
+
+    A fraction from 0 to 1, in Picard's `PCT_MRNA_BASES` column.
     """
 
-    pct_usable_bases: float = 0.0
+    frac_usable_bases: float = 0.0
     """The fraction of bases mapping to mRNA divided by the total number of PF bases,
     (CODING_BASES + UTR_BASES)/PF_BASES.
+
+    A fraction from 0 to 1, in Picard's `PCT_USABLE_BASES` column.
     """
 
-    pct_correct_strand_reads: float = 0.0
+    frac_correct_strand_reads: float = 0.0
     """Fraction of reads corresponding to mRNA transcripts which map to the correct strand of a
     reference genome = CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS). 0 if
     library is not strand-specific.
+
+    A fraction from 0 to 1, in Picard's `PCT_CORRECT_STRAND_READS` column.
     """
 
     median_cv_coverage: float = 0.0
@@ -3083,8 +3341,11 @@ class RrbsCpgDetailMetrics:
     converted_sites: int | None = None
     """Number of times this CpG site was converted (TG for + strand, CA for - strand)"""
 
-    pct_converted: float | None = None
-    """CpG CONVERTED_BASES / CpG TOTAL_BASES (fraction)"""
+    frac_converted: float | None = None
+    """CpG CONVERTED_BASES / CpG TOTAL_BASES (fraction)
+
+    A fraction from 0 to 1, in Picard's `PCT_CONVERTED` column.
+    """
 
     sample: str | None = None
     """The sample to which these metrics apply. If null, it means they apply to all reads in the
@@ -3115,8 +3376,11 @@ class RrbsSummaryMetrics:
     non_cpg_converted_bases: int | None = None
     """Number of times a non-CpG cytosine was converted (C->T for +, G->A for -)"""
 
-    pct_non_cpg_bases_converted: float | None = None
-    """NON_CPG_CONVERTED_BASES / NON_CPG_BASES (fraction)"""
+    frac_non_cpg_bases_converted: float | None = None
+    """NON_CPG_CONVERTED_BASES / NON_CPG_BASES (fraction)
+
+    A fraction from 0 to 1, in Picard's `PCT_NON_CPG_BASES_CONVERTED` column.
+    """
 
     cpg_bases_seen: int | None = None
     """Number of CpG sites encountered"""
@@ -3124,8 +3388,11 @@ class RrbsSummaryMetrics:
     cpg_bases_converted: int | None = None
     """Number of CpG sites that were converted (TG for +, CA for -)"""
 
-    pct_cpg_bases_converted: float | None = None
-    """CPG_BASES_CONVERTED / CPG_BASES_SEEN (fraction)"""
+    frac_cpg_bases_converted: float | None = None
+    """CPG_BASES_CONVERTED / CPG_BASES_SEEN (fraction)
+
+    A fraction from 0 to 1, in Picard's `PCT_CPG_BASES_CONVERTED` column.
+    """
 
     mean_cpg_coverage: float | None = None
     """Mean coverage of CpG sites"""
@@ -3243,14 +3510,18 @@ class TargetedPcrMetrics:
     off_amplicon_bases: int = 0
     """The number of PF_BASES_ALIGNED that mapped neither on or near an amplicon."""
 
-    pct_amplified_bases: float = 0.0
+    frac_amplified_bases: float = 0.0
     """The fraction of PF_BASES_ALIGNED that mapped to or near an amplicon, (ON_AMPLICON_BASES +
     NEAR_AMPLICON_BASES)/PF_BASES_ALIGNED.
+
+    A fraction from 0 to 1, in Picard's `PCT_AMPLIFIED_BASES` column.
     """
 
-    pct_off_amplicon: float = 0.0
+    frac_off_amplicon: float = 0.0
     """The fraction of PF_BASES_ALIGNED that mapped neither onto or near an amplicon,
     OFF_AMPLICON_BASES/PF_BASES_ALIGNED
+
+    A fraction from 0 to 1, in Picard's `PCT_OFF_AMPLICON` column.
     """
 
     on_amplicon_vs_selected: float = 0.0
@@ -3307,15 +3578,23 @@ class TargetedPcrMetrics:
     on_target_bases: int = 0
     """The number of PF aligned bases that mapped to a targeted region of the genome."""
 
-    pct_pf_reads: float = 0.0
-    """The fraction of reads passing filter, PF_READS/TOTAL_READS."""
+    frac_pf_reads: float = 0.0
+    """The fraction of reads passing filter, PF_READS/TOTAL_READS.
 
-    pct_pf_uq_reads: float = 0.0
-    """The fraction of unique reads passing filter, PF_UNIQUE_READS/TOTAL_READS."""
+    A fraction from 0 to 1, in Picard's `PCT_PF_READS` column.
+    """
 
-    pct_pf_uq_reads_aligned: float = 0.0
+    frac_pf_uq_reads: float = 0.0
+    """The fraction of unique reads passing filter, PF_UNIQUE_READS/TOTAL_READS.
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_UQ_READS` column.
+    """
+
+    frac_pf_uq_reads_aligned: float = 0.0
     """The fraction of unique reads passing filter that align to the reference,
     PF_UQ_READS_ALIGNED/PF_UNIQUE_READS.
+
+    A fraction from 0 to 1, in Picard's `PCT_PF_UQ_READS_ALIGNED` column.
     """
 
     mean_target_coverage: float = 0.0
@@ -3330,37 +3609,52 @@ class TargetedPcrMetrics:
     min_target_coverage: int = 0
     """The minimum coverage of reads that mapped to target regions of an experiment."""
 
-    zero_cvg_targets_pct: float = 0.0
-    """The fraction of targets that did not reach coverage=1 over any base."""
+    zero_cvg_targets_frac: float = 0.0
+    """The fraction of targets that did not reach coverage=1 over any base.
 
-    pct_exc_dupe: float = 0.0
+    A fraction from 0 to 1, in Picard's `ZERO_CVG_TARGETS_PCT` column.
+    """
+
+    frac_exc_dupe: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads marked as
     duplicates.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_DUPE` column.
     """
 
-    pct_exc_adapter: float = 0.0
+    frac_exc_adapter: float = 0.0
     """The fraction of aligned bases in reads that have MQ=0 and whose 5' end consists of adapter
     sequence.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_ADAPTER` column.
     """
 
-    pct_exc_mapq: float = 0.0
+    frac_exc_mapq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with low
     mapping quality.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_MAPQ` column.
     """
 
-    pct_exc_baseq: float = 0.0
+    frac_exc_baseq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were of low base
     quality.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_BASEQ` column.
     """
 
-    pct_exc_overlap: float = 0.0
+    frac_exc_overlap: float = 0.0
     """The fraction of aligned bases that were filtered out because they were the second
     observation from an insert with overlapping reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OVERLAP` column.
     """
 
-    pct_exc_off_target: float = 0.0
+    frac_exc_off_target: float = 0.0
     """The fraction of aligned bases that were filtered out because they did not align over a
     target base.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OFF_TARGET` column.
     """
 
     fold_80_base_penalty: float = 0.0
@@ -3368,56 +3662,107 @@ class TargetedPcrMetrics:
     mean coverage level in those targets.
     """
 
-    pct_target_bases_1x: float = 0.0
-    """The fraction of all target bases achieving 1X or greater coverage."""
+    frac_target_bases_1x: float = 0.0
+    """The fraction of all target bases achieving 1X or greater coverage.
 
-    pct_target_bases_2x: float = 0.0
-    """The fraction of all target bases achieving 2X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_1X` column.
+    """
 
-    pct_target_bases_10x: float = 0.0
-    """The fraction of all target bases achieving 10X or greater coverage."""
+    frac_target_bases_2x: float = 0.0
+    """The fraction of all target bases achieving 2X or greater coverage.
 
-    pct_target_bases_20x: float = 0.0
-    """The fraction of all target bases achieving 20X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_2X` column.
+    """
 
-    pct_target_bases_30x: float = 0.0
-    """The fraction of all target bases achieving 30X or greater coverage."""
+    frac_target_bases_10x: float = 0.0
+    """The fraction of all target bases achieving 10X or greater coverage.
 
-    pct_target_bases_40x: float = 0.0
-    """The fraction of all target bases achieving 40X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_10X` column.
+    """
 
-    pct_target_bases_50x: float = 0.0
-    """The fraction of all target bases achieving 50X or greater coverage."""
+    frac_target_bases_20x: float = 0.0
+    """The fraction of all target bases achieving 20X or greater coverage.
 
-    pct_target_bases_100x: float = 0.0
-    """The fraction of all target bases achieving 100X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_20X` column.
+    """
 
-    pct_target_bases_250x: float = 0.0
-    """The fraction of all target bases achieving 250X or greater coverage."""
+    frac_target_bases_30x: float = 0.0
+    """The fraction of all target bases achieving 30X or greater coverage.
 
-    pct_target_bases_500x: float = 0.0
-    """The fraction of all target bases achieving 500X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_30X` column.
+    """
 
-    pct_target_bases_1000x: float = 0.0
-    """The fraction of all target bases achieving 1000X or greater coverage."""
+    frac_target_bases_40x: float = 0.0
+    """The fraction of all target bases achieving 40X or greater coverage.
 
-    pct_target_bases_2500x: float = 0.0
-    """The fraction of all target bases achieving 2500X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_40X` column.
+    """
 
-    pct_target_bases_5000x: float = 0.0
-    """The fraction of all target bases achieving 5000X or greater coverage."""
+    frac_target_bases_50x: float = 0.0
+    """The fraction of all target bases achieving 50X or greater coverage.
 
-    pct_target_bases_10000x: float = 0.0
-    """The fraction of all target bases achieving 10000X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_50X` column.
+    """
 
-    pct_target_bases_25000x: float = 0.0
-    """The fraction of all target bases achieving 25000X or greater coverage."""
+    frac_target_bases_100x: float = 0.0
+    """The fraction of all target bases achieving 100X or greater coverage.
 
-    pct_target_bases_50000x: float = 0.0
-    """The fraction of all target bases achieving 50000X or greater coverage."""
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_100X` column.
+    """
 
-    pct_target_bases_100000x: float = 0.0
-    """The fraction of all target bases achieving 100000X or greater coverage."""
+    frac_target_bases_250x: float = 0.0
+    """The fraction of all target bases achieving 250X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_250X` column.
+    """
+
+    frac_target_bases_500x: float = 0.0
+    """The fraction of all target bases achieving 500X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_500X` column.
+    """
+
+    frac_target_bases_1000x: float = 0.0
+    """The fraction of all target bases achieving 1000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_1000X` column.
+    """
+
+    frac_target_bases_2500x: float = 0.0
+    """The fraction of all target bases achieving 2500X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_2500X` column.
+    """
+
+    frac_target_bases_5000x: float = 0.0
+    """The fraction of all target bases achieving 5000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_5000X` column.
+    """
+
+    frac_target_bases_10000x: float = 0.0
+    """The fraction of all target bases achieving 10000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_10000X` column.
+    """
+
+    frac_target_bases_25000x: float = 0.0
+    """The fraction of all target bases achieving 25000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_25000X` column.
+    """
+
+    frac_target_bases_50000x: float = 0.0
+    """The fraction of all target bases achieving 50000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_50000X` column.
+    """
+
+    frac_target_bases_100000x: float = 0.0
+    """The fraction of all target bases achieving 100000X or greater coverage.
+
+    A fraction from 0 to 1, in Picard's `PCT_TARGET_BASES_100000X` column.
+    """
 
     at_dropout: float = 0.0
     """A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin
@@ -3523,8 +3868,11 @@ class UmiMetrics:
     umi_base_qualities: float = 0.0
     """Estimation of Phred scaled quality scores for UMIs"""
 
-    pct_umi_with_n: float = 0.0
-    """The percentage of reads that contain an UMI that contains at least one N"""
+    frac_umi_with_n: float = 0.0
+    """The fraction of reads that contain an UMI that contains at least one N
+
+    A fraction from 0 to 1, in Picard's `PCT_UMI_WITH_N` column.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -3539,8 +3887,11 @@ class VariantCallingDetailMetrics:
     het_homvar_ratio: float = 0.0
     """(count of hets)/(count of homozygous non-ref) for this sample"""
 
-    pct_gq0_variants: float = 0.0
-    """The percentage of variants in a particular sample that have a GQ score of 0."""
+    frac_gq0_variants: float = 0.0
+    """The fraction of variants in a particular sample that have a GQ score of 0.
+
+    A fraction from 0 to 1, in Picard's `PCT_GQ0_VARIANTS` column.
+    """
 
     total_gq0_variants: int = 0
     """The total number of variants in a particular sample that have a GQ score of 0."""
@@ -3562,8 +3913,11 @@ class VariantCallingDetailMetrics:
     filtered_snps: int = 0
     """The number of SNPs that are filtered"""
 
-    pct_dbsnp: float = 0.0
-    """The fraction of passing bi-allelic SNPs in dbSNP"""
+    frac_dbsnp: float = 0.0
+    """The fraction of passing bi-allelic SNPs in dbSNP
+
+    A fraction from 0 to 1, in Picard's `PCT_DBSNP` column.
+    """
 
     dbsnp_titv: float = 0.0
     """The Transition/Transversion ratio of the passing bi-allelic SNP calls made at dbSNP sites"""
@@ -3582,8 +3936,11 @@ class VariantCallingDetailMetrics:
     filtered_indels: int = 0
     """The number of indels that are filtered"""
 
-    pct_dbsnp_indels: float = 0.0
-    """The fraction of passing indels in dbSNP"""
+    frac_dbsnp_indels: float = 0.0
+    """The fraction of passing indels in dbSNP
+
+    A fraction from 0 to 1, in Picard's `PCT_DBSNP_INDELS` column.
+    """
 
     num_in_db_snp_indels: int = 0
     """The number of passing indels found in dbSNP"""
@@ -3633,8 +3990,11 @@ class VariantCallingSummaryMetrics:
     filtered_snps: int = 0
     """The number of SNPs that are filtered"""
 
-    pct_dbsnp: float = 0.0
-    """The fraction of passing bi-allelic SNPs in dbSNP"""
+    frac_dbsnp: float = 0.0
+    """The fraction of passing bi-allelic SNPs in dbSNP
+
+    A fraction from 0 to 1, in Picard's `PCT_DBSNP` column.
+    """
 
     dbsnp_titv: float = 0.0
     """The Transition/Transversion ratio of the passing bi-allelic SNP calls made at dbSNP sites"""
@@ -3653,8 +4013,11 @@ class VariantCallingSummaryMetrics:
     filtered_indels: int = 0
     """The number of indels that are filtered"""
 
-    pct_dbsnp_indels: float = 0.0
-    """The fraction of passing indels in dbSNP"""
+    frac_dbsnp_indels: float = 0.0
+    """The fraction of passing indels in dbSNP
+
+    A fraction from 0 to 1, in Picard's `PCT_DBSNP_INDELS` column.
+    """
 
     num_in_db_snp_indels: int = 0
     """The number of passing indels found in dbSNP"""
@@ -3722,108 +4085,155 @@ class WgsMetrics:
     mad_coverage: float = 0.0
     """The median absolute deviation of coverage of the genome after all filters are applied."""
 
-    pct_exc_adapter: float = 0.0
+    frac_exc_adapter: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with
     mapping quality 0 and the looked like adapter reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_ADAPTER` column.
     """
 
-    pct_exc_mapq: float = 0.0
+    frac_exc_mapq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with low
     mapping quality (lower than MIN_MAPPING_QUALITY).
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_MAPQ` column.
     """
 
-    pct_exc_dupe: float = 0.0
+    frac_exc_dupe: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads marked as
     duplicates.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_DUPE` column.
     """
 
-    pct_exc_unpaired: float = 0.0
+    frac_exc_unpaired: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads without a
     mapped mate pair.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_UNPAIRED` column.
     """
 
-    pct_exc_baseq: float = 0.0
+    frac_exc_baseq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were of low base quality
     (lower than MIN_BASE_QUALITY).
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_BASEQ` column.
     """
 
-    pct_exc_overlap: float = 0.0
+    frac_exc_overlap: float = 0.0
     """The fraction of aligned bases that were filtered out because they were the second
     observation from an insert with overlapping reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OVERLAP` column.
     """
 
-    pct_exc_capped: float = 0.0
+    frac_exc_capped: float = 0.0
     """The fraction of aligned bases that were filtered out because they would have raised
     coverage above COVERAGE_CAP.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_CAPPED` column.
     """
 
-    pct_exc_total: float = 0.0
-    """The total fraction of aligned bases excluded due to all filters."""
+    frac_exc_total: float = 0.0
+    """The total fraction of aligned bases excluded due to all filters.
 
-    pct_1x: float = 0.0
-    """The fraction of bases that attained at least 1X sequence coverage in post-filtering bases."""
+    A fraction from 0 to 1, in Picard's `PCT_EXC_TOTAL` column.
+    """
 
-    pct_5x: float = 0.0
-    """The fraction of bases that attained at least 5X sequence coverage in post-filtering bases."""
+    frac_1x: float = 0.0
+    """The fraction of bases that attained at least 1X sequence coverage in post-filtering bases.
 
-    pct_10x: float = 0.0
+    A fraction from 0 to 1, in Picard's `PCT_1X` column.
+    """
+
+    frac_5x: float = 0.0
+    """The fraction of bases that attained at least 5X sequence coverage in post-filtering bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_5X` column.
+    """
+
+    frac_10x: float = 0.0
     """The fraction of bases that attained at least 10X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_10X` column.
     """
 
-    pct_15x: float = 0.0
+    frac_15x: float = 0.0
     """The fraction of bases that attained at least 15X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_15X` column.
     """
 
-    pct_20x: float = 0.0
+    frac_20x: float = 0.0
     """The fraction of bases that attained at least 20X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_20X` column.
     """
 
-    pct_25x: float = 0.0
+    frac_25x: float = 0.0
     """The fraction of bases that attained at least 25X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_25X` column.
     """
 
-    pct_30x: float = 0.0
+    frac_30x: float = 0.0
     """The fraction of bases that attained at least 30X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_30X` column.
     """
 
-    pct_40x: float = 0.0
+    frac_40x: float = 0.0
     """The fraction of bases that attained at least 40X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_40X` column.
     """
 
-    pct_50x: float = 0.0
+    frac_50x: float = 0.0
     """The fraction of bases that attained at least 50X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_50X` column.
     """
 
-    pct_60x: float = 0.0
+    frac_60x: float = 0.0
     """The fraction of bases that attained at least 60X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_60X` column.
     """
 
-    pct_70x: float = 0.0
+    frac_70x: float = 0.0
     """The fraction of bases that attained at least 70X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_70X` column.
     """
 
-    pct_80x: float = 0.0
+    frac_80x: float = 0.0
     """The fraction of bases that attained at least 80X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_80X` column.
     """
 
-    pct_90x: float = 0.0
+    frac_90x: float = 0.0
     """The fraction of bases that attained at least 90X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_90X` column.
     """
 
-    pct_100x: float = 0.0
+    frac_100x: float = 0.0
     """The fraction of bases that attained at least 100X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_100X` column.
     """
 
     fold_80_base_penalty: float = 0.0
@@ -3864,108 +4274,155 @@ class WgsMetricsWithNonZeroCoverage:
     mad_coverage: float = 0.0
     """The median absolute deviation of coverage of the genome after all filters are applied."""
 
-    pct_exc_adapter: float = 0.0
+    frac_exc_adapter: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with
     mapping quality 0 and the looked like adapter reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_ADAPTER` column.
     """
 
-    pct_exc_mapq: float = 0.0
+    frac_exc_mapq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads with low
     mapping quality (lower than MIN_MAPPING_QUALITY).
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_MAPQ` column.
     """
 
-    pct_exc_dupe: float = 0.0
+    frac_exc_dupe: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads marked as
     duplicates.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_DUPE` column.
     """
 
-    pct_exc_unpaired: float = 0.0
+    frac_exc_unpaired: float = 0.0
     """The fraction of aligned bases that were filtered out because they were in reads without a
     mapped mate pair.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_UNPAIRED` column.
     """
 
-    pct_exc_baseq: float = 0.0
+    frac_exc_baseq: float = 0.0
     """The fraction of aligned bases that were filtered out because they were of low base quality
     (lower than MIN_BASE_QUALITY).
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_BASEQ` column.
     """
 
-    pct_exc_overlap: float = 0.0
+    frac_exc_overlap: float = 0.0
     """The fraction of aligned bases that were filtered out because they were the second
     observation from an insert with overlapping reads.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_OVERLAP` column.
     """
 
-    pct_exc_capped: float = 0.0
+    frac_exc_capped: float = 0.0
     """The fraction of aligned bases that were filtered out because they would have raised
     coverage above COVERAGE_CAP.
+
+    A fraction from 0 to 1, in Picard's `PCT_EXC_CAPPED` column.
     """
 
-    pct_exc_total: float = 0.0
-    """The total fraction of aligned bases excluded due to all filters."""
+    frac_exc_total: float = 0.0
+    """The total fraction of aligned bases excluded due to all filters.
 
-    pct_1x: float = 0.0
-    """The fraction of bases that attained at least 1X sequence coverage in post-filtering bases."""
+    A fraction from 0 to 1, in Picard's `PCT_EXC_TOTAL` column.
+    """
 
-    pct_5x: float = 0.0
-    """The fraction of bases that attained at least 5X sequence coverage in post-filtering bases."""
+    frac_1x: float = 0.0
+    """The fraction of bases that attained at least 1X sequence coverage in post-filtering bases.
 
-    pct_10x: float = 0.0
+    A fraction from 0 to 1, in Picard's `PCT_1X` column.
+    """
+
+    frac_5x: float = 0.0
+    """The fraction of bases that attained at least 5X sequence coverage in post-filtering bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_5X` column.
+    """
+
+    frac_10x: float = 0.0
     """The fraction of bases that attained at least 10X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_10X` column.
     """
 
-    pct_15x: float = 0.0
+    frac_15x: float = 0.0
     """The fraction of bases that attained at least 15X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_15X` column.
     """
 
-    pct_20x: float = 0.0
+    frac_20x: float = 0.0
     """The fraction of bases that attained at least 20X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_20X` column.
     """
 
-    pct_25x: float = 0.0
+    frac_25x: float = 0.0
     """The fraction of bases that attained at least 25X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_25X` column.
     """
 
-    pct_30x: float = 0.0
+    frac_30x: float = 0.0
     """The fraction of bases that attained at least 30X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_30X` column.
     """
 
-    pct_40x: float = 0.0
+    frac_40x: float = 0.0
     """The fraction of bases that attained at least 40X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_40X` column.
     """
 
-    pct_50x: float = 0.0
+    frac_50x: float = 0.0
     """The fraction of bases that attained at least 50X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_50X` column.
     """
 
-    pct_60x: float = 0.0
+    frac_60x: float = 0.0
     """The fraction of bases that attained at least 60X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_60X` column.
     """
 
-    pct_70x: float = 0.0
+    frac_70x: float = 0.0
     """The fraction of bases that attained at least 70X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_70X` column.
     """
 
-    pct_80x: float = 0.0
+    frac_80x: float = 0.0
     """The fraction of bases that attained at least 80X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_80X` column.
     """
 
-    pct_90x: float = 0.0
+    frac_90x: float = 0.0
     """The fraction of bases that attained at least 90X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_90X` column.
     """
 
-    pct_100x: float = 0.0
+    frac_100x: float = 0.0
     """The fraction of bases that attained at least 100X sequence coverage in post-filtering
     bases.
+
+    A fraction from 0 to 1, in Picard's `PCT_100X` column.
     """
 
     fold_80_base_penalty: float = 0.0

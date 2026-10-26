@@ -111,8 +111,12 @@ git clone --depth 1 --branch 3.5.0 https://github.com/broadinstitute/picard.git 
 uv run python scripts/picard/generate.py --schema scripts/picard/picard-3.5.0.json --source /tmp/picard --output shipslog/picard
 ```
 
+`scripts/picard/units.json` classifies each field whose name holds `PCT` or `PERCENT` as a `fraction` from 0 to 1, a `percent` from 0 to 100, `none` when the word is not its unit, or `unknown`, with the line of Picard's source that sets it.
+The generator names a fraction `frac` in place of `pct` or `percent`, maps it to Picard's label in `COLUMN_LABELS`, and says the unit in its docstring.
+It refuses to run while a field is missing from the table, so classify each new one from where Picard computes it, never from its name.
+
 For a new Picard release, set its version in `scripts/fixtures/make.sh` and `scripts/fixtures/pixi.toml`, along with the package build that the path of `PICARD_JAR` names, then update the lock with `pixi lock --manifest-path scripts/fixtures/pixi.toml`.
-Write its schema to a new `scripts/picard/picard-X.Y.Z.json`, name that file in `pyproject.toml` and `tests/picard/test_metrics.py`, generate the modules from it, and regenerate the fixtures.
+Write its schema to a new `scripts/picard/picard-X.Y.Z.json`, name that file in `pyproject.toml` and `tests/picard/test_metrics.py`, check the source lines in `scripts/picard/units.json` against the new release, generate the modules from it, and regenerate the fixtures.
 `git grep -n -F 3.5.0 -- ':!*.lock' ':!tests/data'` lists every other place that names the release, such as the errors in `shipslog/picard/_reader.py` and this guide.
 The histograms in `shipslog/picard/_histograms.py` are written by hand, so check them against the new release too.
 

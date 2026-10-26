@@ -110,9 +110,9 @@ def test_writer_writes_nan_and_negative_infinity_as_picard_does(tmp_path: Path) 
     """NaN and infinity are `?`, minus infinity is `-?`, and booleans are `Y` and `N`."""
     path = tmp_path / "out.duplication_metrics"
     records = [
-        DuplicationMetrics(library="a", percent_duplication=float("nan")),
-        DuplicationMetrics(library="b", percent_duplication=float("-inf")),
-        DuplicationMetrics(library="c", percent_duplication=float("inf")),
+        DuplicationMetrics(library="a", frac_duplication=float("nan")),
+        DuplicationMetrics(library="b", frac_duplication=float("-inf")),
+        DuplicationMetrics(library="c", frac_duplication=float("inf")),
     ]
     with PicardWriter.from_path[DuplicationMetrics](path, header=HEADER) as writer:
         writer.write_all(records)
@@ -122,9 +122,9 @@ def test_writer_writes_nan_and_negative_infinity_as_picard_does(tmp_path: Path) 
     column = columns.index("PERCENT_DUPLICATION")
     assert [line.split("\t")[column] for line in lines[start : start + 3]] == ["?", "-?", "?"]
     read = list(PicardReader.from_path[DuplicationMetrics](path))
-    nan = read[0].percent_duplication
+    nan = read[0].frac_duplication
     assert nan is not None and isnan(nan)
-    assert read[1].percent_duplication == float("-inf")
+    assert read[1].frac_duplication == float("-inf")
 
     flags = tmp_path / "out.sam_comparison_metric"
     with PicardWriter.from_path[SamComparisonMetric](flags, header=HEADER) as writer:

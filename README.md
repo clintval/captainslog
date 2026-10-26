@@ -14,6 +14,7 @@ Typed dataclasses for the metrics files that Picard and Riker write.
 
 Open a Picard or Riker metrics file and get a list of frozen dataclasses with typed fields, do arithmetic on them without casting, and write them back out.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enums, and Picard's `?` is NaN.
+A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`, and keeps Picard's label on disk.
 Each metrics class that Picard writes has a dataclass, as does each histogram htsjdk can read back, and each table that Riker writes.
 
 ## Installation
@@ -227,7 +228,7 @@ from shipslog.picard import PicardCoverageWriter
 targets = list(PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt"))
 
 assert targets[0].name == "rs7555566"
-assert targets[0].pct_gc == 0.41
+assert targets[0].frac_gc == 0.41
 
 path = Path(temp_dir.name) / "s.per_target_coverage.txt"
 

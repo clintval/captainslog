@@ -35,8 +35,11 @@ class PerTargetCoverage:
     name: str = ""
     """The name of the target interval."""
 
-    pct_gc: float = 0.0
-    """The fraction of the reference bases of the target that are G or C."""
+    frac_gc: float = 0.0
+    """The fraction of the reference bases of the target that are G or C.
+
+    A fraction from 0 to 1, in Picard's `%gc` column.
+    """
 
     mean_coverage: float = 0.0
     """The mean high quality depth over the bases of the target."""
@@ -62,8 +65,11 @@ class PerTargetCoverage:
     max_coverage: int = 0
     """The greatest high quality depth of a base of the target."""
 
-    pct_0x: float = 0.0
-    """The fraction of the bases of the target with no coverage."""
+    frac_0x: float = 0.0
+    """The fraction of the bases of the target with no coverage.
+
+    A fraction from 0 to 1, in Picard's `pct_0x` column.
+    """
 
     read_count: int = 0
     """The number of reads that are not duplicates, meet the minimum mapping quality and are not
@@ -91,7 +97,7 @@ class PerBaseCoverage:
 # fmt: off
 COVERAGE_RENAMES: dict[type[Any], dict[str, str]] = {
     PerBaseCoverage: {},
-    PerTargetCoverage: {"pct_gc": "%gc"},
+    PerTargetCoverage: {"frac_0x": "pct_0x", "frac_gc": "%gc"},
 }
 # fmt: on
 
