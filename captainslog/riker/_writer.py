@@ -32,8 +32,8 @@ class RikerWriter(TsvWriter[RecordType]):
         """
         check_riker_class(self._bound_record_type())
         _ = options.setdefault("comment_prefixes", ("\n",))
-        _ = options.setdefault("header", True)
-        super().__init__(as_text_io(SectionStream(handle, None)), **options)
+        header = options.setdefault("header", True)
+        super().__init__(as_text_io(SectionStream(handle, None)) if header else handle, **options)
 
     @override
     def write_comment(self, comment: str | Comment) -> None:

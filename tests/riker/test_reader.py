@@ -60,16 +60,22 @@ def test_metrics_class_drops_one_compression_suffix(ending: str) -> None:
     assert metrics_class(f"out.hybcap-per-base{ending}") is HybcapPerBase
 
 
-def test_metrics_class_matches_the_longest_suffix() -> None:
-    """`.rna-insert-size-histogram.txt` is not read as `.rna-insert-size`."""
-    assert metrics_class("s.rna-insert-size-histogram.txt").__name__ == "RnaInsertSizeHistogram"
-    assert metrics_class("s.rna-insert-size.txt").__name__ == "RnaInsertSize"
+def test_no_riker_suffix_ends_with_another() -> None:
+    """The longest-suffix match is unambiguous: a suffix is never the end of another."""
+    assert not [(a, b) for a in SUFFIXES for b in SUFFIXES if a != b and a.endswith(b)]
+    assert all(metrics_class(f"s{suffix}") is kind for suffix, kind in SUFFIXES.items())
 
 
 def test_metrics_class_refuses_an_unknown_suffix() -> None:
     """A path with no Riker suffix is refused, named as given."""
     with pytest.raises(ValueError, match=r"^x\.txt does not end with a Riker 0\.5\.0 suffix: \["):
         _ = metrics_class("x.txt")
+
+
+def test_metrics_class_drops_only_one_compression_suffix() -> None:
+    """A second compression suffix is not dropped, so the path is refused."""
+    with pytest.raises(ValueError, match=r"^s\.rna-biotype\.txt\.gz\.gz does not end with"):
+        _ = metrics_class("s.rna-biotype.txt.gz.gz")
 
 
 def test_reader_reads_a_gzipped_per_base_file(tmp_path: Path) -> None:
@@ -121,9 +127,11 @@ def test_reader_reads_a_users_subclass_of_a_riker_dataclass() -> None:
 def test_reader_refuses_a_file_whose_columns_differ() -> None:
     """A file with another header is refused by typeline, naming the column."""
     handle = StringIO("sample\tbiotype\treads\tfrac\ns\tmRNA\t1\t1.0\n")
-    with pytest.raises(ValueError, match="frac_reads"):
-        with RikerReader[RnaBiotype](handle) as reader:
-            _ = list(reader)
+    with (
+        pytest.raises(ValueError, match="frac_reads"),
+        RikerReader[RnaBiotype](handle) as reader,
+    ):
+        _ = list(reader)
 
 
 def test_from_path_types_the_riker_reader() -> None:

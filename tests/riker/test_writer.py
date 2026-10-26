@@ -1,5 +1,7 @@
 import re
+from dataclasses import astuple
 from dataclasses import dataclass
+from dataclasses import fields
 from io import StringIO
 from pathlib import Path
 from typing import assert_type
@@ -36,29 +38,38 @@ def test_every_fixture_reads_back_the_same_after_writing(path: Path, tmp_path: P
         assert same(list(reader), rows)
 
 
-def test_writer_without_records_leaves_the_file_empty(tmp_path: Path) -> None:
+@pytest.mark.parametrize("how", ["close", "write_all", "write_header"])
+def test_writer_without_records_leaves_the_file_empty(how: str, tmp_path: Path) -> None:
     """Closing with no record writes not even the header, as Riker writes."""
     path = tmp_path / "s.alignment-metrics.txt"
-    with RikerWriter.from_path[AlignmentMetrics](path):
-        pass
+    with RikerWriter.from_path[AlignmentMetrics](path) as writer:
+        if how == "write_all":
+            writer.write_all([])
+        elif how == "write_header":
+            writer.write_header()
     assert path.read_text() == ""
 
 
 def test_writer_writes_what_riker_writes_for_quoted_and_empty_cells() -> None:
-    """A tab and a double quote are quoted, a missing optional field is empty, and all read back."""
+    """Cells with a tab, quote or line break are quoted, a missing optional is empty."""
     rows = [
         HybcapMetrics(sample="a\tb", hs_library_size=None),
         HybcapMetrics(sample='a"b', hs_library_size=7),
+        HybcapMetrics(sample="a\nb"),
+        HybcapMetrics(sample="a\rb"),
     ]
     handle = StringIO(newline="")
     with RikerWriter[HybcapMetrics](handle) as writer:
         writer.write_all(rows)
         text = handle.getvalue()
-    lines = text.splitlines()
-    assert lines[1].startswith('"a\tb"\t')
-    assert lines[2].startswith('"a""b"\t')
-    header = lines[0].split("\t")
-    assert lines[1].split("\t")[header.index("hs_library_size") + 1] == ""
+    header = "\t".join(f.name for f in fields(HybcapMetrics))
+    quoted = ['"a\tb"', '"a""b"', '"a\nb"', '"a\rb"']
+    lines = [
+        "\t".join([cell, *("" if v is None else str(v) for v in astuple(row)[1:])])
+        for cell, row in zip(quoted, rows, strict=True)
+    ]
+    expected = "\n".join([header, *lines]) + "\n"
+    assert text == expected
     with RikerReader[HybcapMetrics](StringIO(text)) as reader:
         assert same(list(reader), rows)
 
@@ -75,9 +86,11 @@ def test_writer_writes_a_sample_that_starts_with_a_hash_bare() -> None:
 def test_writer_refuses_a_comment() -> None:
     """A Riker file holds no comments."""
     message = "A Riker metrics file holds no comments!"
-    with RikerWriter[RnaBiotype](StringIO()) as writer:
-        with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
-            writer.write_comment("note")
+    with (
+        RikerWriter[RnaBiotype](StringIO()) as writer,
+        pytest.raises(TypeError, match=f"^{re.escape(message)}$"),
+    ):
+        writer.write_comment("note")
 
 
 def test_writer_refuses_a_class_that_is_not_a_riker_dataclass(tmp_path: Path) -> None:
@@ -114,3 +127,16 @@ def test_from_path_of_the_writer_refuses_an_unknown_option(tmp_path: Path) -> No
     """The writer's `from_path` refuses an option typeline does not have."""
     with pytest.raises(TypeError):
         _ = RikerWriter.from_path[RnaBiotype](tmp_path / "out.txt", bogus=True)  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue, reportUnknownVariableType]  # ty: ignore[unknown-argument]
+
+
+@pytest.mark.parametrize("count", [1, 3])
+def test_writer_without_a_header_writes_every_record(count: int) -> None:
+    """With `header=False`, the first record is written, and no header line."""
+    handle = StringIO(newline="")
+    rows = [
+        RnaBiotype(sample=f"s{i}", biotype="mRNA", reads=i, frac_reads=0.5) for i in range(count)
+    ]
+    with RikerWriter[RnaBiotype](handle, header=False) as writer:
+        writer.write_all(rows)
+        text = handle.getvalue()
+    assert text.splitlines() == [f"s{i}\tmRNA\t{i}\t0.5" for i in range(count)]

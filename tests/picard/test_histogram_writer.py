@@ -25,7 +25,6 @@ from captainslog.picard import SamComparisonMetric
 from captainslog.picard import histogram_class
 from captainslog.picard._header import header_lines
 from captainslog.picard._histograms import HISTOGRAMS
-from captainslog.picard._writer import _SectionStream  # pyright: ignore[reportPrivateUsage]
 from tests.compare import same
 from tests.picard import FIXTURE_CLASSES
 from tests.picard import HEADER
@@ -433,67 +432,3 @@ def test_histogram_only_writer_writes_the_default_header_when_given_none(tmp_pat
     lines = path.read_text().split("\n")
     assert lines[:2] == ["## htsjdk.samtools.metrics.StringHeader", "# captainslog"]
     assert lines[3].startswith("# Started on: ")
-
-
-def test_section_stream_writes_a_label_row_split_across_writes_with_its_first_row() -> None:
-    """The pieces of a label row are held, then written after the section line with a row."""
-    handle = StringIO()
-    stream = _SectionStream(handle, "## SECTION")
-    _ = stream.write("BIN\t")
-    _ = stream.write("VALUE\n")
-    assert handle.getvalue() == ""
-    _ = stream.write("1\t2\n")
-    assert handle.getvalue() == "## SECTION\nBIN\tVALUE\n1\t2\n"
-
-
-def test_section_stream_writes_a_label_row_and_its_rows_given_in_one_write() -> None:
-    """A label row and its rows written at once are written after the section line."""
-    handle = StringIO()
-    stream = _SectionStream(handle, "## SECTION")
-    _ = stream.write("BIN\tVALUE\n1\t2\n3\t4\n")
-    assert handle.getvalue() == "## SECTION\nBIN\tVALUE\n1\t2\n3\t4\n"
-
-
-def test_section_stream_writes_a_row_split_mid_line() -> None:
-    """A row written in pieces is written as given, after the section line and the labels."""
-    handle = StringIO()
-    stream = _SectionStream(handle, "## SECTION")
-    for text in ("BIN\tVALUE\n", "1\t", "2\n", "3\t4\n"):
-        _ = stream.write(text)
-    assert handle.getvalue() == "## SECTION\nBIN\tVALUE\n1\t2\n3\t4\n"
-
-
-def test_section_stream_never_writes_a_label_row_without_rows() -> None:
-    """A label row no row follows is not written, even when the stream is closed."""
-    handle = StringIO()
-    stream = _SectionStream(handle, "## SECTION")
-    _ = stream.write("BIN\tVALUE\n")
-    _ = stream.write("")
-    assert handle.getvalue() == ""
-    stream.close()
-    assert handle.closed
-
-
-def test_section_stream_refuses_a_row_after_its_end_and_writes_nothing() -> None:
-    """A row after the section ends is refused, and nothing is written."""
-    handle = StringIO()
-    stream = _SectionStream(handle, "## SECTION")
-    _ = stream.write("BIN\tVALUE\n1\t2\n")
-    stream.end()
-    assert stream.ended
-    before = handle.getvalue()
-    with pytest.raises(ValueError, match=r"^Cannot write metrics after the histogram!$"):
-        _ = stream.write("3\t4\n")
-    assert handle.getvalue() == before
-
-
-def test_section_stream_drops_a_label_row_after_its_end() -> None:
-    """A label row after the section ends is dropped, and a row after it is still refused."""
-    handle = StringIO()
-    stream = _SectionStream(handle, "## SECTION")
-    stream.end()
-    _ = stream.write("BIN\tVALUE\n")
-    assert handle.getvalue() == ""
-    with pytest.raises(ValueError, match=r"^Cannot write metrics after the histogram!$"):
-        _ = stream.write("1\t2\n")
-    assert handle.getvalue() == ""

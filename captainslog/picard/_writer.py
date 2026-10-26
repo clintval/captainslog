@@ -24,8 +24,6 @@ from captainslog.picard._reader import java_name
 from captainslog.picard._table import HISTOGRAM
 from captainslog.picard._table import METRICS_CLASS
 
-_SectionStream = SectionStream
-
 
 def table_options(rename: Mapping[str, str]) -> WriterOptions:
     """The options typeline writes a table of a Picard metrics file with: its labels, then its rows.
