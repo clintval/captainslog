@@ -14,16 +14,21 @@ __all__ = [
     "HybcapPerBase",
     "HybcapPerTarget",
     "IsizeHistogram",
+    "IsizeHistogramColumns",
     "IsizeMetrics",
     "MeanQualityByCycle",
+    "MeanQualityByCycleColumns",
     "PairOrientation",
     "QualityScoreDistribution",
+    "QualityScoreDistributionColumns",
     "RnaBiotype",
     "RnaInsertSize",
     "RnaInsertSizeHistogram",
+    "RnaInsertSizeHistogramColumns",
     "RnaMetrics",
     "StrandSpec",
     "WgsCoverage",
+    "WgsCoverageColumns",
     "WgsMetrics",
 ]
 
@@ -190,6 +195,15 @@ class MeanQualityByCycle:
 
 
 @dataclass(frozen=True, kw_only=True)
+class MeanQualityByCycleColumns:
+    """The columns of a `MeanQualityByCycle`, one tuple per field."""
+
+    sample: tuple[str, ...] = ()
+    cycle: tuple[int, ...] = ()
+    mean_quality: tuple[float, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class QualityScoreDistribution:
     """The `.quality-score-distribution.txt` table that `riker basic` writes."""
 
@@ -204,6 +218,16 @@ class QualityScoreDistribution:
 
     frac_bases: float = 0.0
     """Fraction of all bases with this quality score."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class QualityScoreDistributionColumns:
+    """The columns of a `QualityScoreDistribution`, one tuple per field."""
+
+    sample: tuple[str, ...] = ()
+    quality: tuple[int, ...] = ()
+    count: tuple[int, ...] = ()
+    frac_bases: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -259,6 +283,17 @@ class IsizeHistogram:
 
     tandem_count: int = 0
     """Number of tandem (FF/RR) pairs at this insert size."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class IsizeHistogramColumns:
+    """The columns of an `IsizeHistogram`, one tuple per field."""
+
+    sample: tuple[str, ...] = ()
+    insert_size: tuple[int, ...] = ()
+    fr_count: tuple[int, ...] = ()
+    rf_count: tuple[int, ...] = ()
+    tandem_count: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -454,6 +489,18 @@ class WgsCoverage:
 
     frac_bases_at_or_above: float = 0.0
     """Fraction of genome territory with depth ≥ this depth."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class WgsCoverageColumns:
+    """The columns of a `WgsCoverage`, one tuple per field."""
+
+    sample: tuple[str, ...] = ()
+    depth: tuple[int, ...] = ()
+    bases: tuple[int, ...] = ()
+    frac_bases: tuple[float, ...] = ()
+    bases_at_or_above: tuple[int, ...] = ()
+    frac_bases_at_or_above: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1111,3 +1158,14 @@ class RnaInsertSizeHistogram:
 
     tandem_count: int = 0
     """Tandem pairs at this insert size."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class RnaInsertSizeHistogramColumns:
+    """The columns of an `RnaInsertSizeHistogram`, one tuple per field."""
+
+    sample: tuple[str, ...] = ()
+    insert_size: tuple[int, ...] = ()
+    fr_count: tuple[int, ...] = ()
+    rf_count: tuple[int, ...] = ()
+    tandem_count: tuple[int, ...] = ()

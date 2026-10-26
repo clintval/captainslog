@@ -22,7 +22,7 @@ from tests.riker import riker_class_of
 DATACLASSES = [
     getattr(_metrics, name)
     for name in _metrics.__all__
-    if dataclasses.is_dataclass(getattr(_metrics, name))
+    if dataclasses.is_dataclass(getattr(_metrics, name)) and not name.endswith("Columns")
 ]
 
 ENUMS = (Category, PairOrientation, StrandSpec)
