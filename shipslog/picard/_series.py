@@ -1,7 +1,12 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
+from shipslog.picard._histograms import InsertSizeHistogram
 from shipslog.picard._histograms import InsertSizeHistogramColumns
+from shipslog.picard._histograms import LibraryComplexityHistogram
 from shipslog.picard._histograms import LibraryComplexityHistogramColumns
+from shipslog.picard._histograms import RnaCoverageHistogram
 from shipslog.picard._histograms import RnaCoverageHistogramColumns
 from shipslog.picard._metrics import PairOrientation
 
@@ -18,6 +23,9 @@ class InsertSizeSeries:
     orientation: PairOrientation
     """The pair orientation of the reads counted."""
 
+    insert_size: tuple[int, ...]
+    """The insert size of each bin, shared with the histogram's `insert_size`."""
+
     counts: tuple[int, ...]
     """One count per bin of the histogram's `insert_size`."""
 
@@ -28,6 +36,9 @@ class RnaCoverageSeries:
 
     name: str | None
     """The sample, library or read group of the column, or `None` for all reads."""
+
+    normalized_position: tuple[int, ...]
+    """The position of each bin, shared with the histogram's `normalized_position`."""
 
     normalized_coverage: tuple[float, ...]
     """One normalized coverage per bin of the histogram's `normalized_position`."""
@@ -40,6 +51,9 @@ class LibraryComplexitySeries:
     library: str
     """The library of the column."""
 
+    duplication_group_count: tuple[int, ...]
+    """The group size of each bin, shared with the histogram's `duplication_group_count`."""
+
     counts: tuple[int, ...]
     """One count of duplicate groups per bin of the histogram's `duplication_group_count`."""
 
@@ -51,6 +65,32 @@ def _strip_suffix(column: str, suffixes: tuple[str, ...]) -> tuple[str | None, s
             prefix = column.removesuffix(suffix)
             return (None if prefix == ALL_READS else prefix), suffix
     return None
+
+
+def _column(name: str | None, suffix: str) -> str:
+    """Return the column Picard writes for a name, with `All_Reads` for no name."""
+    return f"{ALL_READS if name is None else name}{suffix}"
+
+
+def _rows(
+    axes: list[tuple[int, ...]], named: list[tuple[str, tuple[Any, ...]]], axis_message: str
+) -> list[tuple[int, dict[str, Any]]]:
+    """Give each bin of the shared axis with one value per named column, in the order given."""
+    if not axes:
+        return []
+    if any(axis != axes[0] for axis in axes):
+        raise ValueError(axis_message)
+    columns: dict[str, tuple[Any, ...]] = {}
+    for column, values in named:
+        if len(values) != len(axes[0]):
+            raise ValueError(
+                f"The {column} series holds {len(values)} values for {len(axes[0])} bins!"
+            )
+        if column in columns:
+            raise ValueError(f"Two series make the column {column}!")
+        columns[column] = values
+    rows = zip(axes[0], *columns.values(), strict=True)
+    return [(bin_, dict(zip(columns, row, strict=True))) for bin_, *row in rows]
 
 
 def insert_size_series(hist: InsertSizeHistogramColumns, /) -> list[InsertSizeSeries]:
@@ -72,7 +112,11 @@ def insert_size_series(hist: InsertSizeHistogramColumns, /) -> list[InsertSizeSe
             )
         name, suffix = parsed
         orientation = PairOrientation(suffix[1:].removesuffix("_count").upper())
-        series.append(InsertSizeSeries(name=name, orientation=orientation, counts=counts))
+        series.append(
+            InsertSizeSeries(
+                name=name, orientation=orientation, insert_size=hist.insert_size, counts=counts
+            )
+        )
     return series
 
 
@@ -92,7 +136,13 @@ def rna_coverage_series(hist: RnaCoverageHistogramColumns, /) -> list[RnaCoverag
             raise ValueError(
                 f"{column!r} is not a column name Picard writes for an RNA coverage histogram!"
             )
-        series.append(RnaCoverageSeries(name=parsed[0], normalized_coverage=coverage))
+        series.append(
+            RnaCoverageSeries(
+                name=parsed[0],
+                normalized_position=hist.normalized_position,
+                normalized_coverage=coverage,
+            )
+        )
     return series
 
 
@@ -105,6 +155,70 @@ def library_complexity_series(
         hist: the columns of a library complexity histogram, as `columns` returns them.
     """
     return [
-        LibraryComplexitySeries(library=library, counts=counts)
+        LibraryComplexitySeries(
+            library=library, duplication_group_count=hist.duplication_group_count, counts=counts
+        )
         for library, counts in hist.counts.items()
+    ]
+
+
+def insert_size_bins(series: Sequence[InsertSizeSeries], /) -> list[InsertSizeHistogram]:
+    """Build the bins of an insert size histogram from its series, one bin per insert size.
+
+    Args:
+        series: the series to write, one column each, named as Picard names the column.
+
+    Raises:
+        ValueError: if the series differ in insert sizes, hold a count other than one per bin,
+            or make the same column.
+    """
+    rows = _rows(
+        [s.insert_size for s in series],
+        [(_column(s.name, f".{s.orientation.lower()}_count"), s.counts) for s in series],
+        "Every series must hold the same insert sizes!",
+    )
+    return [InsertSizeHistogram(insert_size=size, counts=counts) for size, counts in rows]
+
+
+def rna_coverage_bins(series: Sequence[RnaCoverageSeries], /) -> list[RnaCoverageHistogram]:
+    """Build the bins of an RNA coverage histogram from its series, one bin per position.
+
+    Args:
+        series: the series to write, one column each, named as Picard names the column.
+
+    Raises:
+        ValueError: if the series differ in positions, hold a coverage other than one per bin,
+            or make the same column.
+    """
+    rows = _rows(
+        [s.normalized_position for s in series],
+        [(_column(s.name, ".normalized_coverage"), s.normalized_coverage) for s in series],
+        "Every series must hold the same normalized positions!",
+    )
+    return [
+        RnaCoverageHistogram(normalized_position=position, normalized_coverage=coverage)
+        for position, coverage in rows
+    ]
+
+
+def library_complexity_bins(
+    series: Sequence[LibraryComplexitySeries], /
+) -> list[LibraryComplexityHistogram]:
+    """Build the bins of a library complexity histogram from its series, one bin per group size.
+
+    Args:
+        series: the series to write, one library column each.
+
+    Raises:
+        ValueError: if the series differ in group sizes, hold a count other than one per bin,
+            or make the same column.
+    """
+    rows = _rows(
+        [s.duplication_group_count for s in series],
+        [(s.library, s.counts) for s in series],
+        "Every series must hold the same duplication group counts!",
+    )
+    return [
+        LibraryComplexityHistogram(duplication_group_count=count, counts=counts)
+        for count, counts in rows
     ]

@@ -133,7 +133,7 @@ assert all_reads.pair_orientation is PairOrientation.FR
 ### Histograms and Columns
 
 `PicardHistogramReader` reads the histogram of a file into one dataclass per bin, and `columns` transposes the bins into one tuple per column.
-`insert_size_series`, `rna_coverage_series`, and `library_complexity_series` turn the columns Picard names after samples, libraries, and read groups into typed series.
+`insert_size_series`, `rna_coverage_series`, and `library_complexity_series` turn the columns Picard names after samples, libraries, and read groups into typed series, and `insert_size_bins` and its siblings turn series back into bins.
 
 ```python
 from shipslog import picard
@@ -193,11 +193,13 @@ from tempfile import TemporaryDirectory
 
 from shipslog.picard import InsertSizeHistogram
 from shipslog.picard import InsertSizeMetrics
+from shipslog.picard import InsertSizeSeries
 from shipslog.picard import PairOrientation
 from shipslog.picard import PicardHeader
 from shipslog.picard import PicardHistogramReader
 from shipslog.picard import PicardReader
 from shipslog.picard import PicardWriter
+from shipslog.picard import insert_size_bins
 
 temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.insert_size_metrics"
@@ -206,10 +208,9 @@ header = PicardHeader(
     started_on="Sat Oct 24 10:00:00 HST 2026",
 )
 metric = InsertSizeMetrics(read_pairs=3, mean_insert_size=150.5, pair_orientation=PairOrientation.FR)
-insert_sizes = [
-    InsertSizeHistogram(insert_size=150, counts={"All_Reads.fr_count": 2}),
-    InsertSizeHistogram(insert_size=151, counts={"All_Reads.fr_count": 1}),
-]
+insert_sizes = insert_size_bins([
+    InsertSizeSeries(name=None, orientation=PairOrientation.FR, insert_size=(150, 151), counts=(2, 1)),
+])
 
 with PicardWriter.from_path[InsertSizeMetrics](path, header=header) as writer:
     writer.write(metric)
