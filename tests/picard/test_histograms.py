@@ -5,7 +5,9 @@ from dataclasses import replace
 from io import StringIO
 from itertools import takewhile
 from pathlib import Path
+from types import GenericAlias
 from typing import Any
+from typing import get_args
 from typing import get_type_hints
 
 import pytest
@@ -120,7 +122,7 @@ def test_every_histogram_fixture_names_the_key_of_its_class(path: Path) -> None:
 def test_registry_describes_each_histogram_dataclass() -> None:
     """Each histogram dataclass is registered with its owners, its key, and its fixed labels."""
     exported = {getattr(_histograms, name) for name in _histograms.__all__}
-    assert exported == set(HISTOGRAMS)
+    assert exported == set(HISTOGRAMS) | {histogram.columns for histogram in HISTOGRAMS.values()}
     assert _histograms.__all__ == sorted(_histograms.__all__)
     for kind, histogram in HISTOGRAMS.items():
         assert kind.__dataclass_params__.frozen, kind
@@ -133,6 +135,16 @@ def test_registry_describes_each_histogram_dataclass() -> None:
         assert all(name == snake_case(label) for name, label in histogram.labels.items()), kind
         assert histogram.owners <= set(JAVA_NAMES.values()), kind
         assert hints[names[0]] is KEY_TYPES[histogram.key], kind
+        columns = histogram.columns
+        assert columns.__dataclass_params__.frozen, columns
+        assert all(f.kw_only is True for f in fields(columns)), columns
+        assert [f.name for f in fields(columns)] == names, columns
+        column_hints = get_type_hints(columns)
+        for name in names:
+            row_type = get_args(get_args(hints[name])[0])[1] if name in extras else hints[name]
+            column = GenericAlias(tuple, (row_type, ...))
+            expected = GenericAlias(dict, (str, column)) if name in extras else column
+            assert column_hints[name] == expected, (columns, name)
 
 
 def test_reader_refuses_a_histogram_the_files_of_the_metrics_class_do_not_hold() -> None:

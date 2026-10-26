@@ -2,6 +2,7 @@
 
 from captainslog.picard import _histograms
 from captainslog.picard import _metrics
+from captainslog.picard._columns import columns
 from captainslog.picard._header import PicardHeader
 from captainslog.picard._histograms import *  # noqa: F403
 from captainslog.picard._levels import AccumulationLevel
@@ -24,6 +25,7 @@ __all__: list[str] = [
     "PicardReader",
     "PicardWriter",
     "accumulation_level",
+    "columns",
     "histogram_class",
     "metrics_class",
 ]

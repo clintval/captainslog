@@ -7,22 +7,39 @@ from typeline import NamedExtraColumns
 
 __all__ = [
     "ClippedBasesHistogram",
+    "ClippedBasesHistogramColumns",
     "DuplicateSetSizeHistogram",
+    "DuplicateSetSizeHistogramColumns",
     "DuplicationRoiHistogram",
+    "DuplicationRoiHistogramColumns",
     "HsHistogram",
+    "HsHistogramColumns",
     "IndependentReplicateHistogram",
+    "IndependentReplicateHistogramColumns",
     "InsertSizeHistogram",
+    "InsertSizeHistogramColumns",
     "LibraryComplexityHistogram",
+    "LibraryComplexityHistogramColumns",
     "MeanQualityByCycle",
+    "MeanQualityByCycleColumns",
     "QualityScoreDistribution",
+    "QualityScoreDistributionColumns",
     "QualityYieldFlowHistogram",
+    "QualityYieldFlowHistogramColumns",
     "QualityYieldSnvqHistogram",
+    "QualityYieldSnvqHistogramColumns",
     "ReadLengthHistogram",
+    "ReadLengthHistogramColumns",
     "RnaCoverageHistogram",
+    "RnaCoverageHistogramColumns",
     "SamComparisonHistogram",
+    "SamComparisonHistogramColumns",
     "UmiPrevalenceHistogram",
+    "UmiPrevalenceHistogramColumns",
     "WgsHistogram",
+    "WgsHistogramColumns",
     "WgsNonZeroCoverageHistogram",
+    "WgsNonZeroCoverageHistogramColumns",
 ]
 
 
@@ -35,6 +52,14 @@ class ClippedBasesHistogram:
 
     read_count: int = 0
     """The number of reads with that many bases clipped."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class ClippedBasesHistogramColumns:
+    """The columns of a `ClippedBasesHistogram`, one tuple per field."""
+
+    clipped_bases: tuple[int, ...] = ()
+    read_count: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,6 +77,16 @@ class DuplicateSetSizeHistogram:
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
     """`optical_sets`, the number of sets of that many optical duplicates plus one, if any."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class DuplicateSetSizeHistogramColumns:
+    """The columns of a `DuplicateSetSizeHistogram`, one tuple per field."""
+
+    set_size: tuple[float, ...] = ()
+    all_sets: tuple[int, ...] = ()
+    non_optical_sets: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,6 +110,17 @@ class DuplicationRoiHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class DuplicationRoiHistogramColumns:
+    """The columns of a `DuplicationRoiHistogram`, one tuple per field."""
+
+    bin: tuple[float, ...] = ()
+    coverage_mult: tuple[float, ...] = ()
+    all_sets: tuple[int, ...] = ()
+    non_optical_sets: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, kw_only=True)
 class HsHistogram:
     """The coverage and base quality histogram of CollectHsMetrics and CollectTargetedPcrMetrics."""
 
@@ -86,6 +132,15 @@ class HsHistogram:
 
     unfiltered_baseq_count: int = 0
     """The number of on-target bases of that base quality, counting only bases above quality 2."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class HsHistogramColumns:
+    """The columns of a `HsHistogram`, one tuple per field."""
+
+    coverage_or_base_quality: tuple[int, ...] = ()
+    high_quality_coverage_count: tuple[int, ...] = ()
+    unfiltered_baseq_count: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -105,6 +160,15 @@ class IndependentReplicateHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class IndependentReplicateHistogramColumns:
+    """The columns of an `IndependentReplicateHistogram`, one tuple per field."""
+
+    allele_balance: tuple[int, ...] = ()
+    allele_balance_count: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, kw_only=True)
 class InsertSizeHistogram:
     """The insert size histogram CollectInsertSizeMetrics writes."""
 
@@ -118,6 +182,14 @@ class InsertSizeHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class InsertSizeHistogramColumns:
+    """The columns of an `InsertSizeHistogram`, one tuple per field."""
+
+    insert_size: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, kw_only=True)
 class LibraryComplexityHistogram:
     """The histogram of duplicate group sizes EstimateLibraryComplexity writes."""
 
@@ -126,6 +198,14 @@ class LibraryComplexityHistogram:
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
     """The number of duplicate groups of that size, by library."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class LibraryComplexityHistogramColumns:
+    """The columns of a `LibraryComplexityHistogram`, one tuple per field."""
+
+    duplication_group_count: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -143,6 +223,15 @@ class MeanQualityByCycle:
 
 
 @dataclass(frozen=True, kw_only=True)
+class MeanQualityByCycleColumns:
+    """The columns of a `MeanQualityByCycle`, one tuple per field."""
+
+    cycle: tuple[int, ...] = ()
+    mean_quality: tuple[float, ...] = ()
+    means: dict[str, tuple[float, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, kw_only=True)
 class QualityScoreDistribution:
     """The distribution of base qualities QualityScoreDistribution writes."""
 
@@ -154,6 +243,15 @@ class QualityScoreDistribution:
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
     """`COUNT_OF_OQ`, the number of bases of that original base quality, when reads hold OQ."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class QualityScoreDistributionColumns:
+    """The columns of a `QualityScoreDistribution`, one tuple per field."""
+
+    quality: tuple[int, ...] = ()
+    count_of_q: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -180,6 +278,18 @@ class QualityYieldFlowHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class QualityYieldFlowHistogramColumns:
+    """The columns of a `QualityYieldFlowHistogram`, one tuple per field."""
+
+    key: tuple[int, ...] = ()
+    qual_count: tuple[int, ...] = ()
+    mean_cycle_qual: tuple[float, ...] = ()
+    median_cycle_qual: tuple[float, ...] = ()
+    q25_cycle_qual: tuple[float, ...] = ()
+    q75_cycle_qual: tuple[float, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class QualityYieldSnvqHistogram:
     """The quality histogram CollectQualityYieldMetricsSNVQ writes with INCLUDE_BQ_HISTOGRAM."""
 
@@ -200,6 +310,17 @@ class QualityYieldSnvqHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class QualityYieldSnvqHistogramColumns:
+    """The columns of a `QualityYieldSnvqHistogram`, one tuple per field."""
+
+    key: tuple[int, ...] = ()
+    bq_count: tuple[int, ...] = ()
+    snvq_count: tuple[int, ...] = ()
+    read_index_mean_bq: tuple[float, ...] = ()
+    read_index_mean_snvq: tuple[float, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class ReadLengthHistogram:
     """The read length histogram CollectAlignmentSummaryMetrics writes over all reads."""
 
@@ -210,6 +331,14 @@ class ReadLengthHistogram:
     """The number of reads of that length, e.g. `PAIRED_TOTAL_LENGTH_COUNT`, for the paired and the
     unpaired reads Picard saw, over their whole length and their aligned length.
     """
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReadLengthHistogramColumns:
+    """The columns of a `ReadLengthHistogram`, one tuple per field."""
+
+    read_length: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -226,6 +355,14 @@ class RnaCoverageHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class RnaCoverageHistogramColumns:
+    """The columns of a `RnaCoverageHistogram`, one tuple per field."""
+
+    normalized_position: tuple[int, ...] = ()
+    normalized_coverage: dict[str, tuple[float, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, kw_only=True)
 class SamComparisonHistogram:
     """The mapping quality histogram CompareSAMs writes with COMPARE_MQ."""
 
@@ -234,6 +371,14 @@ class SamComparisonHistogram:
 
     value: int = 0
     """The number of reads with that pair of mapping qualities."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class SamComparisonHistogramColumns:
+    """The columns of a `SamComparisonHistogram`, one tuple per field."""
+
+    bin: tuple[str, ...] = ()
+    value: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -248,6 +393,14 @@ class UmiPrevalenceHistogram:
 
 
 @dataclass(frozen=True, kw_only=True)
+class UmiPrevalenceHistogramColumns:
+    """The columns of an `UmiPrevalenceHistogram`, one tuple per field."""
+
+    num_umis: tuple[int, ...] = ()
+    duplicate_sets: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class WgsHistogram:
     """The coverage histogram CollectWgsMetrics and CollectRawWgsMetrics write."""
 
@@ -259,6 +412,15 @@ class WgsHistogram:
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
     """`unfiltered_baseq_count`, the number of bases of that quality, with INCLUDE_BQ_HISTOGRAM."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class WgsHistogramColumns:
+    """The columns of a `WgsHistogram`, one tuple per field."""
+
+    coverage: tuple[int, ...] = ()
+    high_quality_coverage_count: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -278,6 +440,16 @@ class WgsNonZeroCoverageHistogram:
     """`unfiltered_baseq_count`, the number of bases of that quality, with INCLUDE_BQ_HISTOGRAM."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class WgsNonZeroCoverageHistogramColumns:
+    """The columns of a `WgsNonZeroCoverageHistogram`, one tuple per field."""
+
+    coverage: tuple[int, ...] = ()
+    count_whole_genome: tuple[int, ...] = ()
+    count_non_zero_regions: tuple[int, ...] = ()
+    counts: dict[str, tuple[int, ...]] = field(default_factory=dict)
+
+
 @dataclass(frozen=True)
 class Histogram:
     """How Picard writes a histogram into a metrics file."""
@@ -291,25 +463,28 @@ class Histogram:
     labels: Mapping[str, str]
     """The label of the column of each field always written, by field name, in field order."""
 
+    columns: type[Any]
+    """The dataclass that holds the rows of the histogram transposed into columns."""
+
 
 # fmt: off
 HISTOGRAMS: dict[type[Any], Histogram] = {
-    ClippedBasesHistogram: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"clipped_bases": "clipped_bases", "read_count": "read_count"}),
-    DuplicateSetSizeHistogram: Histogram(owners=frozenset({"picard.sam.DuplicationMetrics", "picard.sam.FlowBasedDuplicationMetrics"}), key="java.lang.Double", labels={"set_size": "set_size", "all_sets": "all_sets", "non_optical_sets": "non_optical_sets"}),
-    DuplicationRoiHistogram: Histogram(owners=frozenset({"picard.sam.DuplicationMetrics", "picard.sam.FlowBasedDuplicationMetrics"}), key="java.lang.Double", labels={"bin": "BIN", "coverage_mult": "CoverageMult", "all_sets": "all_sets", "non_optical_sets": "non_optical_sets"}),
-    HsHistogram: Histogram(owners=frozenset({"picard.analysis.directed.HsMetrics", "picard.analysis.directed.TargetedPcrMetrics"}), key="java.lang.Integer", labels={"coverage_or_base_quality": "coverage_or_base_quality", "high_quality_coverage_count": "high_quality_coverage_count", "unfiltered_baseq_count": "unfiltered_baseq_count"}),
-    IndependentReplicateHistogram: Histogram(owners=frozenset({"picard.analysis.replicates.IndependentReplicateMetric"}), key="java.lang.Byte", labels={"allele_balance": "alleleBalance", "allele_balance_count": "alleleBalanceCount"}),
-    InsertSizeHistogram: Histogram(owners=frozenset({"picard.analysis.InsertSizeMetrics"}), key="java.lang.Integer", labels={"insert_size": "insert_size"}),
-    LibraryComplexityHistogram: Histogram(owners=frozenset({"picard.sam.DuplicationMetrics"}), key="java.lang.Integer", labels={"duplication_group_count": "duplication_group_count"}),
-    MeanQualityByCycle: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"cycle": "CYCLE", "mean_quality": "MEAN_QUALITY"}),
-    QualityScoreDistribution: Histogram(owners=frozenset(), key="java.lang.Byte", labels={"quality": "QUALITY", "count_of_q": "COUNT_OF_Q"}),
-    QualityYieldFlowHistogram: Histogram(owners=frozenset({"picard.analysis.CollectQualityYieldMetricsFlow$QualityYieldMetricsFlow"}), key="java.lang.Integer", labels={"key": "KEY", "qual_count": "QUAL_COUNT", "mean_cycle_qual": "MEAN_CYCLE_QUAL", "median_cycle_qual": "MEDIAN_CYCLE_QUAL", "q25_cycle_qual": "Q25_CYCLE_QUAL", "q75_cycle_qual": "Q75_CYCLE_QUAL"}),
-    QualityYieldSnvqHistogram: Histogram(owners=frozenset({"picard.analysis.CollectQualityYieldMetricsSNVQ$QualityYieldMetrics"}), key="java.lang.Integer", labels={"key": "KEY", "bq_count": "BQ_COUNT", "snvq_count": "SNVQ_COUNT", "read_index_mean_bq": "READ_INDEX_MEAN_BQ", "read_index_mean_snvq": "READ_INDEX_MEAN_SNVQ"}),
-    ReadLengthHistogram: Histogram(owners=frozenset({"picard.analysis.AlignmentSummaryMetrics"}), key="java.lang.Integer", labels={"read_length": "READ_LENGTH"}),
-    RnaCoverageHistogram: Histogram(owners=frozenset({"picard.analysis.RnaSeqMetrics"}), key="java.lang.Integer", labels={"normalized_position": "normalized_position"}),
-    SamComparisonHistogram: Histogram(owners=frozenset({"picard.sam.SamComparisonMetric"}), key="java.lang.String", labels={"bin": "BIN", "value": "VALUE"}),
-    UmiPrevalenceHistogram: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"num_umis": "numUmis", "duplicate_sets": "duplicateSets"}),
-    WgsHistogram: Histogram(owners=frozenset({"picard.analysis.WgsMetrics", "picard.analysis.CollectRawWgsMetrics$RawWgsMetrics"}), key="java.lang.Integer", labels={"coverage": "coverage", "high_quality_coverage_count": "high_quality_coverage_count"}),
-    WgsNonZeroCoverageHistogram: Histogram(owners=frozenset({"picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage"}), key="java.lang.Integer", labels={"coverage": "coverage", "count_whole_genome": "count_WHOLE_GENOME", "count_non_zero_regions": "count_NON_ZERO_REGIONS"}),
+    ClippedBasesHistogram: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"clipped_bases": "clipped_bases", "read_count": "read_count"}, columns=ClippedBasesHistogramColumns),
+    DuplicateSetSizeHistogram: Histogram(owners=frozenset({"picard.sam.DuplicationMetrics", "picard.sam.FlowBasedDuplicationMetrics"}), key="java.lang.Double", labels={"set_size": "set_size", "all_sets": "all_sets", "non_optical_sets": "non_optical_sets"}, columns=DuplicateSetSizeHistogramColumns),
+    DuplicationRoiHistogram: Histogram(owners=frozenset({"picard.sam.DuplicationMetrics", "picard.sam.FlowBasedDuplicationMetrics"}), key="java.lang.Double", labels={"bin": "BIN", "coverage_mult": "CoverageMult", "all_sets": "all_sets", "non_optical_sets": "non_optical_sets"}, columns=DuplicationRoiHistogramColumns),
+    HsHistogram: Histogram(owners=frozenset({"picard.analysis.directed.HsMetrics", "picard.analysis.directed.TargetedPcrMetrics"}), key="java.lang.Integer", labels={"coverage_or_base_quality": "coverage_or_base_quality", "high_quality_coverage_count": "high_quality_coverage_count", "unfiltered_baseq_count": "unfiltered_baseq_count"}, columns=HsHistogramColumns),
+    IndependentReplicateHistogram: Histogram(owners=frozenset({"picard.analysis.replicates.IndependentReplicateMetric"}), key="java.lang.Byte", labels={"allele_balance": "alleleBalance", "allele_balance_count": "alleleBalanceCount"}, columns=IndependentReplicateHistogramColumns),
+    InsertSizeHistogram: Histogram(owners=frozenset({"picard.analysis.InsertSizeMetrics"}), key="java.lang.Integer", labels={"insert_size": "insert_size"}, columns=InsertSizeHistogramColumns),
+    LibraryComplexityHistogram: Histogram(owners=frozenset({"picard.sam.DuplicationMetrics"}), key="java.lang.Integer", labels={"duplication_group_count": "duplication_group_count"}, columns=LibraryComplexityHistogramColumns),
+    MeanQualityByCycle: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"cycle": "CYCLE", "mean_quality": "MEAN_QUALITY"}, columns=MeanQualityByCycleColumns),
+    QualityScoreDistribution: Histogram(owners=frozenset(), key="java.lang.Byte", labels={"quality": "QUALITY", "count_of_q": "COUNT_OF_Q"}, columns=QualityScoreDistributionColumns),
+    QualityYieldFlowHistogram: Histogram(owners=frozenset({"picard.analysis.CollectQualityYieldMetricsFlow$QualityYieldMetricsFlow"}), key="java.lang.Integer", labels={"key": "KEY", "qual_count": "QUAL_COUNT", "mean_cycle_qual": "MEAN_CYCLE_QUAL", "median_cycle_qual": "MEDIAN_CYCLE_QUAL", "q25_cycle_qual": "Q25_CYCLE_QUAL", "q75_cycle_qual": "Q75_CYCLE_QUAL"}, columns=QualityYieldFlowHistogramColumns),
+    QualityYieldSnvqHistogram: Histogram(owners=frozenset({"picard.analysis.CollectQualityYieldMetricsSNVQ$QualityYieldMetrics"}), key="java.lang.Integer", labels={"key": "KEY", "bq_count": "BQ_COUNT", "snvq_count": "SNVQ_COUNT", "read_index_mean_bq": "READ_INDEX_MEAN_BQ", "read_index_mean_snvq": "READ_INDEX_MEAN_SNVQ"}, columns=QualityYieldSnvqHistogramColumns),
+    ReadLengthHistogram: Histogram(owners=frozenset({"picard.analysis.AlignmentSummaryMetrics"}), key="java.lang.Integer", labels={"read_length": "READ_LENGTH"}, columns=ReadLengthHistogramColumns),
+    RnaCoverageHistogram: Histogram(owners=frozenset({"picard.analysis.RnaSeqMetrics"}), key="java.lang.Integer", labels={"normalized_position": "normalized_position"}, columns=RnaCoverageHistogramColumns),
+    SamComparisonHistogram: Histogram(owners=frozenset({"picard.sam.SamComparisonMetric"}), key="java.lang.String", labels={"bin": "BIN", "value": "VALUE"}, columns=SamComparisonHistogramColumns),
+    UmiPrevalenceHistogram: Histogram(owners=frozenset(), key="java.lang.Integer", labels={"num_umis": "numUmis", "duplicate_sets": "duplicateSets"}, columns=UmiPrevalenceHistogramColumns),
+    WgsHistogram: Histogram(owners=frozenset({"picard.analysis.WgsMetrics", "picard.analysis.CollectRawWgsMetrics$RawWgsMetrics"}), key="java.lang.Integer", labels={"coverage": "coverage", "high_quality_coverage_count": "high_quality_coverage_count"}, columns=WgsHistogramColumns),
+    WgsNonZeroCoverageHistogram: Histogram(owners=frozenset({"picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage"}), key="java.lang.Integer", labels={"coverage": "coverage", "count_whole_genome": "count_WHOLE_GENOME", "count_non_zero_regions": "count_NON_ZERO_REGIONS"}, columns=WgsNonZeroCoverageHistogramColumns),
 }
 # fmt: on
