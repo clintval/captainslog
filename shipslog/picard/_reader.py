@@ -25,6 +25,7 @@ from shipslog.picard._table import METRICS_CLASS
 from shipslog.picard._table import NOT_BLANK
 from shipslog.picard._table import Table
 from shipslog.picard._table import as_text_io
+from shipslog.picard._table import repeated_label
 from shipslog.picard._table import unmark
 
 
@@ -232,9 +233,9 @@ def histogram_class(path: Path | str) -> type[Any]:
 
     Raises:
         ValueError: if the file holds no histogram, holds one of a shape or metrics class no
-            Picard 3.5.0 histogram has, ends after its header or holds no rows after its
-            `## HISTOGRAM` line, so may be cut short, is not a Picard metrics file, or breaks its
-            lines with lone carriage returns.
+            Picard 3.5.0 histogram has, repeats a column that Picard writes once, ends after its
+            header or holds no rows after its `## HISTOGRAM` line, so may be cut short, is not a
+            Picard metrics file, or breaks its lines with lone carriage returns.
     """
     with open_for_reading(path) as handle:
         table = Table(handle, marker=HISTOGRAM)
@@ -245,6 +246,8 @@ def histogram_class(path: Path | str) -> type[Any]:
     kinds = histogram_classes(section_java(line), labels)
     if not kinds:
         raise ValueError(f"{path} holds a histogram shipslog does not know: {', '.join(labels)}!")
+    if (repeated := repeated_label(labels, HISTOGRAMS[kinds[0]].labels.values())) is not None:
+        raise ValueError(f"{path} repeats the column {repeated}, which Picard does not!")
     return kinds[0]
 
 
@@ -328,9 +331,10 @@ class PicardReader(_PicardTableReader[RecordType]):
         A caller's `on_comment` receives each header line here, before any record is read, then
         each line of the table that `comment_prefixes` skips, as it is read.
 
-        Once the last record is read, the rest of the file is read, and a `ValueError` refuses a
-        second Picard file in it, as a concatenation writes. Only the histogram and blank lines may
-        follow the metrics.
+        Once the last record is read, the rest of the file is read. A `ValueError` refuses a line in
+        it that starts `## htsjdk`, `## METRICS CLASS`, or a second `## HISTOGRAM`, as a
+        concatenation writes, and any other line that is not blank, unless it is in the histogram
+        that follows the metrics. A blank line is one of only whitespace other than tabs.
 
         Args:
             handle: the text of a Picard metrics file.
@@ -364,8 +368,13 @@ class PicardHistogramReader(_PicardTableReader[RecordType]):
 
         A file whose metrics hold the histogram, but which holds none, reads as no bins.
 
-        Once the last bin is read, the rest of the file is read, and a `ValueError` refuses a second
-        Picard file in it, as a concatenation writes. Only blank lines may follow the histogram.
+        Once the last bin is read, the rest of the file is read. A `ValueError` refuses a line in it
+        that starts `## htsjdk`, `## METRICS CLASS`, or `## HISTOGRAM`, as a concatenation writes,
+        and any other line that is not blank. A blank line is one of only whitespace other than
+        tabs.
+
+        A label of a fixed column that the histogram repeats is also refused, since Picard repeats
+        only the columns of a sample and a library.
 
         Args:
             handle: the text of a Picard metrics file.
@@ -382,6 +391,6 @@ class PicardHistogramReader(_PicardTableReader[RecordType]):
         """
         record_type = self.record_type
         histogram = histogram_of(record_type)
-        table = Table(handle, marker=HISTOGRAM)
+        table = Table(handle, marker=HISTOGRAM, fixed=histogram.labels.values())
         check_histogram_section(table, histogram.owners, record_type.__name__)
         super().__init__(table, histogram.labels, options)

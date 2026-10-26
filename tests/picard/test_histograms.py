@@ -441,9 +441,9 @@ def test_reader_refuses_a_histogram_fixture_written_twice_into_one_file(
         _ = list(reader)
 
 
-@pytest.mark.parametrize("line", ["0\t1", "## HISTOGRAM\tjava.lang.Byte", "#"], ids=repr)
-def test_reader_refuses_any_line_but_a_blank_one_after_the_histogram(line: str) -> None:
-    """Only blank lines follow a histogram, which htsjdk writes last."""
+@pytest.mark.parametrize("line", ["## HISTOGRAM\tjava.lang.Byte"], ids=repr)
+def test_reader_refuses_a_second_histogram_after_the_histogram(line: str) -> None:
+    """A second histogram follows no histogram, which htsjdk writes last."""
     text = (DATA / "cmm.quality_distribution_metrics").read_text()
     with (
         PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n \n{line}")) as reader,
@@ -455,7 +455,90 @@ def test_reader_refuses_any_line_but_a_blank_one_after_the_histogram(line: str) 
 def test_reader_reads_a_histogram_followed_by_blank_lines() -> None:
     """The blank lines after a histogram are no second file."""
     path = DATA / "cmm.quality_distribution_metrics"
-    text = path.read_text() + " \n\n\t\n"
+    text = path.read_text() + " \n\n\x0c\n"
     bins = list(PicardHistogramReader.from_path[QualityScoreDistribution](path))
     assert bins
     assert list(PicardHistogramReader[QualityScoreDistribution](StringIO(text))) == bins
+
+
+TRAILING = "holds text after its last table, which htsjdk does not write!"
+
+
+@pytest.mark.parametrize("line", ["# done", "\t", "0\t1", " x"], ids=repr)
+def test_reader_refuses_text_after_the_last_table(line: str) -> None:
+    """Other than blank lines, nothing follows the histogram, which htsjdk writes last."""
+    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    with (
+        PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n \n{line}")) as reader,
+        pytest.raises(ValueError, match=f"^The text {re.escape(TRAILING)}$"),
+    ):
+        _ = list(reader)
+
+
+@pytest.mark.parametrize("line", ["## htsjdk.samtools.metrics.StringHeader", "## METRICS CLASS\tx"])
+def test_reader_refuses_a_header_or_metrics_after_the_histogram(line: str) -> None:
+    """A header line or a metrics section after any table is a concatenation."""
+    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    with (
+        PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n{line}\n")) as reader,
+        pytest.raises(ValueError, match=f"^The text {re.escape(CONCATENATED)}$"),
+    ):
+        _ = list(reader)
+
+
+def with_labels(row: str) -> str:
+    """The text of the insert size fixture, with its histogram's label row replaced."""
+    lines = (DATA / "cmm.insert_size_metrics").read_text().split("\n")
+    at = next(i for i, line in enumerate(lines) if line.startswith("## HISTOGRAM")) + 1
+    lines[at] = row
+    return "\n".join(lines)
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        "insert_size\tinsert_size\tAll_Reads.fr_count",
+        "insert_size\tAll_Reads.fr_count\tinsert_size",
+    ],
+    ids=repr,
+)
+def test_reader_refuses_a_fixed_label_repeated(row: str) -> None:
+    """A fixed column, which Picard writes once, is refused when the label row repeats it."""
+    message = "^The text repeats the column insert_size, which Picard does not!$"
+    with pytest.raises(ValueError, match=message):
+        _ = list(PicardHistogramReader[InsertSizeHistogram](StringIO(with_labels(row))))
+
+
+def test_reader_refuses_a_repeated_label_of_a_histogram_without_extra_columns() -> None:
+    """A histogram with no extra columns refuses a repeated label as it does any."""
+    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    text = text.replace("QUALITY\tCOUNT_OF_Q", "QUALITY\tCOUNT_OF_Q\tCOUNT_OF_Q")
+    message = "^The text repeats the column COUNT_OF_Q, which Picard does not!$"
+    with pytest.raises(ValueError, match=message):
+        _ = list(PicardHistogramReader[QualityScoreDistribution](StringIO(text)))
+
+
+def test_histogram_class_names_no_class_for_a_repeated_fixed_label(tmp_path: Path) -> None:
+    """A row that repeats a fixed label names no class, whether or not it keeps extra columns."""
+    path = tmp_path / "a.insert_size_metrics"
+    _ = path.write_text(with_labels("insert_size\tinsert_size\tAll_Reads.fr_count"))
+    with pytest.raises(ValueError, match=f"^{re.escape(str(path))} repeats the column insert_size"):
+        _ = histogram_class(path)
+    other = tmp_path / "b.quality_distribution_metrics"
+    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    _ = other.write_text(text.replace("QUALITY\tCOUNT_OF_Q", "QUALITY\tCOUNT_OF_Q\tCOUNT_OF_Q"))
+    with pytest.raises(ValueError):
+        _ = histogram_class(other)
+
+
+def test_reader_keeps_a_repeated_extra_column() -> None:
+    """The column of a sample and a library of one name repeats in a Picard file, and is kept."""
+    text = with_labels("insert_size\tAll_Reads.fr_count\tNA12891.fr_count\tNA12891.fr_count")
+    lines = text.split("\n")
+    at = next(i for i, line in enumerate(lines) if line.startswith("## HISTOGRAM")) + 2
+    for i in range(at, len(lines)):
+        if lines[i].strip():
+            lines[i] = "\t".join(lines[i].split("\t")[:2] + ["1", "2"])
+    bins = list(PicardHistogramReader[InsertSizeHistogram](StringIO("\n".join(lines))))
+    assert bins
+    assert "NA12891.fr_count" in bins[0].counts

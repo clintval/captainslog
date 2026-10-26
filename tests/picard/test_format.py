@@ -78,12 +78,40 @@ def test_picard_float_codec_reads_a_decimal_comma_and_writes_a_decimal_point() -
     assert PICARD_CODECS[float].into_text(1e-7) == "1e-7"
 
 
-@pytest.mark.parametrize("text", ["", "many", "1,2,3", "1.5,2"], ids=repr)
+@pytest.mark.parametrize(
+    "text",
+    [
+        "",
+        "many",
+        "1,2,3",
+        "1.5,2",
+        "1_000",
+        "NaN",
+        "nan",
+        "Infinity",
+        "inf",
+        " 1.5 ",
+        "1.",
+        ".5",
+        "+1",
+    ],
+    ids=repr,
+)
 def test_picard_float_codec_refuses_text_that_is_not_a_float(text: str) -> None:
     """Text that is not a float, with a decimal point or a comma, is refused as it is."""
     message = f"Expected a float but found '{text}'!"
     with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
         _ = PICARD_CODECS[float].from_text(text)
+
+
+@pytest.mark.parametrize(
+    ("text", "value"),
+    [("1,5", 1.5), ("-2.5e-3", -0.0025), ("1e-7", 1e-7), ("1,5E+3", 1500.0), ("-0", 0.0)],
+    ids=repr,
+)
+def test_picard_float_codec_reads_numbers_as_typeline_does(text: str, value: float) -> None:
+    """A float of digits, a decimal point or comma, and an exponent is read."""
+    assert PICARD_CODECS[float].from_text(text) == value
 
 
 @pytest.mark.parametrize(

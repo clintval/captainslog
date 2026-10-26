@@ -276,7 +276,7 @@ def test_table_ends_at_the_end_of_a_file_without_a_closing_blank_line(end: str) 
 @pytest.mark.parametrize("blank", ["", " ", " \r", "\x0c"], ids=repr)
 def test_table_ends_at_a_line_of_only_whitespace_without_a_tab(blank: str) -> None:
     """A table ends at its first blank line, of whitespace other than tabs, after its first line."""
-    text = "\n".join([*LINES, "", METRICS, "sample\treads", "a\t1", blank, "b\t2", ""])
+    text = "\n".join([*LINES, "", METRICS, "sample\treads", "a\t1", blank, HISTOGRAM, "b\t2", ""])
     assert metrics(StringIO(text)) == [Metric("a", 1)]
 
 
@@ -323,7 +323,7 @@ def test_table_keys_the_repeats_of_a_label_row_after_blank_lines(most: int) -> N
 
 def test_table_starts_at_a_line_holding_a_tab() -> None:
     """The first line of a table is the first line after the marker that is not blank."""
-    table = Table(StringIO("## M\n \n\t\nx\n\nsample\treads\n"), marker="## M")
+    table = Table(StringIO("## M\n \n\t\nx\n\n## HISTOGRAM\n"), marker="## M")
     assert table.read() == "\n \n\t\nx\n"
 
 
@@ -453,7 +453,7 @@ def test_table_reads_the_blank_lines_after_a_file_however_its_text_is_split(
 ) -> None:
     """Blank lines after the last table, in pieces of any size, are no second file."""
     whole = Table(StringIO(TEXT), marker=marker).read()
-    table = Table(Trickle(f"{TEXT}\n \r\n\t\n", most), marker=marker)
+    table = Table(Trickle(f"{TEXT}\n \r\n\x0c\n", most), marker=marker)
     assert "".join(iter(lambda: table.read(2), "")) == whole
 
 
@@ -462,3 +462,14 @@ def test_close_closes_the_handle() -> None:
     handle = StringIO(TEXT)
     Table(handle, marker="## METRICS CLASS").close()
     assert handle.closed
+
+
+@pytest.mark.parametrize("marker", ["## METRICS CLASS", "## HISTOGRAM"])
+@pytest.mark.parametrize("line", ["# done", "\t"], ids=repr)
+def test_table_refuses_text_after_its_last_table(marker: str, line: str) -> None:
+    """Text that is not blank after the last table is refused with its own message."""
+    text = TEXT if marker == "## HISTOGRAM" else TEXT[: TEXT.index("## HISTOGRAM")]
+    table = Table(StringIO(f"{text}\n{line}\n"), marker=marker)
+    message = "^The text holds text after its last table, which htsjdk does not write!$"
+    with pytest.raises(ValueError, match=message):
+        _ = table.read()

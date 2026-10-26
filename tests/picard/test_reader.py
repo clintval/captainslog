@@ -304,3 +304,26 @@ def test_reader_passes_comments_to_the_callers_on_comment() -> None:
         assert received == expected
         assert list(reader)
     assert received == expected
+
+
+TRAILING = "holds text after its last table, which htsjdk does not write!"
+
+
+@pytest.mark.parametrize("line", ["# done", "\t", "0\t1", " x"], ids=repr)
+def test_reader_refuses_text_after_its_last_table(line: str) -> None:
+    """Other than blank lines and the histogram, nothing follows the metrics table."""
+    text = (DATA / "cmm.insert_size_metrics").read_text()
+    head = text[: text.index("## HISTOGRAM")]
+    with (
+        PicardReader[InsertSizeMetrics](StringIO(f"{head}\n \n{line}\n")) as reader,
+        pytest.raises(ValueError, match=f"^The text {re.escape(TRAILING)}$"),
+    ):
+        _ = list(reader)
+
+
+def test_reader_reads_metrics_followed_by_blank_lines() -> None:
+    """Blank lines after the metrics table, and the histogram after them, are no trailing text."""
+    path = DATA / "cmm.insert_size_metrics"
+    rows = list(PicardReader.from_path[InsertSizeMetrics](path))
+    text = path.read_text() + " \n\n\r\n"
+    assert list(PicardReader[InsertSizeMetrics](StringIO(text))) == rows

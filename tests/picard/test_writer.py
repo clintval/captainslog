@@ -342,6 +342,52 @@ def test_writer_refuses_a_comment_holding_no_text(tmp_path: Path, text: str) -> 
     assert called.read_text() == plain.read_text()
 
 
+@pytest.mark.parametrize(
+    ("text", "kept"),
+    [
+        ("hello\n", ["hello"]),
+        ("hello\r\n", ["hello"]),
+        ("hello\r", ["hello"]),
+        ("a\nb\n", ["a", "b"]),
+    ],
+    ids=repr,
+)
+def test_writer_writes_a_comment_with_a_trailing_line_break(
+    tmp_path: Path, text: str, kept: list[str]
+) -> None:
+    """One line break at the end of a comment ends its last line, and adds no empty one."""
+    path = tmp_path / "metrics"
+    with PicardWriter.from_path[QualityYieldMetrics](path, header=HEADER) as writer:
+        writer.write_comment(text)
+    with PicardReader.from_path[QualityYieldMetrics](path) as reader:
+        assert [text for _, text in reader.header.others[-len(kept) :]] == kept
+
+
+def test_writer_writes_a_comment_read_from_a_file_line(tmp_path: Path) -> None:
+    """A line read from a file, with its line break, is a comment of its text."""
+    note = tmp_path / "note.txt"
+    _ = note.write_text("from a file\n")
+    path = tmp_path / "metrics"
+    with (
+        PicardWriter.from_path[QualityYieldMetrics](path, header=HEADER) as writer,
+        note.open() as lines,
+    ):
+        for line in lines:
+            writer.write_comment(line)
+    with PicardReader.from_path[QualityYieldMetrics](path) as reader:
+        assert reader.header.others[-1][1] == "from a file"
+
+
+@pytest.mark.parametrize("text", ["a\n\nb", "\n", "a\n\n"], ids=repr)
+def test_writer_refuses_an_empty_line_in_a_comment(tmp_path: Path, text: str) -> None:
+    """An empty line in the middle of a comment, or a second one at its end, is still refused."""
+    with (
+        PicardWriter.from_path[QualityYieldMetrics](tmp_path / "metrics", header=HEADER) as writer,
+        pytest.raises(ValueError, match="^A header line holds no text"),
+    ):
+        writer.write_comment(text)
+
+
 def test_writer_refuses_a_comment_when_the_header_has_no_command_line(tmp_path: Path) -> None:
     """A comment would need an empty command line before it, so it is refused and not kept."""
     plain, called = tmp_path / "plain", tmp_path / "called"

@@ -1,6 +1,7 @@
 import re
 from collections import Counter
 from collections.abc import Callable
+from collections.abc import Collection
 from collections.abc import Sequence
 from typing import TextIO
 from typing import cast
@@ -46,6 +47,20 @@ def mark_repeats(labels: Sequence[str]) -> list[str]:
     return keys
 
 
+def repeated_label(labels: Sequence[str], fixed: Collection[str]) -> str | None:
+    """Find the first label of a fixed column that a row of labels repeats, if any.
+
+    Args:
+        labels: the labels, in order.
+        fixed: the labels of the columns that Picard writes once.
+    """
+    keys = mark_repeats(labels)
+    return next(
+        (label for label, key in zip(labels, keys, strict=True) if label != key and label in fixed),
+        None,
+    )
+
+
 def unmark(text: str) -> str:
     """Remove the key of each repeat from a label, or from a row of labels.
 
@@ -73,21 +88,26 @@ class Table:
     A blank line holds only whitespace other than tabs, as for typeline, so a row of empty fields
     is a row.
 
-    Once the table is read, the rest of the file is read, and refused when it holds another Picard
-    file, as a concatenation does: only blank lines follow a histogram, and only blank lines and
-    one histogram follow metrics.
+    A label of the fixed columns that the header line repeats is refused, since Picard repeats only
+    the columns it names for a sample and a library.
+
+    Once the table is read, the rest of the file is read. After any table, a line that starts
+    `## htsjdk`, `## METRICS CLASS`, or a second `## HISTOGRAM` is refused as a concatenation. After
+    metrics, a `## HISTOGRAM` line is allowed, and so is what follows it. Any other line that is not
+    blank, outside a histogram, is refused as text after the last table.
 
     The leading comment lines, and the first line after them that is not blank, which starts the
     file's first section, are read when the table is built, and so is whether the file ends in
     them.
     """
 
-    def __init__(self, handle: TextIO, /, marker: str) -> None:
+    def __init__(self, handle: TextIO, /, marker: str, fixed: Collection[str] = ()) -> None:
         """Read the leading comments of a Picard metrics file and its section line, not its table.
 
         Args:
             handle: the text of a Picard metrics file.
             marker: the start of the line before the table, e.g. `## METRICS CLASS`.
+            fixed: the labels of the histogram columns that Picard writes once.
         """
         name = getattr(handle, "name", None)
         self.name: str | None = name if isinstance(name, str) else None
@@ -102,6 +122,7 @@ class Table:
         """The marker line without its line break, or None until read or when there is none."""
         self._handle: TextIO = handle
         self._marker: str = marker
+        self._fixed: Collection[str] = fixed
         self._ended: bool = False
         self._text: str = ""
         self._ready: str = ""
@@ -216,7 +237,12 @@ class Table:
         if self._marker == HISTOGRAM:
             line = text if stop < 0 else text[:stop]
             labels = line.removesuffix("\r")
-            keyed = "\t".join(mark_repeats(labels.split("\t")))
+            row = labels.split("\t")
+            if (repeated := repeated_label(row, self._fixed)) is not None:
+                raise ValueError(
+                    f"{self.display_name} repeats the column {repeated}, which Picard does not!"
+                )
+            keyed = "\t".join(mark_repeats(row))
             text = f"{keyed}{line[len(labels) :]}{text[len(line) :]}"
         self._step = self._rows
         self._rows(text, end)
@@ -242,26 +268,39 @@ class Table:
         """Read the rest of the file after the table, a chunk at a time, refusing a second file.
 
         Raises:
-            ValueError: if the rest holds a line that is not blank after a histogram, or a header
-                line, a metrics section, or a second histogram after metrics.
+            ValueError: if the rest holds a header line, a metrics section, or a second histogram,
+                or a line that is not blank outside a histogram.
         """
         while True:
             text = self._text + self._pull()
             cut = len(text) if self._ended else text.rfind("\n") + 1
             rest, self._text = text[:cut], text[cut:]
-            if self._marker == HISTOGRAM:
-                found = bool(rest) and not rest.isspace()
-            else:
-                starts = [start.group() for start in FILE_START.finditer(rest)]
-                self._histograms += starts.count(HISTOGRAM)
-                found = self._histograms > 1 or any(start != HISTOGRAM for start in starts)
-            if found:
+            for line in rest.split("\n"):
+                self._check_after(line)
+            if self._ended:
+                return
+
+    def _check_after(self, line: str) -> None:
+        """Refuse a line after the last table that is a second file or text, but not a histogram.
+
+        Args:
+            line: the line, without its line break.
+        """
+        start = FILE_START.match(line)
+        if start is not None:
+            first = (
+                start.group() == HISTOGRAM and self._marker != HISTOGRAM and not self._histograms
+            )
+            if not first:
                 raise ValueError(
                     f"{self.display_name} holds another Picard file after its first,"
                     + " as a concatenation does!"
                 )
-            if self._ended:
-                return
+            self._histograms = 1
+        elif NOT_BLANK.search(line) is not None and not self._histograms:
+            raise ValueError(
+                f"{self.display_name} holds text after its last table, which htsjdk does not write!"
+            )
 
     def _look_for_a_row(self, text: str, stop: int) -> None:
         """Note whether the table's text passed on so far holds a row after its header line."""

@@ -99,9 +99,10 @@ class _PicardTableWriter(TsvWriter[RecordType]):
     def write_comment(self, comment: str | Comment) -> None:
         """Add a comment to the header, as string headers after the header's own.
 
-        Each line of a string is one header. A `Comment`, such as one a reader of a plain table
-        sent to `on_comment`, is one header of its text, without its leading `#` characters and one
-        space after them; to copy a Picard file's header, pass `header=reader.header` instead.
+        Each line of a string is one header, and one line break at its end ends the last line.
+        A `Comment`, such as one a reader of a plain table sent to `on_comment`, is one header of
+        its text, without its leading `#` characters and one space after them; to copy a Picard
+        file's header, pass `header=reader.header` instead.
         The comments read back in order, at the end of `reader.header.others`, as
         `(STRING_HEADER, text)` pairs. htsjdk trims the text of each header line when it reads it
         back.
@@ -120,7 +121,7 @@ class _PicardTableWriter(TsvWriter[RecordType]):
                 + " since a Picard file holds them only in its header!"
             )
         if isinstance(comment, str):
-            texts = re.split(r"\r\n|\r|\n", comment)
+            texts = re.split(r"\r\n|\r|\n", re.sub(r"(?:\r\n|\r|\n)\Z", "", comment))
         else:
             texts = [comment.text.lstrip("#").removeprefix(" ")]
         others = (*self._picard_header.others, *((STRING_HEADER, text) for text in texts))
