@@ -63,18 +63,6 @@ assert reader.header.command_line.startswith("CollectHsMetrics BAIT_INTERVALS=")
 assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 ```
 
-Picard's `?` reads back as NaN:
-
-```python
-from math import isnan
-
-from shipslog.picard import JumpingLibraryMetrics
-
-[jumps] = list(PicardReader.from_path[JumpingLibraryMetrics]("tests/data/picard/jump.jumping_metrics"))
-
-assert isnan(jumps.jump_mean_insert_size)
-```
-
 ### Accumulation Levels
 
 Picard writes a row for each accumulation level it is asked for: all reads, then each sample, library, and read group.
