@@ -260,9 +260,9 @@ def java_module(schema: dict[str, Any], classes: dict[str, str]) -> str:
 def main() -> None:
     """Write `_metrics.py` and `_java.py` into the output directory and format them."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--schema", type=Path, required=True, help="PicardSchema.java's JSON")
-    parser.add_argument("--source", type=Path, required=True, help="a checkout of Picard's source")
-    parser.add_argument("--output", type=Path, required=True, help="the directory to write into")
+    _ = parser.add_argument("--schema", type=Path, required=True, help="PicardSchema.java's JSON")
+    _ = parser.add_argument("--source", type=Path, required=True, help="a checkout of Picard")
+    _ = parser.add_argument("--output", type=Path, required=True, help="the directory to write to")
     args = parser.parse_args()
     if not (args.source / "src/main/java/picard").is_dir():
         raise SystemExit(f"{args.source} is not a checkout of Picard's source!")

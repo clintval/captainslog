@@ -50,7 +50,8 @@ depth = picard.columns(bins)
 
 def frac_target_bases(min_depth: int) -> float:
     pairs = zip(depth.coverage_or_base_quality, depth.high_quality_coverage_count, strict=True)
-    return sum(bases for coverage, bases in pairs if coverage >= min_depth) / hs.target_territory
+    covered = sum(bases for coverage, bases in pairs if coverage >= min_depth)
+    return float(covered / hs.target_territory)
 
 assert frac_target_bases(50) == hs.pct_target_bases_50x
 assert frac_target_bases(60) == 0.862
@@ -204,7 +205,7 @@ assert picard.histogram_class("tests/data/picard/cmm.quality_by_cycle_metrics") 
 
 `metrics_class` reads the `## METRICS CLASS` line of a file and returns the dataclass to read it with.
 `histogram_class` finds the dataclass of a file's histogram by its label row, and by its metrics class when the file has one.
-Each reads only the first lines of a file.
+`metrics_class` reads only the first lines of a file, while `histogram_class` reads through any metrics table to the label row of its histogram, and no further.
 For a file that holds only a histogram, `metrics_class` raises a `ValueError` that points to `histogram_class`.
 A class that Picard 3.5.0 does not write, like one that an older Picard named another way, is refused with a `ValueError`.
 
@@ -400,6 +401,8 @@ A release of shipslog that follows a newer Picard or Riker names it here.
   A `DuplicationMetrics` histogram's `optical_sets` therefore moves to the end of the row, and htsjdk reads it by its label.
 - A `RikerWriter` path ending in `.bgz` is written uncompressed.
   Name gzipped Riker files `.gz`, as Riker itself does.
+- A subclass of a reader or writer, built with `from_path[...]`, is typed as the class it extends, such as `PicardReader[T]`, so type checkers do not see its own methods.
+  Calling its constructor directly types it as itself.
 
 ## Development and Testing
 

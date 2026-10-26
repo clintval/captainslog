@@ -230,7 +230,9 @@ def test_writer_refuses_a_comment_and_writes_nothing(tmp_path: Path) -> None:
     message = (
         "A Picard metrics file holds no comments: give its header lines as the writer's header!"
     )
-    with PicardWriter.from_path[QualityYieldMetrics](called, header=HEADER) as writer:
-        with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
-            writer.write_comment("x")
+    with (
+        PicardWriter.from_path[QualityYieldMetrics](called, header=HEADER) as writer,
+        pytest.raises(TypeError, match=f"^{re.escape(message)}$"),
+    ):
+        writer.write_comment("x")
     assert called.read_text() == plain.read_text()

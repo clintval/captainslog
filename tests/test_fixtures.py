@@ -85,6 +85,14 @@ def test_every_required_fixture_exists(fixture: Path) -> None:
     assert path.stat().st_size > 0
 
 
+@pytest.mark.parametrize("name", RIKER)
+def test_every_riker_fixture_holds_a_row_below_its_labels(name: str) -> None:
+    """Every Riker fixture holds its label row and at least one row of data below it."""
+    labels, *rows = (DATA / "riker" / name).read_text().splitlines()
+    assert labels.startswith("sample\t")
+    assert any(row.strip() for row in rows)
+
+
 @pytest.mark.parametrize("name", picard_metrics_fixtures())
 def test_every_picard_fixture_starts_with_picards_two_headers(name: str) -> None:
     """Every Picard metrics fixture opens with the command line and start time headers."""

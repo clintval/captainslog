@@ -143,7 +143,7 @@ doctest_optionflags = [
 ]
 
 [tool.mypy]
-files                       = ["shipslog/", "tests/", "conftest.py"]
+files                       = ["shipslog/", "tests/", "scripts/", "conftest.py"]
 strict_optional             = true
 strict_equality             = true
 check_untyped_defs          = true
@@ -164,14 +164,14 @@ enable_error_code           = [
 ]
 
 [tool.pyright]
-include = ["shipslog/", "tests/", "conftest.py"]
+include = ["shipslog/", "tests/", "scripts/", "conftest.py"]
 reportAny = false
 reportExplicitAny = false
 reportImportCycles = false
 pythonVersion = "3.11"
 
 [tool.ty.src]
-include = ["shipslog", "tests", "conftest.py"]
+include = ["shipslog", "tests", "scripts", "conftest.py"]
 
 [tool.ty.analysis]
 respect-type-ignore-comments = false

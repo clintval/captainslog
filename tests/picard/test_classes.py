@@ -52,7 +52,10 @@ def test_metrics_class_points_a_file_of_a_header_alone_to_histogram_class(tmp_pa
     """Metrics class points a file of a header alone to histogram class."""
     path = tmp_path / "header.metrics"
     _ = path.write_text("\n".join(LINES) + "\n")
-    message = rf"^{re.escape(str(path))} holds no metrics table! If it holds only a histogram"
+    message = (
+        rf"^{re.escape(str(path))} holds no metrics table! "
+        r"If it holds only a histogram, find its type with histogram_class\.$"
+    )
     with pytest.raises(ValueError, match=message):
         _ = metrics_class(path)
 
