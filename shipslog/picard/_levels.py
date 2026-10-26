@@ -64,6 +64,11 @@ def accumulation_level(row: object) -> AccumulationLevel:
     A row with an `accumulation_level` column is read from it. Any other row is at the finest
     level whose column is not blank: read group, library, sample, else all reads.
 
+    At the read group level, Picard 3.5.0 counts the reads of a read group without a platform unit
+    (`PU`) in a row whose sample, library, and read group are each `unknown`, and tools such as
+    CollectAlignmentSummaryMetrics also write an empty row for that read group. That row holds its
+    sample and library but no read group, so it reads as `LIBRARY`.
+
     Args:
         row: a row of metrics.
 
