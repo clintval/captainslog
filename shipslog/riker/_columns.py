@@ -25,24 +25,18 @@ HISTOGRAMS: dict[type[Any], type[Any]] = {
 # fmt: on
 
 
+# fmt: off
 @overload
 def columns(rows: Sequence[IsizeHistogram], /) -> IsizeHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[MeanQualityByCycle], /) -> MeanQualityByCycleColumns: ...
-
-
 @overload
 def columns(rows: Sequence[QualityScoreDistribution], /) -> QualityScoreDistributionColumns: ...
-
-
 @overload
 def columns(rows: Sequence[RnaInsertSizeHistogram], /) -> RnaInsertSizeHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[WgsCoverage], /) -> WgsCoverageColumns: ...
+# fmt: on
 
 
 def columns(rows: Sequence[object], /) -> Any:

@@ -40,76 +40,42 @@ from shipslog.picard._histograms import WgsNonZeroCoverageHistogramColumns
 from shipslog.picard._reader import histogram_of
 
 
+# fmt: off
 @overload
 def columns(rows: Sequence[ClippedBasesHistogram], /) -> ClippedBasesHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[DuplicateSetSizeHistogram], /) -> DuplicateSetSizeHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[DuplicationRoiHistogram], /) -> DuplicationRoiHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[HsHistogram], /) -> HsHistogramColumns: ...
-
-
 @overload
-def columns(
-    rows: Sequence[IndependentReplicateHistogram], /
-) -> IndependentReplicateHistogramColumns: ...
-
-
+def columns(rows: Sequence[IndependentReplicateHistogram], /) -> IndependentReplicateHistogramColumns: ...
 @overload
 def columns(rows: Sequence[InsertSizeHistogram], /) -> InsertSizeHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[LibraryComplexityHistogram], /) -> LibraryComplexityHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[MeanQualityByCycle], /) -> MeanQualityByCycleColumns: ...
-
-
 @overload
 def columns(rows: Sequence[QualityScoreDistribution], /) -> QualityScoreDistributionColumns: ...
-
-
 @overload
 def columns(rows: Sequence[QualityYieldFlowHistogram], /) -> QualityYieldFlowHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[QualityYieldSnvqHistogram], /) -> QualityYieldSnvqHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[ReadLengthHistogram], /) -> ReadLengthHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[RnaCoverageHistogram], /) -> RnaCoverageHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[SamComparisonHistogram], /) -> SamComparisonHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[UmiPrevalenceHistogram], /) -> UmiPrevalenceHistogramColumns: ...
-
-
 @overload
 def columns(rows: Sequence[WgsHistogram], /) -> WgsHistogramColumns: ...
-
-
 @overload
-def columns(
-    rows: Sequence[WgsNonZeroCoverageHistogram], /
-) -> WgsNonZeroCoverageHistogramColumns: ...
+def columns(rows: Sequence[WgsNonZeroCoverageHistogram], /) -> WgsNonZeroCoverageHistogramColumns: ...
+# fmt: on
 
 
 def columns(rows: Sequence[object], /) -> Any:

@@ -148,40 +148,26 @@ class FromPath:
         """Take the name it is held by, to find the `from_path` it hides."""
         self._name = name
 
+    # fmt: off
     @overload
     def __get__(self, obj: object, owner: type["PicardReader[Any]"]) -> BoundReaderFromPath: ...
-
     @overload
-    def __get__(
-        self, obj: object, owner: type["PicardHistogramReader[Any]"]
-    ) -> BoundHistogramReaderFromPath: ...
-
+    def __get__(self, obj: object, owner: type["PicardHistogramReader[Any]"]) -> BoundHistogramReaderFromPath: ...
     @overload
     def __get__(self, obj: object, owner: type["PicardWriter[Any]"]) -> BoundWriterFromPath: ...
-
     @overload
-    def __get__(
-        self, obj: object, owner: type["PicardHistogramWriter[Any]"]
-    ) -> BoundHistogramWriterFromPath: ...
-
+    def __get__(self, obj: object, owner: type["PicardHistogramWriter[Any]"]) -> BoundHistogramWriterFromPath: ...
     @overload
-    def __get__(
-        self, obj: object, owner: type["PicardCoverageReader[Any]"]
-    ) -> BoundCoverageReaderFromPath: ...
-
+    def __get__(self, obj: object, owner: type["PicardCoverageReader[Any]"]) -> BoundCoverageReaderFromPath: ...
     @overload
-    def __get__(
-        self, obj: object, owner: type["PicardCoverageWriter[Any]"]
-    ) -> BoundCoverageWriterFromPath: ...
-
+    def __get__(self, obj: object, owner: type["PicardCoverageWriter[Any]"]) -> BoundCoverageWriterFromPath: ...
     @overload
     def __get__(self, obj: object, owner: type["RikerReader[Any]"]) -> BoundRikerReaderFromPath: ...
-
     @overload
     def __get__(self, obj: object, owner: type["RikerWriter[Any]"]) -> BoundRikerWriterFromPath: ...
-
     @overload
     def __get__(self, obj: object, owner: type[object]) -> object: ...
+    # fmt: on
 
     def __get__(self, obj: object, owner: type[Any]) -> Any:
         """Hand back the inherited typeline `from_path`, bound to the class it is read through.
