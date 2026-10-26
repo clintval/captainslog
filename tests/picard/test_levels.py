@@ -5,6 +5,7 @@ from shipslog.picard import GcBiasDetailMetrics
 from shipslog.picard import GcBiasSummaryMetrics
 from shipslog.picard import HsMetrics
 from shipslog.picard import PicardReader
+from shipslog.picard import ReadsUsed
 from shipslog.picard import accumulation_level
 from tests.picard import DATA
 
@@ -38,12 +39,13 @@ def test_accumulation_level_of_a_subclass_of_gc_bias_reads_its_own_column() -> N
     class Mine(GcBiasSummaryMetrics):
         """A user's subclass."""
 
-    assert accumulation_level(Mine(accumulation_level="Library")) is AccumulationLevel.LIBRARY
+    row = Mine(accumulation_level="Library", reads_used=ReadsUsed.ALL)
+    assert accumulation_level(row) is AccumulationLevel.LIBRARY
 
 
 def test_accumulation_level_refuses_an_unknown_level() -> None:
     """Accumulation level refuses an unknown level."""
-    row = GcBiasSummaryMetrics(accumulation_level="Lane")
+    row = GcBiasSummaryMetrics(accumulation_level="Lane", reads_used=ReadsUsed.ALL)
     with pytest.raises(ValueError, match=r"^Unknown accumulation level: 'Lane'!$"):
         _ = accumulation_level(row)
 

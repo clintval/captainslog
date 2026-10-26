@@ -51,6 +51,18 @@ ENUM_RENAMES = {
     ),
 }
 
+# Picard declares these fields as strings, but writes only the constants of the enum named here.
+# fmt: off
+STRING_ENUMS = {
+    "picard.analysis.GcBiasDetailMetrics.READS_USED": "ReadsUsed",
+    "picard.analysis.GcBiasSummaryMetrics.READS_USED": "ReadsUsed",
+}
+
+STRING_ENUM_TYPES = {
+    "ReadsUsed": ("Whether a row counts all reads, or only the unique ones.", ["ALL", "UNIQUE"]),
+}
+# fmt: on
+
 # Its fields hold a whole metrics file and a summary bean, so htsjdk cannot write it as columns.
 SKIPPED = {"picard.metrics.GcBiasMetrics"}
 
@@ -113,6 +125,8 @@ def javadoc(source: Path, java: str, member: str | None = None) -> list[str]:
 
 def class_summary(source: Path, java: str) -> str:
     """The first paragraph of a type's Javadoc, ending in a period, or else its Java name."""
+    if java in STRING_ENUM_TYPES:
+        return STRING_ENUM_TYPES[java][0]
     found = javadoc(source, java)
     if not found:
         owner = "htsjdk" if java.startswith("htsjdk.") else "Picard"
@@ -245,6 +259,10 @@ def main() -> None:
         raise SystemExit(f"{args.source} is not a checkout of Picard's source!")
 
     schema = json.loads(args.schema.read_text())
+    for metric in schema["classes"]:
+        for field in metric["fields"]:
+            field["type"] = STRING_ENUMS.get(f"{metric['class']}.{field['name']}", field["type"])
+    schema["enums"] |= {name: constants for name, (_, constants) in STRING_ENUM_TYPES.items()}
     kept = [metric for metric in schema["classes"] if metric["class"] not in SKIPPED]
     used = {field["type"] for metric in kept for field in metric["fields"]}
     classes = {

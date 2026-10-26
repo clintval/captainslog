@@ -56,6 +56,7 @@ __all__ = [
     "QualityYieldMetricsFlow",
     "QualityYieldMetricsSnvq",
     "RawWgsMetrics",
+    "ReadsUsed",
     "RnaSeqMetrics",
     "RrbsCpgDetailMetrics",
     "RrbsSummaryMetrics",
@@ -145,6 +146,13 @@ class PfFailReason(StrEnum):
     POLYCLONAL = "POLYCLONAL"
     MISALIGNED = "MISALIGNED"
     UNKNOWN = "UNKNOWN"
+
+
+class ReadsUsed(StrEnum):
+    """Whether a row counts all reads, or only the unique ones."""
+
+    ALL = "ALL"
+    UNIQUE = "UNIQUE"
 
 
 class Sex(StrEnum):
@@ -1346,7 +1354,7 @@ class GcBiasDetailMetrics:
 
     accumulation_level: str = ""
 
-    reads_used: str = ""
+    reads_used: ReadsUsed
     """This option is used to mark including or excluding duplicates."""
 
     gc: int = 0
@@ -1401,7 +1409,7 @@ class GcBiasSummaryMetrics:
 
     accumulation_level: str = ""
 
-    reads_used: str = ""
+    reads_used: ReadsUsed
     """This option is used to mark including or excluding duplicates."""
 
     window_size: int = 0

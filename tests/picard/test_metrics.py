@@ -9,15 +9,20 @@ import pytest
 
 from shipslog.picard import AlignmentSummaryMetrics
 from shipslog.picard import Category
+from shipslog.picard import GcBiasDetailMetrics
+from shipslog.picard import GcBiasSummaryMetrics
 from shipslog.picard import GenotypeConcordanceSummaryMetrics
 from shipslog.picard import HsMetrics
 from shipslog.picard import IndependentReplicateMetric
+from shipslog.picard import PicardReader
 from shipslog.picard import QualityYieldMetrics
 from shipslog.picard import QualityYieldMetricsSnvq
+from shipslog.picard import ReadsUsed
 from shipslog.picard import VariantType
 from shipslog.picard import _metrics
 from shipslog.picard._java import COLUMN_LABELS
 from shipslog.picard._java import JAVA_NAMES
+from tests.picard import DATA
 from tests.picard import METRICS_CLASS
 from tests.picard import PICARD_METRICS_FIXTURES
 from tests.picard import class_named_in
@@ -68,6 +73,27 @@ def test_htsjdks_variant_context_type_is_the_enum_variant_type() -> None:
         "SYMBOLIC",
         "MIXED",
     ]
+
+
+def test_reads_used_is_an_enum_of_the_constants_picard_writes() -> None:
+    """The reads used by GC bias metrics are all reads, or only those that are not duplicates."""
+    assert [member.value for member in ReadsUsed] == ["ALL", "UNIQUE"]
+
+
+@pytest.mark.parametrize(
+    ("kind", "name"),
+    [
+        (GcBiasDetailMetrics, "cmm.gc_bias.detail_metrics"),
+        (GcBiasSummaryMetrics, "cmm.gc_bias.summary_metrics"),
+    ],
+)
+def test_gc_bias_reads_used_is_read_as_a_reads_used(kind: type[Any], name: str) -> None:
+    """The reads used of both GC bias dataclasses is a `ReadsUsed`, and is read as one."""
+    assert get_type_hints(kind)["reads_used"] is ReadsUsed
+    rows = list(PicardReader.from_path[kind](DATA / name))
+    assert rows
+    assert all(type(row.reads_used) is ReadsUsed for row in rows)
+    assert {row.reads_used for row in rows} == {ReadsUsed.ALL}
 
 
 def test_quality_yield_metrics_from_both_tools_have_distinct_names() -> None:
