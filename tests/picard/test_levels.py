@@ -21,14 +21,14 @@ def test_accumulation_level_reads_the_level_from_the_blank_level_columns() -> No
 
 def test_accumulation_level_of_gc_bias_reads_its_own_column() -> None:
     """A GC bias summary row gives the level from its own `accumulation_level` column."""
-    path = DATA / "cmm.gc_bias.summary_metrics"
+    path = DATA / "cmm.gc_bias.summary_metrics.txt"
     rows = list(PicardReader.from_path[GcBiasSummaryMetrics](path))
     assert {accumulation_level(row) for row in rows} == set(AccumulationLevel)
 
 
 def test_accumulation_level_of_gc_bias_detail_reads_its_own_column() -> None:
     """A GC bias detail row gives the level from its own `accumulation_level` column."""
-    path = DATA / "cmm.gc_bias.detail_metrics"
+    path = DATA / "cmm.gc_bias.detail_metrics.txt"
     rows = list(PicardReader.from_path[GcBiasDetailMetrics](path))
     assert {accumulation_level(row) for row in rows} == set(AccumulationLevel)
 

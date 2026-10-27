@@ -86,7 +86,9 @@ def opened(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
 
 def test_from_path_types_the_reader_as_the_subscripted_picard_reader() -> None:
     """Type checkers see `from_path` build the reader it is read through, over its record type."""
-    with PicardReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics") as reader:
+    with PicardReader.from_path[QualityYieldMetrics](
+        DATA / "cmm.quality_yield_metrics.txt"
+    ) as reader:
         _ = assert_type(reader, PicardReader[QualityYieldMetrics])
         _ = assert_type(reader.header, PicardHeader)
         assert type(reader).__name__ == "PicardReader[QualityYieldMetrics]"
@@ -94,7 +96,7 @@ def test_from_path_types_the_reader_as_the_subscripted_picard_reader() -> None:
 
 def test_from_path_types_the_histogram_reader_as_the_subscripted_histogram_reader() -> None:
     """Type checkers see the histogram reader's `from_path` build it over its record type."""
-    path = DATA / "cmm.insert_size_metrics"
+    path = DATA / "cmm.insert_size_metrics.txt"
     with PicardHistogramReader.from_path[InsertSizeHistogram](path) as reader:
         _ = assert_type(reader, PicardHistogramReader[InsertSizeHistogram])
         _ = assert_type(reader.header, PicardHeader)
@@ -159,8 +161,8 @@ def test_from_path_of_a_subclass_of_the_coverage_reader_builds_the_subclass() ->
 
 def test_from_path_reads_a_gzipped_file_as_the_plain_file(tmp_path: Path) -> None:
     """A gzipped file reads as the same records and header as the plain file."""
-    plain = DATA / "hs.hs_metrics"
-    gzipped = tmp_path / "hs.hs_metrics.gz"
+    plain = DATA / "hs.hs_metrics.txt"
+    gzipped = tmp_path / "hs.hs_metrics.txt.gz"
     _ = gzipped.write_bytes(gzip.compress(plain.read_bytes()))
     with (
         PicardReader.from_path[HsMetrics](gzipped) as gzipped_reader,
@@ -174,7 +176,7 @@ def test_from_path_reads_a_gzipped_file_as_the_plain_file(tmp_path: Path) -> Non
 
 def test_from_path_closes_the_file_once_read_to_the_end(opened: list[Any]) -> None:
     """A reader from `from_path` closes its file once every record is read."""
-    assert list(PicardReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics"))
+    assert list(PicardReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics.txt"))
     assert opened
     assert all(handle.closed for handle in opened)
 
@@ -182,14 +184,14 @@ def test_from_path_closes_the_file_once_read_to_the_end(opened: list[Any]) -> No
 def test_from_path_closes_the_file_when_the_reader_refuses_it(opened: list[Any]) -> None:
     """A file of another class is closed before its refusal is raised."""
     with pytest.raises(ValueError, match=r"holds picard\.analysis\.InsertSizeMetrics"):
-        _ = PicardReader.from_path[HsMetrics](DATA / "cmm.insert_size_metrics")
+        _ = PicardReader.from_path[HsMetrics](DATA / "cmm.insert_size_metrics.txt")
     assert opened
     assert all(handle.closed for handle in opened)
 
 
 def test_from_path_on_a_subclass_of_the_reader_builds_the_subclass() -> None:
     """A user's subclass of the reader builds itself from a path."""
-    with OwnReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics") as reader:
+    with OwnReader.from_path[QualityYieldMetrics](DATA / "cmm.quality_yield_metrics.txt") as reader:
         assert isinstance(reader, OwnReader)
         assert type(reader).__name__ == "OwnReader[QualityYieldMetrics]"
         assert list(reader)
@@ -197,7 +199,7 @@ def test_from_path_on_a_subclass_of_the_reader_builds_the_subclass() -> None:
 
 def test_from_path_of_a_subclass_of_the_histogram_reader_builds_the_subclass() -> None:
     """A user's subclass of the histogram reader, with its own `from_path`, builds itself."""
-    path = DATA / "cmm.insert_size_metrics"
+    path = DATA / "cmm.insert_size_metrics.txt"
     with OwnHistogramReader.from_path[InsertSizeHistogram](path) as reader:
         assert isinstance(reader, OwnHistogramReader)
         assert type(reader).__name__ == "OwnHistogramReader[InsertSizeHistogram]"
@@ -220,7 +222,7 @@ def test_from_path_of_a_subclass_of_the_histogram_writer_builds_the_subclass(
 
 def test_from_path_held_by_two_classes_builds_each() -> None:
     """One `from_path` held by two classes builds whichever class it is read through."""
-    path = DATA / "cmm.quality_yield_metrics"
+    path = DATA / "cmm.quality_yield_metrics.txt"
     for kind in (FirstReader, SecondReader):
         with kind.from_path[QualityYieldMetrics](path) as reader:
             assert type(reader).__name__ == f"{kind.__name__}[QualityYieldMetrics]"

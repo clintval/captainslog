@@ -71,9 +71,9 @@ levels=(
   METRIC_ACCUMULATION_LEVEL=READ_GROUP
 )
 
-picard MarkDuplicates I=in/merged.bam O="$bam" M=picard/dup.duplication_metrics
+picard MarkDuplicates I=in/merged.bam O="$bam" M=picard/dup.duplication_metrics.txt
 samtools index "$bam"
-picard MarkDuplicates I=in/r1.bam O=in/r1.marked.bam M=picard/one_library.duplication_metrics
+picard MarkDuplicates I=in/r1.bam O=in/r1.marked.bam M=picard/one_library.duplication_metrics.txt
 
 picard CollectMultipleMetrics I="$bam" O=picard/cmm R="$ref" "${levels[@]}" \
   PROGRAM=null \
@@ -86,27 +86,27 @@ picard CollectMultipleMetrics I="$bam" O=picard/cmm R="$ref" "${levels[@]}" \
   PROGRAM=MeanQualityByCycle \
   PROGRAM=QualityScoreDistribution
 # Picard 3.5.0 shares target depth histograms across levels and throws on any level but ALL_READS.
-picard CollectHsMetrics I="$bam" O=picard/hs.hs_metrics R="$ref" \
+picard CollectHsMetrics I="$bam" O=picard/hs.hs_metrics.txt R="$ref" \
   BAIT_INTERVALS=in/baits.interval_list \
   TARGET_INTERVALS=in/targets.interval_list \
   PER_TARGET_COVERAGE=picard/hs.per_target_coverage.txt \
   PER_BASE_COVERAGE=picard/hs.per_base_coverage.txt
-picard CollectTargetedPcrMetrics I="$bam" O=picard/pcr.targeted_pcr_metrics R="$ref" \
+picard CollectTargetedPcrMetrics I="$bam" O=picard/pcr.targeted_pcr_metrics.txt R="$ref" \
   AMPLICON_INTERVALS=in/baits.interval_list \
   TARGET_INTERVALS=in/targets.interval_list
-picard CollectWgsMetrics I="$bam" O=picard/wgs.wgs_metrics R="$ref"
-picard CollectRawWgsMetrics I="$bam" O=picard/raw.raw_wgs_metrics R="$ref" COVERAGE_CAP=250
-picard CollectWgsMetricsWithNonZeroCoverage I="$bam" O=picard/nonzero.wgs_metrics R="$ref" \
+picard CollectWgsMetrics I="$bam" O=picard/wgs.wgs_metrics.txt R="$ref"
+picard CollectRawWgsMetrics I="$bam" O=picard/raw.raw_wgs_metrics.txt R="$ref" COVERAGE_CAP=250
+picard CollectWgsMetricsWithNonZeroCoverage I="$bam" O=picard/nonzero.wgs_metrics.txt R="$ref" \
   CHART=picard/nonzero.wgs_metrics.pdf
-picard CollectRnaSeqMetrics I="$bam" O=picard/rna.rna_metrics "${levels[@]}" \
+picard CollectRnaSeqMetrics I="$bam" O=picard/rna.rna_metrics.txt "${levels[@]}" \
   REF_FLAT=in/genes.refflat \
   RIBOSOMAL_INTERVALS=in/ribosomal.interval_list \
   STRAND_SPECIFICITY=NONE \
   MINIMUM_LENGTH=100
-picard CollectOxoGMetrics I="$bam" O=picard/oxog.oxog_metrics R="$ref"
-picard EstimateLibraryComplexity I="$bam" O=picard/elc.duplication_metrics
-picard CollectJumpingLibraryMetrics I="$bam" O=picard/jump.jumping_metrics
-picard CrosscheckFingerprints O=picard/crosscheck.crosscheck_metrics HAPLOTYPE_MAP="$sites" \
+picard CollectOxoGMetrics I="$bam" O=picard/oxog.oxog_metrics.txt R="$ref"
+picard EstimateLibraryComplexity I="$bam" O=picard/elc.duplication_metrics.txt
+picard CollectJumpingLibraryMetrics I="$bam" O=picard/jump.jumping_metrics.txt
+picard CrosscheckFingerprints O=picard/crosscheck.crosscheck_metrics.txt HAPLOTYPE_MAP="$sites" \
   I="$bam" \
   I=in/NA12892.over.fingerprints.shifted.for.crams.r1.sam \
   CROSSCHECK_BY=LIBRARY
@@ -134,6 +134,10 @@ riker multi -i "$bam" -o riker/s -r "$ref" \
   --rna::ribosomal-intervals in/ribosomal.interval_list
 
 find picard riker \( -name '*.pdf' -o -name '*.bw' \) -delete
+# Some Picard tools take only an output prefix, so their outputs are given the .txt extension here.
+for path in picard/*; do
+  [[ "$path" == *.txt ]] || command mv "$path" "$path.txt"
+done
 command rm -rf "$repo/tests/data/picard" "$repo/tests/data/riker"
 mkdir -p "$repo/tests/data"
 command cp -Rf picard riker "$repo/tests/data/"

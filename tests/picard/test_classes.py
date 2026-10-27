@@ -24,7 +24,7 @@ def test_metrics_class_names_the_dataclass_of_every_fixture(path: Path) -> None:
 
 def test_metrics_class_and_the_reader_read_a_gzipped_file(tmp_path: Path) -> None:
     """A gzipped file gives the same metrics class and the same rows as its plain file."""
-    source = DATA / "cmm.quality_yield_metrics"
+    source = DATA / "cmm.quality_yield_metrics.txt"
     path = tmp_path / "zipped.quality_yield_metrics.gz"
     _ = path.write_bytes(gzip.compress(source.read_bytes()))
     assert metrics_class(path) is QualityYieldMetrics
@@ -34,12 +34,12 @@ def test_metrics_class_and_the_reader_read_a_gzipped_file(tmp_path: Path) -> Non
 
 def test_metrics_class_accepts_a_path_given_as_text() -> None:
     """A path given as text gives the same metrics class as a `Path`."""
-    assert metrics_class(str(DATA / "cmm.quality_yield_metrics")) is QualityYieldMetrics
+    assert metrics_class(str(DATA / "cmm.quality_yield_metrics.txt")) is QualityYieldMetrics
 
 
 def test_metrics_class_points_a_histogram_only_file_to_histogram_class() -> None:
     """A file holding only a histogram is refused, pointing to `histogram_class`."""
-    path = DATA / "cmm.quality_by_cycle_metrics"
+    path = DATA / "cmm.quality_by_cycle_metrics.txt"
     message = (
         rf"^{re.escape(str(path))} holds no metrics table! "
         r"If it holds only a histogram, find its type with histogram_class\.$"
@@ -108,7 +108,7 @@ def test_metrics_class_refuses_a_file_whose_lines_end_with_a_lone_carriage_retur
     """A file whose lines end with a lone carriage return is refused by both."""
     path = tmp_path / "mac.metrics"
     _ = path.write_text(
-        (DATA / "cmm.quality_yield_metrics").read_text().replace("\n", "\r"), newline=""
+        (DATA / "cmm.quality_yield_metrics.txt").read_text().replace("\n", "\r"), newline=""
     )
     message = (
         rf"^{re.escape(str(path))} breaks its lines with lone carriage returns, not line feeds!$"

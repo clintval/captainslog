@@ -37,7 +37,7 @@ PREFIXES = ["All_Reads", *[name for name in NAMES if name]]
 
 def test_insert_size_series_of_the_fixture() -> None:
     """Each column of the insert size histogram becomes a series in file order."""
-    path = "tests/data/picard/cmm.insert_size_metrics"
+    path = "tests/data/picard/cmm.insert_size_metrics.txt"
     with PicardHistogramReader.from_path[InsertSizeHistogram](path) as reader:
         hist = columns(list(reader))
     series = insert_size_series(hist)
@@ -50,7 +50,7 @@ def test_insert_size_series_of_the_fixture() -> None:
 
 def test_rna_coverage_series_of_the_fixture() -> None:
     """Each column of the RNA coverage histogram becomes a series in file order."""
-    path = "tests/data/picard/rna.rna_metrics"
+    path = "tests/data/picard/rna.rna_metrics.txt"
     with PicardHistogramReader.from_path[RnaCoverageHistogram](path) as reader:
         hist = columns(list(reader))
     series = rna_coverage_series(hist)
@@ -63,7 +63,7 @@ def test_rna_coverage_series_of_the_fixture() -> None:
 
 def test_library_complexity_series_of_the_fixture() -> None:
     """Each library column becomes a series named by the library."""
-    path = "tests/data/picard/elc.duplication_metrics"
+    path = "tests/data/picard/elc.duplication_metrics.txt"
     with PicardHistogramReader.from_path[LibraryComplexityHistogram](path) as reader:
         hist = columns(list(reader))
     series = library_complexity_series(hist)
@@ -163,19 +163,19 @@ def _round_trip(kind: Any, path: str, series_of: Any, bins_of: Any) -> None:
 
 def test_insert_size_bins_round_trip_the_fixture() -> None:
     """The bins rebuilt from the series equal the bins read, keys in file order."""
-    path = "tests/data/picard/cmm.insert_size_metrics"
+    path = "tests/data/picard/cmm.insert_size_metrics.txt"
     _round_trip(InsertSizeHistogram, path, insert_size_series, insert_size_bins)
 
 
 def test_rna_coverage_bins_round_trip_the_fixture() -> None:
     """The bins rebuilt from the series equal the bins read, keys in file order."""
-    path = "tests/data/picard/rna.rna_metrics"
+    path = "tests/data/picard/rna.rna_metrics.txt"
     _round_trip(RnaCoverageHistogram, path, rna_coverage_series, rna_coverage_bins)
 
 
 def test_library_complexity_bins_round_trip_the_fixture() -> None:
     """The bins rebuilt from the series equal the bins read, keys in file order."""
-    path = "tests/data/picard/elc.duplication_metrics"
+    path = "tests/data/picard/elc.duplication_metrics.txt"
     _round_trip(
         LibraryComplexityHistogram, path, library_complexity_series, library_complexity_bins
     )

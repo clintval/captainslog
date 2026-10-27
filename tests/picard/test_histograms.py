@@ -64,7 +64,7 @@ def histogram_line(lines: list[str]) -> int:
 
 def test_reader_reads_the_insert_size_histogram_by_column_name() -> None:
     """The bins of a histogram hold its key, and each column a header names, by its name."""
-    path = DATA / "cmm.insert_size_metrics"
+    path = DATA / "cmm.insert_size_metrics.txt"
     bins = list(PicardHistogramReader.from_path[InsertSizeHistogram](path))
     assert bins and all(b.insert_size > 0 for b in bins)
     assert "All_Reads.fr_count" in bins[0].counts
@@ -153,7 +153,7 @@ def test_registry_describes_each_histogram_dataclass() -> None:
 
 def test_reader_refuses_a_histogram_the_files_of_the_metrics_class_do_not_hold() -> None:
     """A metrics file whose class does not own the histogram is refused, naming both."""
-    path = DATA / "cmm.quality_yield_metrics"
+    path = DATA / "cmm.quality_yield_metrics.txt"
     assert path not in PICARD_HISTOGRAM_FIXTURES
     java = "picard.analysis.CollectQualityYieldMetrics$QualityYieldMetrics"
     message = f"{path} holds {java}, whose files hold no InsertSizeHistogram!"
@@ -163,7 +163,7 @@ def test_reader_refuses_a_histogram_the_files_of_the_metrics_class_do_not_hold()
 
 def test_reader_refuses_a_histogram_only_class_from_a_metrics_file() -> None:
     """A histogram that Picard writes without metrics is refused from a file of metrics."""
-    path = DATA / "cmm.insert_size_metrics"
+    path = DATA / "cmm.insert_size_metrics.txt"
     message = (
         f"{path} holds picard.analysis.InsertSizeMetrics, whose files hold no MeanQualityByCycle!"
     )
@@ -173,7 +173,7 @@ def test_reader_refuses_a_histogram_only_class_from_a_metrics_file() -> None:
 
 def test_reader_refuses_an_owned_histogram_from_a_histogram_only_file() -> None:
     """A histogram that Picard writes after metrics is refused from a file of only a histogram."""
-    path = DATA / "cmm.quality_by_cycle_metrics"
+    path = DATA / "cmm.quality_by_cycle_metrics.txt"
     message = f"{path} holds only a histogram, which is not InsertSizeHistogram!"
     with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
         _ = PicardHistogramReader.from_path[InsertSizeHistogram](path)
@@ -181,7 +181,7 @@ def test_reader_refuses_an_owned_histogram_from_a_histogram_only_file() -> None:
 
 def test_reader_reads_no_rows_from_an_owner_file_without_its_histogram(tmp_path: Path) -> None:
     """A file of the metrics that own a histogram, but without one, holds no bins."""
-    lines = (DATA / "cmm.insert_size_metrics").read_text().split("\n")
+    lines = (DATA / "cmm.insert_size_metrics.txt").read_text().split("\n")
     path = tmp_path / "cut.insert_size_metrics"
     _ = path.write_text("".join(f"{line}\n" for line in lines[: histogram_line(lines)]))
     with PicardHistogramReader.from_path[InsertSizeHistogram](path) as reader:
@@ -229,7 +229,7 @@ def test_histogram_class_refuses_a_header_and_its_blank_lines_as_no_histogram(
 @pytest.mark.parametrize("end", ["", "\n"], ids=repr)
 def test_reader_reads_a_histogram_the_file_ends_without_a_blank_line(end: str) -> None:
     """A histogram that ends the file, without a blank line after it, reads every bin."""
-    path = DATA / "cmm.quality_by_cycle_metrics"
+    path = DATA / "cmm.quality_by_cycle_metrics.txt"
     text = path.read_text().rstrip("\n") + end
     with (
         PicardHistogramReader[MeanQualityByCycle](StringIO(text)) as cut_reader,
@@ -242,7 +242,7 @@ def test_reader_reads_a_histogram_the_file_ends_without_a_blank_line(end: str) -
 
 def test_reader_reads_the_header_of_a_histogram_only_file() -> None:
     """A file of only a histogram has the header htsjdk wrote at its top."""
-    path = DATA / "cmm.quality_by_cycle_metrics"
+    path = DATA / "cmm.quality_by_cycle_metrics.txt"
     with PicardHistogramReader.from_path[MeanQualityByCycle](path) as reader:
         assert reader.header.command_line.startswith("CollectMultipleMetrics INPUT=in/sample.bam")
         assert reader.header.started_on == "Sat Oct 24 21:42:13 HST 2026"
@@ -252,7 +252,7 @@ def test_reader_reads_the_header_of_a_histogram_only_file() -> None:
 
 def test_reader_passes_header_comments_to_the_callers_on_comment() -> None:
     """The caller's `on_comment` receives each header line, with its line number, on opening."""
-    path = DATA / "cmm.insert_size_metrics"
+    path = DATA / "cmm.insert_size_metrics.txt"
     lines = takewhile(lambda line: line.startswith("#"), path.read_text().split("\n"))
     expected = [Comment(number, line) for number, line in enumerate(lines, start=1)]
     assert len(expected) == 4
@@ -281,7 +281,7 @@ def test_histogram_class_refuses_a_file_that_is_not_picard() -> None:
 
 def test_reader_refuses_lone_carriage_returns() -> None:
     """A file whose lines end with a carriage return alone is refused, not read as empty."""
-    text = (DATA / "cmm.quality_by_cycle_metrics").read_text().replace("\n", "\r")
+    text = (DATA / "cmm.quality_by_cycle_metrics.txt").read_text().replace("\n", "\r")
     message = r"^The text breaks its lines with lone carriage returns, not line feeds!$"
     with pytest.raises(ValueError, match=message):
         _ = PicardHistogramReader[MeanQualityByCycle](StringIO(text))
@@ -289,15 +289,15 @@ def test_reader_refuses_lone_carriage_returns() -> None:
 
 def test_histogram_class_refuses_a_file_without_a_histogram() -> None:
     """A metrics file without a histogram names no histogram dataclass."""
-    path = DATA / "cmm.quality_yield_metrics"
+    path = DATA / "cmm.quality_yield_metrics.txt"
     assert path not in PICARD_HISTOGRAM_FIXTURES
-    with pytest.raises(ValueError, match=r"cmm\.quality_yield_metrics holds no histogram!$"):
+    with pytest.raises(ValueError, match=r"cmm\.quality_yield_metrics\.txt holds no histogram!$"):
         _ = histogram_class(path)
 
 
 def test_histogram_class_refuses_an_unknown_label_row(tmp_path: Path) -> None:
     """A label row no registered class matches is refused, naming its labels."""
-    text = (DATA / "cmm.quality_by_cycle_metrics").read_text()
+    text = (DATA / "cmm.quality_by_cycle_metrics.txt").read_text()
     assert "CYCLE\tMEAN_QUALITY\t" in text
     path = tmp_path / "unknown.quality_by_cycle_metrics"
     _ = path.write_text(text.replace("CYCLE\tMEAN_QUALITY\t", "CYCLE\tMEDIAN_QUALITY\t"))
@@ -309,7 +309,7 @@ def test_histogram_class_refuses_an_unknown_label_row(tmp_path: Path) -> None:
 
 def test_histogram_class_refuses_the_repeated_labels_of_several_levels(tmp_path: Path) -> None:
     """A targeted histogram of several accumulation levels repeats its labels, so is unknown."""
-    text = (DATA / "hs.hs_metrics").read_text()
+    text = (DATA / "hs.hs_metrics.txt").read_text()
     labels = "coverage_or_base_quality\thigh_quality_coverage_count\tunfiltered_baseq_count"
     assert f"\n{labels}\n" in text
     path = tmp_path / "levels.hs_metrics"
@@ -324,8 +324,8 @@ def test_histogram_class_refuses_the_repeated_labels_of_several_levels(tmp_path:
 @pytest.mark.parametrize(
     ("name", "kind"),
     [
-        ("one_library.duplication_metrics", DuplicationRoiHistogram),
-        ("dup.duplication_metrics", DuplicateSetSizeHistogram),
+        ("one_library.duplication_metrics.txt", DuplicationRoiHistogram),
+        ("dup.duplication_metrics.txt", DuplicateSetSizeHistogram),
     ],
     ids=["roi", "set_size"],
 )
@@ -358,8 +358,8 @@ def test_optical_sets_between_fixed_columns_read_as_an_extra_column(
 
 def test_histogram_class_reads_a_gzipped_file(tmp_path: Path) -> None:
     """A gzipped file names the class of the plain file, and reads as the same bins."""
-    plain = DATA / "cmm.insert_size_metrics"
-    gzipped = tmp_path / "cmm.insert_size_metrics.gz"
+    plain = DATA / "cmm.insert_size_metrics.txt"
+    gzipped = tmp_path / "cmm.insert_size_metrics.txt.gz"
     _ = gzipped.write_bytes(gzip.compress(plain.read_bytes()))
     assert histogram_class(gzipped) is InsertSizeHistogram
     with (
@@ -373,8 +373,8 @@ def test_histogram_class_reads_a_gzipped_file(tmp_path: Path) -> None:
 
 def test_reader_reads_a_crlf_histogram_as_the_lf_histogram(tmp_path: Path) -> None:
     """A file whose lines end with CRLF names the same class and reads as the same bins."""
-    lf = DATA / "rna.rna_metrics"
-    crlf = tmp_path / "rna.rna_metrics"
+    lf = DATA / "rna.rna_metrics.txt"
+    crlf = tmp_path / "rna.rna_metrics.txt"
     _ = crlf.write_text(lf.read_text(), newline="\r\n")
     assert crlf.read_bytes().count(b"\r\n") == lf.read_bytes().count(b"\n")
     assert histogram_class(crlf) is RnaCoverageHistogram
@@ -390,7 +390,7 @@ def test_reader_reads_a_crlf_histogram_as_the_lf_histogram(tmp_path: Path) -> No
 
 def test_reader_refuses_a_record_type_that_is_not_a_picard_histogram() -> None:
     """A dataclass that is not a Picard histogram dataclass is refused before the file is read."""
-    handle = StringIO((DATA / "cmm.insert_size_metrics").read_text())
+    handle = StringIO((DATA / "cmm.insert_size_metrics.txt").read_text())
     with pytest.raises(TypeError, match=r"^NotHistogram is not a Picard histogram dataclass!$"):
         _ = PicardHistogramReader[NotHistogram](handle)
     message = r"^InsertSizeMetrics is not a Picard histogram dataclass!$"
@@ -401,7 +401,9 @@ def test_reader_refuses_a_record_type_that_is_not_a_picard_histogram() -> None:
 
 def test_reader_reads_a_users_subclass_of_a_histogram() -> None:
     """A subclass of the histogram a file holds reads the file into the subclass."""
-    bins = list(PicardHistogramReader.from_path[DerivedHistogram](DATA / "cmm.insert_size_metrics"))
+    bins = list(
+        PicardHistogramReader.from_path[DerivedHistogram](DATA / "cmm.insert_size_metrics.txt")
+    )
     assert bins
     assert all(isinstance(b, DerivedHistogram) for b in bins)
     assert bins[0].all_reads == bins[0].counts["All_Reads.fr_count"]
@@ -444,7 +446,7 @@ def test_reader_refuses_a_histogram_fixture_written_twice_into_one_file(
 @pytest.mark.parametrize("line", ["## HISTOGRAM\tjava.lang.Byte"], ids=repr)
 def test_reader_refuses_a_second_histogram_after_the_histogram(line: str) -> None:
     """A second histogram follows no histogram, which htsjdk writes last."""
-    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    text = (DATA / "cmm.quality_distribution_metrics.txt").read_text()
     with (
         PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n \n{line}")) as reader,
         pytest.raises(ValueError, match=f"^The text {re.escape(CONCATENATED)}$"),
@@ -454,7 +456,7 @@ def test_reader_refuses_a_second_histogram_after_the_histogram(line: str) -> Non
 
 def test_reader_reads_a_histogram_followed_by_blank_lines() -> None:
     """The blank lines after a histogram are no second file."""
-    path = DATA / "cmm.quality_distribution_metrics"
+    path = DATA / "cmm.quality_distribution_metrics.txt"
     text = path.read_text() + " \n\n\x0c\n"
     bins = list(PicardHistogramReader.from_path[QualityScoreDistribution](path))
     assert bins
@@ -467,7 +469,7 @@ TRAILING = "holds text after its last table, which htsjdk does not write!"
 @pytest.mark.parametrize("line", ["# done", "\t", "0\t1", " x"], ids=repr)
 def test_reader_refuses_text_after_the_last_table(line: str) -> None:
     """Other than blank lines, nothing follows the histogram, which htsjdk writes last."""
-    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    text = (DATA / "cmm.quality_distribution_metrics.txt").read_text()
     with (
         PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n \n{line}")) as reader,
         pytest.raises(ValueError, match=f"^The text {re.escape(TRAILING)}$"),
@@ -478,7 +480,7 @@ def test_reader_refuses_text_after_the_last_table(line: str) -> None:
 @pytest.mark.parametrize("line", ["## htsjdk.samtools.metrics.StringHeader", "## METRICS CLASS\tx"])
 def test_reader_refuses_a_header_or_metrics_after_the_histogram(line: str) -> None:
     """A header line or a metrics section after any table is a concatenation."""
-    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    text = (DATA / "cmm.quality_distribution_metrics.txt").read_text()
     with (
         PicardHistogramReader[QualityScoreDistribution](StringIO(f"{text}\n{line}\n")) as reader,
         pytest.raises(ValueError, match=f"^The text {re.escape(CONCATENATED)}$"),
@@ -488,7 +490,7 @@ def test_reader_refuses_a_header_or_metrics_after_the_histogram(line: str) -> No
 
 def with_labels(row: str) -> str:
     """The text of the insert size fixture, with its histogram's label row replaced."""
-    lines = (DATA / "cmm.insert_size_metrics").read_text().split("\n")
+    lines = (DATA / "cmm.insert_size_metrics.txt").read_text().split("\n")
     at = next(i for i, line in enumerate(lines) if line.startswith("## HISTOGRAM")) + 1
     lines[at] = row
     return "\n".join(lines)
@@ -511,7 +513,7 @@ def test_reader_refuses_a_fixed_label_repeated(row: str) -> None:
 
 def test_reader_refuses_a_repeated_label_of_a_histogram_without_extra_columns() -> None:
     """A histogram with no extra columns refuses a repeated label as it does any."""
-    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    text = (DATA / "cmm.quality_distribution_metrics.txt").read_text()
     text = text.replace("QUALITY\tCOUNT_OF_Q", "QUALITY\tCOUNT_OF_Q\tCOUNT_OF_Q")
     message = "^The text repeats the column COUNT_OF_Q, which Picard does not!$"
     with pytest.raises(ValueError, match=message):
@@ -525,7 +527,7 @@ def test_histogram_class_names_no_class_for_a_repeated_fixed_label(tmp_path: Pat
     with pytest.raises(ValueError, match=f"^{re.escape(str(path))} repeats the column insert_size"):
         _ = histogram_class(path)
     other = tmp_path / "b.quality_distribution_metrics"
-    text = (DATA / "cmm.quality_distribution_metrics").read_text()
+    text = (DATA / "cmm.quality_distribution_metrics.txt").read_text()
     _ = other.write_text(text.replace("QUALITY\tCOUNT_OF_Q", "QUALITY\tCOUNT_OF_Q\tCOUNT_OF_Q"))
     with pytest.raises(ValueError):
         _ = histogram_class(other)
