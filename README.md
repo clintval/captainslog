@@ -167,7 +167,7 @@ assert qualities[0].count_of_q == 2
 
 #### Accumulation Levels
 
-Picard writes a row for each accumulation level it is asked for: all reads, then each sample, library, and read group.
+Picard writes a row for each accumulation level: all reads, then each sample, library, and read group.
 
 ```python
 from captainslog.picard import AccumulationLevel
