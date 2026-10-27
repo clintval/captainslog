@@ -10,9 +10,9 @@
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
-Typed dataclasses for the metrics files that Riker, Picard, fgbio, and fgumi write.
+Typed dataclasses for the metrics files that Riker, fgumi, Picard, and fgbio write.
 
-Open a [Riker](https://github.com/fulcrumgenomics/riker), [Picard](https://github.com/broadinstitute/picard), [fgbio](https://github.com/fulcrumgenomics/fgbio), or [fgumi](https://github.com/fulcrumgenomics/fgumi) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
+Open a [Riker](https://github.com/fulcrumgenomics/riker), [fgumi](https://github.com/fulcrumgenomics/fgumi), [Picard](https://github.com/broadinstitute/picard), or [fgbio](https://github.com/fulcrumgenomics/fgbio) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, Picard's `?` and fgbio's `NaN` are NaN, and fgbio's `Infinity` and `-Infinity` are infinite.
 
 ## Installation
@@ -90,9 +90,9 @@ assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 > A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
 > Writing the metrics back out keeps Picard's label for each `frac` field.
 
-### Reading fgbio and fgumi Metrics
+### Reading fgumi and fgbio Metrics
 
-An `FgbioReader` or `FgumiReader` reads a metrics file of fgbio or fgumi into dataclasses, one per row.
+An `FgumiReader` or `FgbioReader` reads a metrics file of fgumi or fgbio into dataclasses, one per row.
 Both tools write a file under whatever path they are given, so `metrics_class` names the dataclass of a file by its header row:
 
 ```python
@@ -128,7 +128,7 @@ assert (other.ss_families, other.ds_duplexes) == (library.ss_families, library.d
 Each reader has a writer, which makes realistic files for unit tests:
 
 - `RikerWriter`
-- `FgbioWriter` and `FgumiWriter`
+- `FgumiWriter` and `FgbioWriter`
 - `PicardWriter`, with `write_histogram`
 - `PicardHistogramWriter`
 - `PicardCoverageWriter`

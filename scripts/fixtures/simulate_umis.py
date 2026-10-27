@@ -1,4 +1,4 @@
-"""Write a small, seeded set of duplex UMI reads and the inputs fgbio and fgumi need beside them.
+"""Write a small, seeded set of duplex UMI reads and the inputs fgumi and fgbio need beside them.
 
 Every molecule is a fragment of a random reference, read on both strands as in duplex sequencing:
 the A strand's templates carry the UMI pair `X-Y` with read one on the forward strand, and the B

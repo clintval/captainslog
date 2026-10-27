@@ -1,4 +1,4 @@
-"""Typed dataclasses for the metrics files that Riker, Picard, fgbio, and fgumi write."""
+"""Typed dataclasses for the metrics files that Riker, fgumi, Picard, and fgbio write."""
 
 from captainslog import fgbio
 from captainslog import fgumi

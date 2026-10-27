@@ -115,7 +115,7 @@ The table in `scripts/picard/units.json` classifies each field whose name holds 
 The generator names a fraction `frac` in place of `pct` or `percent`, maps it to Picard's label in `COLUMN_LABELS`, and says the unit in its docstring.
 It refuses to run while a field is missing from the table, so classify each new one from where Picard computes it, never from its name.
 The generator's `COORDINATE_BASES` says whether a position or cycle is 0-based or 1-based where its Javadoc does not, so settle each new one from where Picard sets it.
-Its `SHARED_ENUMS` imports `PairOrientation` from `captainslog/_htsjdk.py` rather than declaring it, since fgbio and Riker write it too, and refuses to run unless that class holds the constants Picard writes.
+Its `SHARED_ENUMS` imports `PairOrientation` from `captainslog/_htsjdk.py` rather than declaring it, since Riker and fgbio write it too, and refuses to run unless that class holds the constants Picard writes.
 
 For a new Picard release, set its version in `scripts/fixtures/make.sh` and `scripts/fixtures/pixi.toml`, along with the package build that the path of `PICARD_JAR` names, then update the lock with `pixi lock --manifest-path scripts/fixtures/pixi.toml`.
 Write its schema to a new `scripts/picard/picard-X.Y.Z.json`, name that file in `pyproject.toml` and `tests/picard/test_metrics.py`, check the source lines in `scripts/picard/units.json` against the new release, generate the modules from it, and regenerate the fixtures.
@@ -158,7 +158,7 @@ The generator reads the fields, types, and doc comments of each struct, follows 
 It copies the published columns to `scripts/fgumi/fgumi-0.8.0.json`, which the tests check the dataclasses against.
 Its `SHARED_ENUMS` imports `ReadType` from `captainslog/_fulcrum.py` rather than declaring it, since fgbio writes it too, and refuses to run unless that class holds the variants fgumi writes.
 
-## Regenerating the fgbio and fgumi Fixtures
+## Regenerating the fgumi and fgbio Fixtures
 
 The files in `tests/data/fgbio` and `tests/data/fgumi` are written by fgbio 4.1.1 and fgumi 0.8.0 from reads that `scripts/fixtures/simulate_umis.py` simulates and bwa aligns, so no input is downloaded:
 

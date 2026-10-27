@@ -1,4 +1,4 @@
-"""What fgbio and fgumi share: read types, how they write values, and the header of a dataclass."""
+"""What fgumi and fgbio share: read types, how they write values, and the header of a dataclass."""
 
 import dataclasses
 import math
@@ -17,7 +17,7 @@ _NON_FINITE: FieldCodec[float] = nan("NaN", inf="Infinity", neg_inf="-Infinity")
 
 
 def _float_text(value: float) -> str:
-    """A float as fgbio and fgumi write one: a whole number without a point, NaN as `NaN`."""
+    """A float as fgumi and fgbio write one: a whole number without a point, NaN as `NaN`."""
     if math.isfinite(value) and float(value).is_integer():
         return str(int(value))
     return _NON_FINITE.into_text(value)
@@ -26,13 +26,13 @@ def _float_text(value: float) -> str:
 FULCRUM_FLOAT: FieldCodec[float] = FieldCodec(
     from_text=_NON_FINITE.from_text, into_text=_float_text
 )
-"""A float as fgbio and fgumi write one: `NaN`, `Infinity`, and `-Infinity` for the non-finite
+"""A float as fgumi and fgbio write one: `NaN`, `Infinity`, and `-Infinity` for the non-finite
 floats, which fgbio's `Metric.read` reads and Python's `nan` and `inf` are not, and a whole
 number without a decimal point, such as `0`.
 """
 
 FULCRUM_CODECS: Codecs = {bool: boolean(true="true", false="false"), float: FULCRUM_FLOAT}
-"""How fgbio and fgumi write booleans, as `true` and `false`, and floats, as `FULCRUM_FLOAT`."""
+"""How fgumi and fgbio write booleans, as `true` and `false`, and floats, as `FULCRUM_FLOAT`."""
 
 
 class ReadType(StrEnum):

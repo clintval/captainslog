@@ -32,7 +32,7 @@ def field_docstrings(path: Path) -> Iterator[tuple[str, str, str]]:
 
 
 def test_the_package_holds_a_module_for_each_tool() -> None:
-    """The package exposes the fgbio, fgumi, picard, and riker modules."""
+    """The package exposes the riker, fgumi, picard, and fgbio modules."""
     from captainslog import fgbio
     from captainslog import fgumi
     from captainslog import picard
@@ -51,8 +51,8 @@ def test_an_enumeration_that_tools_share_is_one_class() -> None:
     from captainslog import picard
     from captainslog import riker
 
-    assert picard.PairOrientation is fgbio.PairOrientation is riker.PairOrientation
-    assert fgbio.ReadType is fgumi.ReadType
+    assert riker.PairOrientation is picard.PairOrientation is fgbio.PairOrientation
+    assert fgumi.ReadType is fgbio.ReadType
 
 
 def test_every_coordinate_field_says_whether_it_is_0_based_or_1_based() -> None:

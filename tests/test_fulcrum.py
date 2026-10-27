@@ -32,7 +32,7 @@ SHARED: dict[type[Any], type[Any]] = {
 
 
 def test_the_files_both_tools_write_have_one_header() -> None:
-    """These are the files that fgbio and fgumi both write with one header, and no others."""
+    """These are the files that fgumi and fgbio both write with one header, and no others."""
     shared = {
         FGBIO_HEADERS[header]: FGUMI_HEADERS[header]
         for header in set(FGBIO_HEADERS) & set(FGUMI_HEADERS)

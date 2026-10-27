@@ -1,4 +1,4 @@
-"""What Picard, fgbio, and Riker share from htsjdk: the orientation of a read pair."""
+"""What Riker, Picard, and fgbio share from htsjdk: the orientation of a read pair."""
 
 from enum import StrEnum
 

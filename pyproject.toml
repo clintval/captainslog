@@ -1,7 +1,7 @@
 [project]
 name = "captainslog-ngs"
 version = "0.1.1"
-description = "Typed dataclasses for the metrics files that Riker, Picard, fgbio, and fgumi write."
+description = "Typed dataclasses for the metrics files that Riker, fgumi, Picard, and fgbio write."
 authors = [{ name = "Clint Valentine", email = "valentine.clint@gmail.com" }]
 license = "MIT"
 readme = "README.md"
