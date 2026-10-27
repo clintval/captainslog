@@ -211,6 +211,7 @@ ignore    = [
 unfixable = ["B"]
 
 [tool.ruff.lint.per-file-ignores]
+"scripts/picard/generate.py" = ["E501"]
 "shipslog/_binding.py" = ["E501"]
 "shipslog/picard/_columns.py" = ["E501"]
 "shipslog/picard/_histograms.py" = ["E501"]

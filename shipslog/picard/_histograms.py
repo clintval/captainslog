@@ -227,7 +227,7 @@ class MeanQualityByCycle:
     """The mean base quality by cycle MeanQualityByCycle writes."""
 
     cycle: int = 0
-    """The cycle, numbering the cycles of the second read after those of the first."""
+    """The 1-based cycle, numbering the cycles of the second read after those of the first."""
 
     mean_quality: float = 0.0
     """The mean base quality of the bases of that cycle."""
@@ -273,7 +273,10 @@ class QualityYieldFlowHistogram:
     """The flow quality histogram of CollectQualityYieldMetricsFlow, with INCLUDE_BQ_HISTOGRAM."""
 
     key: int = 0
-    """The flow quality for `qual_count`, and the cycle of four flows for the cycle qualities."""
+    """The flow quality for `qual_count`, and the cycle of four flows for the cycle qualities.
+
+    The cycle is 0-based.
+    """
 
     qual_count: int = 0
     """The number of flows of that quality."""
@@ -308,7 +311,10 @@ class QualityYieldSnvqHistogram:
     """The quality histogram CollectQualityYieldMetricsSNVQ writes with INCLUDE_BQ_HISTOGRAM."""
 
     key: int = 0
-    """The quality for the counts, and the read position for the means."""
+    """The quality for the counts, and the read position for the means.
+
+    The read position is 0-based, along the bases as the record stores them, on either strand.
+    """
 
     bq_count: int = 0
     """The number of bases of that base quality."""
@@ -360,7 +366,7 @@ class RnaCoverageHistogram:
     """The normalized coverage by transcript position CollectRnaSeqMetrics writes."""
 
     normalized_position: int = 0
-    """The percent of the way along a transcript, from its 5' end."""
+    """The percent of the way along a transcript, 0-based: 0 at its 5' end and 100 at its 3' end."""
 
     normalized_coverage: NamedExtraColumns[float] = field(default_factory=dict)
     """The mean normalized coverage at that position of the most highly expressed transcripts, by

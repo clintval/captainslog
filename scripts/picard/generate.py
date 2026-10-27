@@ -71,6 +71,15 @@ STRING_ENUM_TYPES = {
 }
 # fmt: on
 
+# The base of each coordinate field whose Javadoc does not say it, as the source that sets it shows.
+# fmt: off
+COORDINATE_BASES = {
+    "BaseDistributionByCycleMetrics.CYCLE": "A 1-based cycle, numbering the cycles of the second read after those of the first.",
+    "FingerprintingDetailMetrics.POSITION": "A 1-based position, as the haplotype map of SNPs gives it.",
+    "RrbsCpgDetailMetrics.POSITION": "A 0-based position, of the C of the CpG on the forward strand, for reads on either strand.",
+}
+# fmt: on
+
 # No Picard file holds these: base classes, a collector's own metrics, and a bean of whole files.
 # fmt: off
 SKIPPED = {
@@ -272,6 +281,8 @@ def metrics_module(
             body += ["", f"    {attribute}: {annotation}" + (default and f" = {default}")]
             found = javadoc(source, field["declared_by"], field["name"])
             found = field_doc(field, found or FALLBACK_DOCS.get(field["name"], []))
+            if base := COORDINATE_BASES.get(f"{name}.{field['name']}"):
+                found = [*found, base]
             if found:
                 body += docstring(found, "    ")
     imports = ["import datetime"] if any("datetime." in line for line in body) else []

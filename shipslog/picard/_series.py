@@ -40,7 +40,7 @@ class RnaCoverageSeries:
     """The sample, library or read group of the column, or `None` for all reads."""
 
     normalized_position: tuple[int, ...]
-    """The position of each bin, shared with the histogram's `normalized_position`."""
+    """The 0-based percent of each bin, shared with the histogram's `normalized_position`."""
 
     normalized_coverage: tuple[float, ...]
     """One normalized coverage per bin of the histogram's `normalized_position`."""

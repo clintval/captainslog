@@ -808,6 +808,7 @@ class BaseDistributionByCycleMetrics:
     read_end: int = 0
 
     cycle: int = 0
+    """A 1-based cycle, numbering the cycles of the second read after those of the first."""
 
     pct_a: float = 0.0
     """A percent from 0 to 100."""
@@ -1247,7 +1248,10 @@ class FingerprintingDetailMetrics:
     """The chromosome on which the SNP resides."""
 
     position: int = 0
-    """The position of the SNP on the chromosome."""
+    """The position of the SNP on the chromosome.
+
+    A 1-based position, as the haplotype map of SNPs gives it.
+    """
 
     expected_genotype: str = ""
     """The expected genotype of the sample at the SNP locus."""
@@ -3333,7 +3337,10 @@ class RrbsCpgDetailMetrics:
     """Sequence the CpG is seen in"""
 
     position: int | None = None
-    """Position within the sequence of the CpG site"""
+    """Position within the sequence of the CpG site
+
+    A 0-based position, of the C of the CpG on the forward strand, for reads on either strand.
+    """
 
     total_sites: int | None = None
     """Number of times this CpG site was encountered"""
