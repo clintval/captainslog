@@ -31,11 +31,15 @@ def field_docstrings(path: Path) -> Iterator[tuple[str, str, str]]:
                 yield kind.name, node.target.id, docstring
 
 
-def test_the_package_holds_the_picard_and_riker_modules() -> None:
-    """The package exposes the picard and riker modules."""
+def test_the_package_holds_a_module_for_each_tool() -> None:
+    """The package exposes the fgbio, fgumi, picard, and riker modules."""
+    from captainslog import fgbio
+    from captainslog import fgumi
     from captainslog import picard
     from captainslog import riker
 
+    assert fgbio.__name__ == "captainslog.fgbio"
+    assert fgumi.__name__ == "captainslog.fgumi"
     assert picard.__name__ == "captainslog.picard"
     assert riker.__name__ == "captainslog.riker"
 
@@ -49,6 +53,9 @@ def test_every_coordinate_field_says_whether_it_is_0_based_or_1_based() -> None:
         if COORDINATE.search(name) and name not in NOT_COORDINATES
     }
     assert {
+        ("fgbio", "ConsensusVariantReviewInfo", "pos"),
+        ("fgbio", "ErrorRateByReadPositionMetric", "position"),
+        ("fgumi", "ConsensusVariantReviewInfo", "pos"),
         ("picard", "BaseDistributionByCycleMetrics", "cycle"),
         ("picard", "MeanQualityByCycle", "cycle"),
         ("picard", "PerTargetCoverage", "end"),
