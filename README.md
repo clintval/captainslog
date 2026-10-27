@@ -38,9 +38,9 @@ with (
     RikerReader.from_path[IsizeMetrics]("tests/data/riker/s.isize-metrics.txt") as isizes,
 ):
     alignment = {row.category: row for row in alignments}
-    [isize] = isizes
+    [isize_metrics] = isizes
 
-frac_reads_in_fr_pairs = 2 * isize.read_pairs / alignment[ReadCategory.PAIR].total_reads
+frac_reads_in_fr_pairs = 2 * isize_metrics.read_pairs / alignment[ReadCategory.PAIR].total_reads
 
 assert round(frac_reads_in_fr_pairs, 3) == 0.972
 ```
@@ -65,10 +65,10 @@ assert hybcap.sample == "NA12891"
 assert hybcap.mean_target_coverage == 70.54
 
 with RikerReader.from_path[IsizeHistogram]("tests/data/riker/s.isize-histogram.txt") as reader:
-    isize = riker.columns(list(reader))
+    isize_histogram = riker.columns(list(reader))
 
-assert isize.insert_size[:3] == (112, 128, 134)
-assert isize.fr_count[:3] == (1, 1, 1)
+assert isize_histogram.insert_size[:3] == (112, 128, 134)
+assert isize_histogram.fr_count[:3] == (1, 1, 1)
 ```
 
 ### Reading Picard Metrics
@@ -148,11 +148,11 @@ from captainslog.picard import PairOrientation
 from captainslog.picard import PicardHistogramReader
 
 with PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics") as reader:
-    hist = picard.columns(list(reader))
+    insert_size_histogram = picard.columns(list(reader))
 
-assert hist.insert_size[:3] == (112, 128, 134)
+assert insert_size_histogram.insert_size[:3] == (112, 128, 134)
 
-series = picard.insert_size_series(hist)
+series = picard.insert_size_series(insert_size_histogram)
 all_reads = next(s for s in series if s.name is None and s.orientation is PairOrientation.FR)
 
 assert all_reads.counts[:3] == (1, 1, 1)
