@@ -2,17 +2,17 @@ from collections.abc import Sequence
 from typing import Any
 from typing import overload
 
-from shipslog._columns import transpose
-from shipslog.riker._metrics import IsizeHistogram
-from shipslog.riker._metrics import IsizeHistogramColumns
-from shipslog.riker._metrics import MeanQualityByCycle
-from shipslog.riker._metrics import MeanQualityByCycleColumns
-from shipslog.riker._metrics import QualityScoreDistribution
-from shipslog.riker._metrics import QualityScoreDistributionColumns
-from shipslog.riker._metrics import RnaInsertSizeHistogram
-from shipslog.riker._metrics import RnaInsertSizeHistogramColumns
-from shipslog.riker._metrics import WgsCoverage
-from shipslog.riker._metrics import WgsCoverageColumns
+from captainslog._columns import transpose
+from captainslog.riker._metrics import IsizeHistogram
+from captainslog.riker._metrics import IsizeHistogramColumns
+from captainslog.riker._metrics import MeanQualityByCycle
+from captainslog.riker._metrics import MeanQualityByCycleColumns
+from captainslog.riker._metrics import QualityScoreDistribution
+from captainslog.riker._metrics import QualityScoreDistributionColumns
+from captainslog.riker._metrics import RnaInsertSizeHistogram
+from captainslog.riker._metrics import RnaInsertSizeHistogramColumns
+from captainslog.riker._metrics import WgsCoverage
+from captainslog.riker._metrics import WgsCoverageColumns
 
 # fmt: off
 HISTOGRAMS: dict[type[Any], type[Any]] = {

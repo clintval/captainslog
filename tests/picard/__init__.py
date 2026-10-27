@@ -2,20 +2,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from shipslog.picard import DuplicateSetSizeHistogram
-from shipslog.picard import DuplicationRoiHistogram
-from shipslog.picard import HsHistogram
-from shipslog.picard import InsertSizeHistogram
-from shipslog.picard import LibraryComplexityHistogram
-from shipslog.picard import MeanQualityByCycle
-from shipslog.picard import PicardWriter
-from shipslog.picard import QualityScoreDistribution
-from shipslog.picard import ReadLengthHistogram
-from shipslog.picard import RnaCoverageHistogram
-from shipslog.picard import WgsHistogram
-from shipslog.picard import WgsNonZeroCoverageHistogram
-from shipslog.picard._header import PicardHeader
-from shipslog.picard._java import JAVA_NAMES
+from captainslog.picard import DuplicateSetSizeHistogram
+from captainslog.picard import DuplicationRoiHistogram
+from captainslog.picard import HsHistogram
+from captainslog.picard import InsertSizeHistogram
+from captainslog.picard import LibraryComplexityHistogram
+from captainslog.picard import MeanQualityByCycle
+from captainslog.picard import PicardWriter
+from captainslog.picard import QualityScoreDistribution
+from captainslog.picard import ReadLengthHistogram
+from captainslog.picard import RnaCoverageHistogram
+from captainslog.picard import WgsHistogram
+from captainslog.picard import WgsNonZeroCoverageHistogram
+from captainslog.picard._header import PicardHeader
+from captainslog.picard._java import JAVA_NAMES
 
 DATA = Path(__file__).parents[1] / "data" / "picard"
 

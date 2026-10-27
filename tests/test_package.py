@@ -3,7 +3,7 @@ import re
 from collections.abc import Iterator
 from pathlib import Path
 
-PACKAGE = Path(__file__).parents[1] / "shipslog"
+PACKAGE = Path(__file__).parents[1] / "captainslog"
 
 COORDINATE = re.compile(r"^(?:position|pos|start|end|cycle)$|_(?:position|start|end)$")
 
@@ -33,11 +33,11 @@ def field_docstrings(path: Path) -> Iterator[tuple[str, str, str]]:
 
 def test_the_package_holds_the_picard_and_riker_modules() -> None:
     """The package exposes the picard and riker modules."""
-    from shipslog import picard
-    from shipslog import riker
+    from captainslog import picard
+    from captainslog import riker
 
-    assert picard.__name__ == "shipslog.picard"
-    assert riker.__name__ == "shipslog.riker"
+    assert picard.__name__ == "captainslog.picard"
+    assert riker.__name__ == "captainslog.riker"
 
 
 def test_every_coordinate_field_says_whether_it_is_0_based_or_1_based() -> None:

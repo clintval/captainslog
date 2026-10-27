@@ -11,9 +11,9 @@ from typeline import WriterOptions
 from typing_extensions import Unpack
 from typing_extensions import override
 
-from shipslog._binding import FromPath
-from shipslog.picard._reader import with_table_defaults
-from shipslog.picard._writer import table_options
+from captainslog._binding import FromPath
+from captainslog.picard._reader import with_table_defaults
+from captainslog.picard._writer import table_options
 
 
 @dataclass(frozen=True, kw_only=True)

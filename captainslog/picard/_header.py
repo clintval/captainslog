@@ -101,6 +101,6 @@ def header_lines(header: PicardHeader) -> list[str]:
 
 
 def default_header() -> PicardHeader:
-    """The header shipslog writes when it is given none: its name, and the local time now."""
+    """The header captainslog writes when it is given none: its name, and the local time now."""
     started_on = datetime.now().astimezone().strftime("%a %b %d %H:%M:%S %Z %Y")
-    return PicardHeader(command_line="shipslog", started_on=started_on)
+    return PicardHeader(command_line="captainslog", started_on=started_on)

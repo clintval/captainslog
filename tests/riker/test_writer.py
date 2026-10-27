@@ -8,12 +8,12 @@ from typing import assert_type
 
 import pytest
 
-from shipslog.riker import AlignmentMetrics
-from shipslog.riker import HybcapMetrics
-from shipslog.riker import RikerReader
-from shipslog.riker import RikerWriter
-from shipslog.riker import RnaBiotype
-from shipslog.riker import metrics_class
+from captainslog.riker import AlignmentMetrics
+from captainslog.riker import HybcapMetrics
+from captainslog.riker import RikerReader
+from captainslog.riker import RikerWriter
+from captainslog.riker import RnaBiotype
+from captainslog.riker import metrics_class
 from tests.compare import same
 from tests.riker import RIKER_FIXTURES
 

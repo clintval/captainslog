@@ -10,9 +10,9 @@ from typeline import TsvReader
 from typeline import open_for_reading
 from typing_extensions import override
 
-from shipslog.picard._table import MARK
-from shipslog.picard._table import Table
-from shipslog.picard._table import as_text_io
+from captainslog.picard._table import MARK
+from captainslog.picard._table import Table
+from captainslog.picard._table import as_text_io
 from tests.picard import DATA
 from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES

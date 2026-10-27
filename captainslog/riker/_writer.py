@@ -7,10 +7,10 @@ from typeline import WriterOptions
 from typing_extensions import Unpack
 from typing_extensions import override
 
-from shipslog._binding import FromPath
-from shipslog._stream import SectionStream
-from shipslog._stream import as_text_io
-from shipslog.riker._reader import check_riker_class
+from captainslog._binding import FromPath
+from captainslog._stream import SectionStream
+from captainslog._stream import as_text_io
+from captainslog.riker._reader import check_riker_class
 
 
 class RikerWriter(TsvWriter[RecordType]):

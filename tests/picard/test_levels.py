@@ -1,12 +1,12 @@
 import pytest
 
-from shipslog.picard import AccumulationLevel
-from shipslog.picard import GcBiasDetailMetrics
-from shipslog.picard import GcBiasSummaryMetrics
-from shipslog.picard import HsMetrics
-from shipslog.picard import PicardReader
-from shipslog.picard import ReadsUsed
-from shipslog.picard import accumulation_level
+from captainslog.picard import AccumulationLevel
+from captainslog.picard import GcBiasDetailMetrics
+from captainslog.picard import GcBiasSummaryMetrics
+from captainslog.picard import HsMetrics
+from captainslog.picard import PicardReader
+from captainslog.picard import ReadsUsed
+from captainslog.picard import accumulation_level
 from tests.picard import DATA
 
 

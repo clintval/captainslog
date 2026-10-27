@@ -1,26 +1,26 @@
 from pathlib import Path
 from typing import Any
 
-from shipslog.riker import AlignmentMetrics
-from shipslog.riker import BaseDistributionByCycle
-from shipslog.riker import ErrorIndel
-from shipslog.riker import ErrorMismatch
-from shipslog.riker import ErrorOverlap
-from shipslog.riker import GcbiasDetail
-from shipslog.riker import GcbiasSummary
-from shipslog.riker import HybcapMetrics
-from shipslog.riker import HybcapPerBase
-from shipslog.riker import HybcapPerTarget
-from shipslog.riker import IsizeHistogram
-from shipslog.riker import IsizeMetrics
-from shipslog.riker import MeanQualityByCycle
-from shipslog.riker import QualityScoreDistribution
-from shipslog.riker import RnaBiotype
-from shipslog.riker import RnaInsertSize
-from shipslog.riker import RnaInsertSizeHistogram
-from shipslog.riker import RnaMetrics
-from shipslog.riker import WgsCoverage
-from shipslog.riker import WgsMetrics
+from captainslog.riker import AlignmentMetrics
+from captainslog.riker import BaseDistributionByCycle
+from captainslog.riker import ErrorIndel
+from captainslog.riker import ErrorMismatch
+from captainslog.riker import ErrorOverlap
+from captainslog.riker import GcbiasDetail
+from captainslog.riker import GcbiasSummary
+from captainslog.riker import HybcapMetrics
+from captainslog.riker import HybcapPerBase
+from captainslog.riker import HybcapPerTarget
+from captainslog.riker import IsizeHistogram
+from captainslog.riker import IsizeMetrics
+from captainslog.riker import MeanQualityByCycle
+from captainslog.riker import QualityScoreDistribution
+from captainslog.riker import RnaBiotype
+from captainslog.riker import RnaInsertSize
+from captainslog.riker import RnaInsertSizeHistogram
+from captainslog.riker import RnaMetrics
+from captainslog.riker import WgsCoverage
+from captainslog.riker import WgsMetrics
 
 DATA = Path(__file__).parents[1] / "data" / "riker"
 

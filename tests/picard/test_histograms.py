@@ -14,22 +14,22 @@ import pytest
 from typeline import Comment
 from typeline import NamedExtraColumns
 
-from shipslog.picard import DuplicateSetSizeHistogram
-from shipslog.picard import DuplicationRoiHistogram
-from shipslog.picard import HsHistogram
-from shipslog.picard import InsertSizeHistogram
-from shipslog.picard import InsertSizeMetrics
-from shipslog.picard import MeanQualityByCycle
-from shipslog.picard import PicardHeader
-from shipslog.picard import PicardHistogramReader
-from shipslog.picard import QualityScoreDistribution
-from shipslog.picard import RnaCoverageHistogram
-from shipslog.picard import ValidationErrorHistogram
-from shipslog.picard import _histograms
-from shipslog.picard import histogram_class
-from shipslog.picard._histograms import HISTOGRAMS
-from shipslog.picard._java import JAVA_NAMES
-from shipslog.picard._reader import histogram_classes
+from captainslog.picard import DuplicateSetSizeHistogram
+from captainslog.picard import DuplicationRoiHistogram
+from captainslog.picard import HsHistogram
+from captainslog.picard import InsertSizeHistogram
+from captainslog.picard import InsertSizeMetrics
+from captainslog.picard import MeanQualityByCycle
+from captainslog.picard import PicardHeader
+from captainslog.picard import PicardHistogramReader
+from captainslog.picard import QualityScoreDistribution
+from captainslog.picard import RnaCoverageHistogram
+from captainslog.picard import ValidationErrorHistogram
+from captainslog.picard import _histograms
+from captainslog.picard import histogram_class
+from captainslog.picard._histograms import HISTOGRAMS
+from captainslog.picard._java import JAVA_NAMES
+from captainslog.picard._reader import histogram_classes
 from tests.compare import same
 from tests.picard import DATA
 from tests.picard import FIXTURE_CLASSES
@@ -302,7 +302,7 @@ def test_histogram_class_refuses_an_unknown_label_row(tmp_path: Path) -> None:
     path = tmp_path / "unknown.quality_by_cycle_metrics"
     _ = path.write_text(text.replace("CYCLE\tMEAN_QUALITY\t", "CYCLE\tMEDIAN_QUALITY\t"))
     labels = "CYCLE, MEDIAN_QUALITY, MEAN_ORIGINAL_QUALITY"
-    message = f"{path} holds a histogram shipslog does not know: {labels}!"
+    message = f"{path} holds a histogram captainslog does not know: {labels}!"
     with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
         _ = histogram_class(path)
 
@@ -316,7 +316,7 @@ def test_histogram_class_refuses_the_repeated_labels_of_several_levels(tmp_path:
     repeated = f"{labels}\thigh_quality_coverage_count\tunfiltered_baseq_count"
     _ = path.write_text(text.replace(f"\n{labels}\n", f"\n{repeated}\n"))
     known = repeated.replace("\t", ", ")
-    message = f"{path} holds a histogram shipslog does not know: {known}!"
+    message = f"{path} holds a histogram captainslog does not know: {known}!"
     with pytest.raises(ValueError, match=f"^{re.escape(message)}$"):
         _ = histogram_class(path)
 

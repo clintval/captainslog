@@ -5,15 +5,15 @@ from typing import get_type_hints
 
 import pytest
 
-from shipslog.riker import AlignmentMetrics
-from shipslog.riker import Category
-from shipslog.riker import HybcapMetrics
-from shipslog.riker import IsizeMetrics
-from shipslog.riker import PairOrientation
-from shipslog.riker import RnaInsertSize
-from shipslog.riker import RnaMetrics
-from shipslog.riker import StrandSpec
-from shipslog.riker import _metrics
+from captainslog.riker import AlignmentMetrics
+from captainslog.riker import Category
+from captainslog.riker import HybcapMetrics
+from captainslog.riker import IsizeMetrics
+from captainslog.riker import PairOrientation
+from captainslog.riker import RnaInsertSize
+from captainslog.riker import RnaMetrics
+from captainslog.riker import StrandSpec
+from captainslog.riker import _metrics
 from tests.riker import CLASSES
 from tests.riker import RIKER_FIXTURES
 from tests.riker import riker_class_of

@@ -1,4 +1,4 @@
-"""Read every Picard fixture with shipslog, and write it back, with its header, into a directory.
+"""Read every Picard fixture with captainslog, and write it back, with its header, into a directory.
 
 Run `ReadBack.java` on the directory after, to check that htsjdk reads each file as its fixture.
 """
@@ -10,12 +10,12 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
-from shipslog.picard import PicardHistogramReader
-from shipslog.picard import PicardHistogramWriter
-from shipslog.picard import PicardReader
-from shipslog.picard import PicardWriter
-from shipslog.picard import histogram_class
-from shipslog.picard import metrics_class
+from captainslog.picard import PicardHistogramReader
+from captainslog.picard import PicardHistogramWriter
+from captainslog.picard import PicardReader
+from captainslog.picard import PicardWriter
+from captainslog.picard import histogram_class
+from captainslog.picard import metrics_class
 
 FIXTURES = Path(__file__).parents[2] / "tests" / "data" / "picard"
 METRICS_CLASS = "## METRICS CLASS"

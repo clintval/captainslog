@@ -6,8 +6,8 @@ from typeline import FieldCodec
 from typeline.codecs import boolean
 from typeline.codecs import nan
 
-from shipslog.picard._java import COLUMN_LABELS
-from shipslog.picard._java import JAVA_NAMES
+from captainslog.picard._java import COLUMN_LABELS
+from captainslog.picard._java import JAVA_NAMES
 
 NAN: float = float("nan")
 """The float Picard writes as `?`."""

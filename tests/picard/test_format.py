@@ -8,21 +8,21 @@ from typing import get_type_hints
 
 import pytest
 
-from shipslog.picard import HsMetrics
-from shipslog.picard import IndependentReplicateMetric
-from shipslog.picard import InsertSizeMetrics
-from shipslog.picard import MeanQualityByCycle
-from shipslog.picard import PerTargetCoverage
-from shipslog.picard import PicardCoverageReader
-from shipslog.picard import PicardCoverageWriter
-from shipslog.picard import PicardHistogramReader
-from shipslog.picard import PicardReader
-from shipslog.picard import QualityYieldMetrics
-from shipslog.picard import RnaCoverageHistogram
-from shipslog.picard._coverage import coverage_rename
-from shipslog.picard._format import PICARD_CODECS
-from shipslog.picard._format import picard_rename
-from shipslog.picard._histograms import HISTOGRAMS
+from captainslog.picard import HsMetrics
+from captainslog.picard import IndependentReplicateMetric
+from captainslog.picard import InsertSizeMetrics
+from captainslog.picard import MeanQualityByCycle
+from captainslog.picard import PerTargetCoverage
+from captainslog.picard import PicardCoverageReader
+from captainslog.picard import PicardCoverageWriter
+from captainslog.picard import PicardHistogramReader
+from captainslog.picard import PicardReader
+from captainslog.picard import QualityYieldMetrics
+from captainslog.picard import RnaCoverageHistogram
+from captainslog.picard._coverage import coverage_rename
+from captainslog.picard._format import PICARD_CODECS
+from captainslog.picard._format import picard_rename
+from captainslog.picard._histograms import HISTOGRAMS
 from tests.compare import same
 from tests.picard import DATA
 from tests.picard import HISTOGRAM

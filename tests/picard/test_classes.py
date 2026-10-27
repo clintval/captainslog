@@ -6,10 +6,10 @@ from typing import TextIO
 import pytest
 from typeline import open_for_reading
 
-from shipslog.picard import PicardReader
-from shipslog.picard import QualityYieldMetrics
-from shipslog.picard import _reader as reader
-from shipslog.picard import metrics_class
+from captainslog.picard import PicardReader
+from captainslog.picard import QualityYieldMetrics
+from captainslog.picard import _reader as reader
+from captainslog.picard import metrics_class
 from tests.picard import DATA
 from tests.picard import LINES
 from tests.picard import PICARD_METRICS_FIXTURES

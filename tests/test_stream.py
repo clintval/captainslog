@@ -2,7 +2,7 @@ from io import StringIO
 
 import pytest
 
-from shipslog._stream import SectionStream
+from captainslog._stream import SectionStream
 
 
 def test_section_stream_writes_a_label_row_split_across_writes_with_its_first_row() -> None:

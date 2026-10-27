@@ -123,7 +123,7 @@ jobs:
         run: |
           uv run --no-project --python "$PYTHON_VERSION" --with dist/*."$DIST" python -P - <<'PY'
           import importlib, pkgutil
-          import shipslog as package
+          import captainslog as package
           for module in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
               importlib.import_module(module.name)
           print("imported every module of", package.__name__)
