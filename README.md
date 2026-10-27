@@ -15,9 +15,6 @@ Typed dataclasses for the metrics files that Riker and Picard write.
 Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, and Picard's `?` is NaN.
 
-> [!TIP]
-> A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
-
 ## Installation
 
 The package can be installed with `pip`:
@@ -90,6 +87,9 @@ assert hs_metrics.hs_library_size == 14903
 assert reader.header.command_line.startswith("CollectHsMetrics BAIT_INTERVALS=")
 assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 ```
+
+> [!TIP]
+> A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
 
 ### Writing Metrics
 
