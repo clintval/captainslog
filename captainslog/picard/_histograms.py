@@ -78,7 +78,7 @@ class DuplicateSetSizeHistogram:
     """The number of duplicate sets of that size once their optical duplicates are left out."""
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
-    """`optical_sets`, the number of sets of that many optical duplicates plus one, if any."""
+    """The number of sets of that many optical duplicates plus one, in an `optical_sets` column."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,7 +108,7 @@ class DuplicationRoiHistogram:
     """The number of duplicate sets of that size once their optical duplicates are left out."""
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
-    """`optical_sets`, the number of sets of that many optical duplicates plus one, if any."""
+    """The number of sets of that many optical duplicates plus one, in an `optical_sets` column."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -164,8 +164,8 @@ class IndependentReplicateHistogram:
     """The number of heterozygous sites with that allele balance."""
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
-    """`diffAllelesCount` and `sameAllelesCount`, the duplicate pairs of different and of the same
-    alleles whose UMIs are that edit distance apart, when reads hold UMIs.
+    """The columns `diffAllelesCount` and `sameAllelesCount`, when reads hold UMIs: the duplicate
+    pairs of different and of the same alleles whose UMIs are that edit distance apart.
     """
 
 
@@ -191,7 +191,8 @@ class InsertSizeHistogram:
 
     A sample and a library that share a name repeat a column, such as `NA12891.fr_count`. The first
     is keyed by its label, and the second by its label, the unit separator U+001F, and 2.
-    `insert_size_series` gives each a series of that name, and a writer writes each as the label.
+    The `insert_size_series` function gives each a series of that name, and a writer writes each as
+    the label.
     """
 
 
@@ -233,7 +234,9 @@ class MeanQualityByCycle:
     """The mean base quality of the bases of that cycle."""
 
     means: NamedExtraColumns[float] = field(default_factory=dict)
-    """`MEAN_ORIGINAL_QUALITY`, the mean original base quality of that cycle, when reads hold OQ."""
+    """The column `MEAN_ORIGINAL_QUALITY`, when reads hold OQ: the mean original base quality of
+    that cycle.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -256,7 +259,9 @@ class QualityScoreDistribution:
     """The number of bases of that base quality."""
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
-    """`COUNT_OF_OQ`, the number of bases of that original base quality, when reads hold OQ."""
+    """The column `COUNT_OF_OQ`, when reads hold OQ: the number of bases of that original base
+    quality.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -374,7 +379,8 @@ class RnaCoverageHistogram:
 
     A sample and a library that share a name repeat a column, such as `NA12891.normalized_coverage`.
     The first is keyed by its label, and the second by its label, the unit separator U+001F, and 2.
-    `rna_coverage_series` gives each a series of that name, and a writer writes each as the label.
+    The `rna_coverage_series` function gives each a series of that name, and a writer writes each as
+    the label.
     """
 
 
@@ -458,7 +464,9 @@ class WgsHistogram:
     """The number of sites at that depth, not counting bases below the minimum base quality."""
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
-    """`unfiltered_baseq_count`, the number of bases of that quality, with INCLUDE_BQ_HISTOGRAM."""
+    """The column `unfiltered_baseq_count`, with INCLUDE_BQ_HISTOGRAM: the number of bases of that
+    quality.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -484,7 +492,9 @@ class WgsNonZeroCoverageHistogram:
     """The number of sites at that depth over the sites with coverage, so none at depth 0."""
 
     counts: NamedExtraColumns[int] = field(default_factory=dict)
-    """`unfiltered_baseq_count`, the number of bases of that quality, with INCLUDE_BQ_HISTOGRAM."""
+    """The column `unfiltered_baseq_count`, with INCLUDE_BQ_HISTOGRAM: the number of bases of that
+    quality.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)

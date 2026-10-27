@@ -52,8 +52,8 @@ PICARD_FLOAT: FieldCodec[float] = FieldCodec(
 )
 """How Picard writes a float: `?` for NaN and infinity, `-?` for negative infinity, else a number.
 
-`?` reads as NaN, and a number reads with a decimal point or a decimal comma and is written with a
-point.
+A `?` reads as NaN, and a number reads with a decimal point or a decimal comma and is written with
+a point.
 """
 
 PICARD_CODECS: Codecs = {bool: boolean(true="Y", false="N"), float: PICARD_FLOAT}

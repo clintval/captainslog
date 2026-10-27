@@ -870,7 +870,7 @@ class RnaMetrics:
     """
 
     duplicate_rate: float = 0.0
-    """`duplicate-flagged mapped_reads / mapped_reads`. Always reported as an observed rate;
+    """Fraction of mapped reads flagged as duplicates. Always reported as an observed rate;
     duplicates are still *included* in every other metric unless `--exclude-duplicates` is set.
     """
 
@@ -902,21 +902,25 @@ class RnaMetrics:
     """
 
     frac_ribosomal_reads: float | None = None
-    """`ribosomal_reads / mapped_reads`. Blank if no ribosomal source."""
+    """Fraction of mapped reads that are ribosomal, `ribosomal_reads / mapped_reads`. Blank if no
+    ribosomal source.
+    """
 
     frac_exonic_reads: float = 0.0
-    """`exonic_reads / mapped_reads`. Under default filters, ribosomal + exonic + intronic +
-    intergenic = mapped_reads.
+    """Fraction of mapped reads that are exonic, `exonic_reads / mapped_reads`. Under default
+    filters, ribosomal + exonic + intronic + intergenic = mapped_reads.
     """
 
     frac_intronic_reads: float = 0.0
-    """`intronic_reads / mapped_reads`."""
+    """Fraction of mapped reads that are intronic, `intronic_reads / mapped_reads`."""
 
     frac_intergenic_reads: float = 0.0
-    """`intergenic_reads / mapped_reads`."""
+    """Fraction of mapped reads that are intergenic, `intergenic_reads / mapped_reads`."""
 
     frac_ambiguous_reads: float = 0.0
-    """`ambiguous_reads / mapped_reads` (the ambiguous subset of `frac_exonic_reads`)."""
+    """Fraction of mapped reads that are ambiguous, `ambiguous_reads / mapped_reads` (the ambiguous
+    subset of `frac_exonic_reads`).
+    """
 
     genes_detected: int = 0
     """Number of distinct genes (by name, so a gene at disjoint loci counts once) with at least
@@ -928,7 +932,7 @@ class RnaMetrics:
     """Reads with at least one splice, a CIGAR N (skip) gap of at least --junction-min-intron bp."""
 
     frac_spliced_reads: float = 0.0
-    """`spliced_reads / mapped_reads`."""
+    """Fraction of mapped reads that are spliced, `spliced_reads / mapped_reads`."""
 
     known_splice_obs: int = 0
     """Splice-junction *observations* (counted with read multiplicity: a junction seen in N reads
@@ -956,8 +960,8 @@ class RnaMetrics:
     """Distinct observed junctions with neither splice site annotated."""
 
     frac_known_juncs: float = 0.0
-    """`known_juncs / (known + partial + novel distinct junctions)`: the annotated fraction of the
-    junctions seen.
+    """The annotated fraction of the distinct junctions seen,
+    `known_juncs / (known + partial + novel distinct junctions)`.
     """
 
     bases: int = 0
@@ -989,25 +993,28 @@ class RnaMetrics:
     """Aligned bases overlapping no gene."""
 
     frac_ribosomal_bases: float | None = None
-    """`ribosomal_bases / aligned_bases`. Blank if no ribosomal source."""
+    """Fraction of aligned bases that are ribosomal, `ribosomal_bases / aligned_bases`. Blank if no
+    ribosomal source.
+    """
 
     frac_coding_bases: float = 0.0
-    """`coding_bases / aligned_bases`."""
+    """Fraction of aligned bases that are coding, `coding_bases / aligned_bases`."""
 
     frac_utr_bases: float = 0.0
-    """`utr_bases / aligned_bases`."""
+    """Fraction of aligned bases in UTRs, `utr_bases / aligned_bases`."""
 
     frac_intronic_bases: float = 0.0
-    """`intronic_bases / aligned_bases`."""
+    """Fraction of aligned bases that are intronic, `intronic_bases / aligned_bases`."""
 
     frac_intergenic_bases: float = 0.0
-    """`intergenic_bases / aligned_bases`."""
+    """Fraction of aligned bases that are intergenic, `intergenic_bases / aligned_bases`."""
 
     frac_mrna_bases: float = 0.0
-    """`frac_coding_bases + frac_utr_bases`: the mRNA (exonic) fraction of aligned bases."""
+    """The mRNA (exonic) fraction of aligned bases, `frac_coding_bases + frac_utr_bases`."""
 
     frac_usable_bases: float = 0.0
-    """`(coding_bases + utr_bases) / bases`. Note the denominator is **all sequenced bases**
+    """Fraction of all sequenced bases that are mRNA, `(coding_bases + utr_bases) / bases`. Note the
+    denominator is **all sequenced bases**
     (`bases`), not `aligned_bases` like the other `frac_*_bases`: this is intentional, matching
     Picard's PCT_USABLE_BASES (the usable-mRNA fraction of the whole sequencing run).
     """
@@ -1021,8 +1028,9 @@ class RnaMetrics:
     """Reads aligning on the strand expected under `detected_strand`. Always 0 when unstranded."""
 
     frac_correct_strand_reads: float = 0.0
-    """`correct_strand_reads / (correct + incorrect)`. (The incorrect count is not emitted; it is
-    `mapped exon-overlapping single-gene reads` minus `correct_strand_reads`.)
+    """Fraction of reads on the expected strand, `correct_strand_reads / (correct + incorrect)`.
+    (The incorrect count is not emitted; it is `mapped exon-overlapping single-gene reads` minus
+    `correct_strand_reads`.)
     """
 
     r1_tx_strand_reads: int = 0
@@ -1039,12 +1047,15 @@ class RnaMetrics:
     """
 
     frac_r1_tx_strand_reads: float = 0.0
-    """`r1_tx_strand_reads / (r1_tx_strand_reads + r2_tx_strand_reads)`: the basis for strand
+    """Fraction of templates whose read 1 lies on the transcription strand,
+    `r1_tx_strand_reads / (r1_tx_strand_reads + r2_tx_strand_reads)`: the basis for strand
     auto-detection (≈0.5 unstranded, ≈1 forward, ≈0 reverse).
     """
 
     frac_r2_tx_strand_reads: float = 0.0
-    """`r2_tx_strand_reads / (r1_tx_strand_reads + r2_tx_strand_reads)`."""
+    """Fraction of templates whose read 2 lies on the transcription strand,
+    `r2_tx_strand_reads / (r1_tx_strand_reads + r2_tx_strand_reads)`.
+    """
 
     median_cv_coverage: float = 0.0
     """Median across the top ~1000 expressed transcripts (one per gene, length ≥
@@ -1105,7 +1116,7 @@ class RnaBiotype:
     """Reads uniquely assigned to genes of this biotype."""
 
     frac_reads: float = 0.0
-    """`reads / assigned_reads`."""
+    """Fraction of assigned reads of this biotype, `reads / assigned_reads`."""
 
 
 @dataclass(frozen=True, kw_only=True)
