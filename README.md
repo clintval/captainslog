@@ -209,6 +209,7 @@ assert targets[0].frac_gc == 0.41
 ### Deriving Metrics
 
 To derive metrics, subclass a dataclass, add properties or methods, and read into the subclass.
+
 Add no fields, since every field is a column of the file.
 
 ```python
