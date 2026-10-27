@@ -229,6 +229,27 @@ with PicardReader.from_path[MyHsMetrics]("tests/data/picard/hs.hs_metrics") as r
 assert round(hs_metrics.frac_bases_on_target, 4) == 0.2398
 ```
 
+## Intervals with bedspec
+
+The [bedspec](https://github.com/clintval/bedspec) package reads the targets, bases, SNPs, and CpGs of captainslog as 0-based, half-open intervals, so they work with its overlap detectors:
+
+<!-- skip: next -->
+```python
+from bedspec import Bed3
+from bedspec import register_locatable
+from bedspec.ext.captainslog import as_interval
+from bedspec.overlap import TreeDetector
+
+with (
+    register_locatable(PerTargetCoverage, as_interval),
+    PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt") as reader,
+):
+    targets = TreeDetector(reader)
+    [target] = targets.overlapping(Bed3("1", start=200, end=201))
+
+assert target.name == "rs7555566"
+```
+
 ## Development and Testing
 
 See the [contributing guide](./CONTRIBUTING.md) for more information.
