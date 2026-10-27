@@ -1,6 +1,5 @@
 import dataclasses
 import math
-from enum import StrEnum
 from io import StringIO
 from typing import Any
 from typing import get_type_hints
@@ -32,17 +31,6 @@ SHARED: dict[type[Any], type[Any]] = {
 # fmt: on
 
 
-def kinds(record_type: type[Any]) -> dict[str, object]:
-    """The type of each field of a dataclass, with an enumeration as the texts it holds."""
-    hints = get_type_hints(record_type)
-    return {
-        name: [member.value for member in hint]
-        if isinstance(hint, type) and issubclass(hint, StrEnum)
-        else hint
-        for name, hint in hints.items()
-    }
-
-
 def test_the_files_both_tools_write_have_one_header() -> None:
     """These are the files that fgbio and fgumi both write with one header, and no others."""
     shared = {
@@ -55,7 +43,7 @@ def test_the_files_both_tools_write_have_one_header() -> None:
 @pytest.mark.parametrize("pair", SHARED.items(), ids=lambda pair: pair[0].__name__)
 def test_the_files_both_tools_write_have_the_same_types(pair: tuple[type[Any], type[Any]]) -> None:
     """A file both tools write holds the same type in each column, whichever tool wrote it."""
-    assert kinds(pair[0]) == kinds(pair[1])
+    assert get_type_hints(pair[0]) == get_type_hints(pair[1])
 
 
 @pytest.mark.parametrize(

@@ -1,8 +1,9 @@
-"""What fgbio and fgumi share: how they write values, and a header row that names its dataclass."""
+"""What fgbio and fgumi share: read types, how they write values, and the header of a dataclass."""
 
 import dataclasses
 import math
 from collections.abc import Iterable
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,16 @@ number without a decimal point, such as `0`.
 
 FULCRUM_CODECS: Codecs = {bool: boolean(true="true", false="false"), float: FULCRUM_FLOAT}
 """How fgbio and fgumi write booleans, as `true` and `false`, and floats, as `FULCRUM_FLOAT`."""
+
+
+class ReadType(StrEnum):
+    """The reads that a row of `ClipBam`'s metrics counts."""
+
+    FRAGMENT = "Fragment"
+    READ_ONE = "ReadOne"
+    READ_TWO = "ReadTwo"
+    PAIR = "Pair"
+    ALL = "All"
 
 
 def columns(record_type: type[Any]) -> tuple[str, ...]:

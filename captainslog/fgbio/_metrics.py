@@ -2,6 +2,9 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from captainslog._fulcrum import ReadType
+from captainslog._htsjdk import PairOrientation
+
 __all__ = [
     "AssessPhasingMetric",
     "AssignPrimersMetric",
@@ -37,24 +40,6 @@ class CountKind(StrEnum):
 
     TEMPLATES = "Templates"
     BASES = "Bases"
-
-
-class PairOrientation(StrEnum):
-    """htsjdk's `SamPairUtil$PairOrientation`."""
-
-    FR = "FR"
-    RF = "RF"
-    TANDEM = "TANDEM"
-
-
-class ReadType(StrEnum):
-    """The reads that a row of `ClipBam`'s metrics counts."""
-
-    FRAGMENT = "Fragment"
-    READ_ONE = "ReadOne"
-    READ_TWO = "ReadTwo"
-    PAIR = "Pair"
-    ALL = "All"
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -44,6 +44,17 @@ def test_the_package_holds_a_module_for_each_tool() -> None:
     assert riker.__name__ == "captainslog.riker"
 
 
+def test_an_enumeration_that_tools_share_is_one_class() -> None:
+    """An enumeration that more than one tool writes is the same class from each tool's module."""
+    from captainslog import fgbio
+    from captainslog import fgumi
+    from captainslog import picard
+    from captainslog import riker
+
+    assert picard.PairOrientation is fgbio.PairOrientation is riker.PairOrientation
+    assert fgbio.ReadType is fgumi.ReadType
+
+
 def test_every_coordinate_field_says_whether_it_is_0_based_or_1_based() -> None:
     """Each position, start, end, or cycle says its base, and each end whether it is inclusive."""
     found = {

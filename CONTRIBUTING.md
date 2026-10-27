@@ -115,6 +115,7 @@ The table in `scripts/picard/units.json` classifies each field whose name holds 
 The generator names a fraction `frac` in place of `pct` or `percent`, maps it to Picard's label in `COLUMN_LABELS`, and says the unit in its docstring.
 It refuses to run while a field is missing from the table, so classify each new one from where Picard computes it, never from its name.
 The generator's `COORDINATE_BASES` says whether a position or cycle is 0-based or 1-based where its Javadoc does not, so settle each new one from where Picard sets it.
+Its `SHARED_ENUMS` imports `PairOrientation` from `captainslog/_htsjdk.py` rather than declaring it, since fgbio and Riker write it too, and refuses to run unless that class holds the constants Picard writes.
 
 For a new Picard release, set its version in `scripts/fixtures/make.sh` and `scripts/fixtures/pixi.toml`, along with the package build that the path of `PICARD_JAR` names, then update the lock with `pixi lock --manifest-path scripts/fixtures/pixi.toml`.
 Write its schema to a new `scripts/picard/picard-X.Y.Z.json`, name that file in `pyproject.toml` and `tests/picard/test_metrics.py`, check the source lines in `scripts/picard/units.json` against the new release, generate the modules from it, and regenerate the fixtures.
@@ -140,6 +141,7 @@ uv run python scripts/fgbio/generate.py --schema scripts/fgbio/fgbio-4.1.1.json 
 
 The generator's `SKIPPED` names the classes that extend `Metric` only to be read as tables, such as the primer pairs of `AssignPrimers`, and refuses to run while one of them is gone from the jar.
 Its `FALLBACK_DOCS` documents a field the Scaladoc leaves out, and its `COORDINATE_BASES` says whether a position is 0-based or 1-based where the Scaladoc does not, so settle each new one from where fgbio sets it.
+Its `SHARED_ENUMS` imports `PairOrientation` from `captainslog/_htsjdk.py` and `ReadType` from `captainslog/_fulcrum.py` rather than declaring them, and refuses to run unless each holds the entries fgbio writes.
 The histograms in `captainslog/fgbio/_histograms.py`, which fgbio writes line by line rather than as metrics, are written by hand, so check them against each new release too.
 
 ## Regenerating the fgumi Dataclasses
@@ -154,6 +156,7 @@ uv run python scripts/fgumi/generate.py --source /tmp/fgumi --output captainslog
 fgumi publishes the columns of every metrics file it writes in `crates/fgumi-metrics/metric_columns.json`, and its integration test `test_metric_contract.rs` pairs each file with the struct that writes it.
 The generator reads the fields, types, and doc comments of each struct, follows serde's `rename` and `skip`, and refuses to run unless the columns it finds are the published columns of every file.
 It copies the published columns to `scripts/fgumi/fgumi-0.8.0.json`, which the tests check the dataclasses against.
+Its `SHARED_ENUMS` imports `ReadType` from `captainslog/_fulcrum.py` rather than declaring it, since fgbio writes it too, and refuses to run unless that class holds the variants fgumi writes.
 
 ## Regenerating the fgbio and fgumi Fixtures
 
