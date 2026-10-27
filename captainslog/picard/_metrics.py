@@ -15,11 +15,10 @@ __all__ = [
     "BaseDistributionByCycleMetrics",
     "BaseErrorMetric",
     "CallState",
-    "Category",
     "ClusteredCrosscheckMetric",
     "CpcgMetrics",
+    "CrosscheckBy",
     "CrosscheckMetric",
-    "DataType",
     "DuplicationMetrics",
     "ErrorSummaryMetrics",
     "FingerprintMetrics",
@@ -53,6 +52,7 @@ __all__ = [
     "QualityYieldMetricsFlow",
     "QualityYieldMetricsSnvq",
     "RawWgsMetrics",
+    "ReadCategory",
     "ReadsUsed",
     "RnaSeqMetrics",
     "RrbsCpgDetailMetrics",
@@ -69,7 +69,7 @@ __all__ = [
     "VerifyIDIntensityContaminationMetrics",
     "WgsMetrics",
     "WgsMetricsWithNonZeroCoverage",
-    "WgsMetricsWithNonZeroCoverageCategory",
+    "WgsRegion",
 ]
 
 
@@ -98,17 +98,8 @@ class CallState(StrEnum):
     IS_MIXED = "IS_MIXED"
 
 
-class Category(StrEnum):
-    """Picard's `AlignmentSummaryMetrics$Category`."""
-
-    UNPAIRED = "UNPAIRED"
-    FIRST_OF_PAIR = "FIRST_OF_PAIR"
-    SECOND_OF_PAIR = "SECOND_OF_PAIR"
-    PAIR = "PAIR"
-
-
-class DataType(StrEnum):
-    """The data type."""
+class CrosscheckBy(StrEnum):
+    """Picard's `CrosscheckMetric$DataType`, what `CROSSCHECK_BY` compares."""
 
     FILE = "FILE"
     SAMPLE = "SAMPLE"
@@ -141,6 +132,15 @@ class PfFailReason(StrEnum):
     POLYCLONAL = "POLYCLONAL"
     MISALIGNED = "MISALIGNED"
     UNKNOWN = "UNKNOWN"
+
+
+class ReadCategory(StrEnum):
+    """Picard's `AlignmentSummaryMetrics$Category`."""
+
+    UNPAIRED = "UNPAIRED"
+    FIRST_OF_PAIR = "FIRST_OF_PAIR"
+    SECOND_OF_PAIR = "SECOND_OF_PAIR"
+    PAIR = "PAIR"
 
 
 class ReadsUsed(StrEnum):
@@ -188,7 +188,7 @@ class VariantType(StrEnum):
     MIXED = "MIXED"
 
 
-class WgsMetricsWithNonZeroCoverageCategory(StrEnum):
+class WgsRegion(StrEnum):
     """Picard's `CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage$Category`."""
 
     WHOLE_GENOME = "WHOLE_GENOME"
@@ -202,7 +202,7 @@ class AlignmentSummaryMetrics:
     ".alignment_summary_metrics".
     """
 
-    category: Category
+    category: ReadCategory
     """One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
     first read in a paired run, SECOND_OF_PAIR when the metrics are for only the second read in a
     paired run or PAIR when the metrics are aggregated for both first and second reads in a pair.
@@ -866,7 +866,7 @@ class ClusteredCrosscheckMetric:
     result: FingerprintResult
     """The overall result of the match."""
 
-    data_type: DataType
+    data_type: CrosscheckBy
     """The data type that was being compared."""
 
     lod_score: float | None = None
@@ -1007,7 +1007,7 @@ class CrosscheckMetric:
     result: FingerprintResult
     """The overall result of the match."""
 
-    data_type: DataType
+    data_type: CrosscheckBy
     """The data type that was being compared."""
 
     lod_score: float | None = None
@@ -4263,7 +4263,7 @@ class WgsMetrics:
 class WgsMetricsWithNonZeroCoverage:
     """Metrics for evaluating the performance of whole genome sequencing experiments."""
 
-    category: WgsMetricsWithNonZeroCoverageCategory
+    category: WgsRegion
     """One of either WHOLE_GENOME or NON_ZERO_REGIONS"""
 
     genome_territory: int = 0

@@ -10,7 +10,6 @@ import pytest
 
 from captainslog import picard
 from captainslog.picard import AlignmentSummaryMetrics
-from captainslog.picard import Category
 from captainslog.picard import GcBiasDetailMetrics
 from captainslog.picard import GcBiasSummaryMetrics
 from captainslog.picard import GenotypeConcordanceSummaryMetrics
@@ -20,6 +19,7 @@ from captainslog.picard import PicardReader
 from captainslog.picard import PicardWriter
 from captainslog.picard import QualityYieldMetrics
 from captainslog.picard import QualityYieldMetricsSnvq
+from captainslog.picard import ReadCategory
 from captainslog.picard import ReadsUsed
 from captainslog.picard import VariantType
 from captainslog.picard import _metrics
@@ -80,8 +80,13 @@ def test_multilevel_dataclasses_end_with_their_levels() -> None:
 
 def test_alignment_summary_metrics_category_is_an_enum_of_its_java_constants() -> None:
     """The category of the alignment summary metrics is an enum of its Java constants."""
-    assert {c.value for c in Category} == {"UNPAIRED", "FIRST_OF_PAIR", "SECOND_OF_PAIR", "PAIR"}
-    assert get_type_hints(AlignmentSummaryMetrics)["category"] is Category
+    assert {c.value for c in ReadCategory} == {
+        "UNPAIRED",
+        "FIRST_OF_PAIR",
+        "SECOND_OF_PAIR",
+        "PAIR",
+    }
+    assert get_type_hints(AlignmentSummaryMetrics)["category"] is ReadCategory
 
 
 def test_htsjdks_variant_context_type_is_the_enum_variant_type() -> None:
@@ -162,7 +167,7 @@ def test_no_picard_fraction_field_is_named_pct() -> None:
 def test_a_renamed_fraction_is_written_under_picards_column_label(tmp_path: Path) -> None:
     """A `frac` field is written and read back under Picard's own `PCT` column label."""
     path = tmp_path / "out.alignment_summary_metrics"
-    row = AlignmentSummaryMetrics(category=Category.PAIR, frac_pf_reads_aligned=0.996951)
+    row = AlignmentSummaryMetrics(category=ReadCategory.PAIR, frac_pf_reads_aligned=0.996951)
     with PicardWriter.from_path[AlignmentSummaryMetrics](path) as writer:
         writer.write(row)
     labels = next(line for line in path.read_text().splitlines() if line.startswith("CATEGORY"))

@@ -4,7 +4,6 @@ from enum import StrEnum
 __all__ = [
     "AlignmentMetrics",
     "BaseDistributionByCycle",
-    "Category",
     "ErrorIndel",
     "ErrorMismatch",
     "ErrorOverlap",
@@ -21,6 +20,7 @@ __all__ = [
     "PairOrientation",
     "QualityScoreDistribution",
     "QualityScoreDistributionColumns",
+    "ReadCategory",
     "RnaBiotype",
     "RnaInsertSize",
     "RnaInsertSizeHistogram",
@@ -33,7 +33,7 @@ __all__ = [
 ]
 
 
-class Category(StrEnum):
+class ReadCategory(StrEnum):
     """The `category` column of the alignment metrics: the reads that a row summarizes."""
 
     READ1 = "read1"
@@ -64,7 +64,7 @@ class AlignmentMetrics:
     sample: str = ""
     """Sample name derived from the BAM read group SM tag or filename."""
 
-    category: Category
+    category: ReadCategory
     """Read category: read1, read2, or pair."""
 
     total_reads: int = 0

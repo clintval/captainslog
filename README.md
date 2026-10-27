@@ -30,14 +30,14 @@ Read two Riker metrics files from the same run, and combine their typed fields w
 
 ```python
 from captainslog.riker import AlignmentMetrics
-from captainslog.riker import Category
+from captainslog.riker import ReadCategory
 from captainslog.riker import IsizeMetrics
 from captainslog.riker import RikerReader
 
 alignment = {row.category: row for row in RikerReader.from_path[AlignmentMetrics]("tests/data/riker/s.alignment-metrics.txt")}
 [isize] = RikerReader.from_path[IsizeMetrics]("tests/data/riker/s.isize-metrics.txt")
 
-frac_reads_in_fr_pairs = 2 * isize.read_pairs / alignment[Category.PAIR].total_reads
+frac_reads_in_fr_pairs = 2 * isize.read_pairs / alignment[ReadCategory.PAIR].total_reads
 
 assert round(frac_reads_in_fr_pairs, 3) == 0.972
 ```

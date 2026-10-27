@@ -10,9 +10,9 @@ import pytest
 from typing_extensions import assert_type
 
 from captainslog.riker import AlignmentMetrics
-from captainslog.riker import Category
 from captainslog.riker import IsizeHistogram
 from captainslog.riker import IsizeHistogramColumns
+from captainslog.riker import ReadCategory
 from captainslog.riker import RikerReader
 from captainslog.riker import _metrics
 from captainslog.riker import columns
@@ -90,7 +90,7 @@ def test_columns_refuses_a_row_that_is_not_a_histogram() -> None:
     """Rows of a dataclass that is not a Riker histogram are refused, and by type checkers."""
     message = "AlignmentMetrics is not a Riker histogram dataclass!"
     with pytest.raises(TypeError, match=f"^{re.escape(message)}$"):
-        _ = columns([AlignmentMetrics(category=Category.READ1)])  # type: ignore[list-item]  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]  # ty: ignore[no-matching-overload]
+        _ = columns([AlignmentMetrics(category=ReadCategory.READ1)])  # type: ignore[list-item]  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]  # ty: ignore[no-matching-overload]
 
 
 def test_registry_describes_each_riker_histogram() -> None:

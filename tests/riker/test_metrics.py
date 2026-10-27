@@ -6,10 +6,10 @@ from typing import get_type_hints
 import pytest
 
 from captainslog.riker import AlignmentMetrics
-from captainslog.riker import Category
 from captainslog.riker import HybcapMetrics
 from captainslog.riker import IsizeMetrics
 from captainslog.riker import PairOrientation
+from captainslog.riker import ReadCategory
 from captainslog.riker import RnaInsertSize
 from captainslog.riker import RnaMetrics
 from captainslog.riker import StrandSpec
@@ -24,7 +24,7 @@ DATACLASSES = [
     if dataclasses.is_dataclass(getattr(_metrics, name)) and not name.endswith("Columns")
 ]
 
-ENUMS = (Category, PairOrientation, StrandSpec)
+ENUMS = (ReadCategory, PairOrientation, StrandSpec)
 
 
 def test_every_riker_dataclass_is_frozen_and_keyword_only() -> None:
@@ -55,7 +55,7 @@ def test_every_fixture_suffix_has_exactly_one_dataclass() -> None:
 
 def test_alignment_categories_are_rikers() -> None:
     """The alignment categories are the ones Riker writes."""
-    assert [c.value for c in Category] == ["read1", "read2", "pair"]
+    assert [c.value for c in ReadCategory] == ["read1", "read2", "pair"]
 
 
 def test_pair_orientations_are_rikers() -> None:
@@ -90,7 +90,7 @@ def test_optional_fields_default_to_none() -> None:
 def test_categorical_fields_are_required_enums() -> None:
     """Each categorical column is its own enum with no default, and no other field is an enum."""
     expected = {
-        (AlignmentMetrics, "category"): Category,
+        (AlignmentMetrics, "category"): ReadCategory,
         (IsizeMetrics, "pair_orientation"): PairOrientation,
         (RnaInsertSize, "pair_orientation"): PairOrientation,
         (RnaMetrics, "detected_strand"): StrandSpec,

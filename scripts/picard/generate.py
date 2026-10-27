@@ -54,10 +54,16 @@ RENAMES = {
 
 ENUM_RENAMES = {
     "htsjdk.variant.variantcontext.VariantContext$Type": "VariantType",
-    "picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage$Category": (
-        "WgsMetricsWithNonZeroCoverageCategory"
-    ),
+    "picard.analysis.AlignmentSummaryMetrics$Category": "ReadCategory",
+    "picard.analysis.CollectWgsMetricsWithNonZeroCoverage$WgsMetricsWithNonZeroCoverage$Category": "WgsRegion",
+    "picard.fingerprint.CrosscheckMetric$DataType": "CrosscheckBy",
 }
+
+# fmt: off
+ENUM_SUMMARIES = {
+    "picard.fingerprint.CrosscheckMetric$DataType": "Picard's `CrosscheckMetric$DataType`, what `CROSSCHECK_BY` compares.",
+}
+# fmt: on
 
 # Picard declares these fields as strings, but writes only the constants of the enum named here.
 # fmt: off
@@ -159,6 +165,8 @@ def class_summary(source: Path, java: str) -> str:
     """The first paragraph of a type's Javadoc, ending in a period, or else its Java name."""
     if java in STRING_ENUM_TYPES:
         return STRING_ENUM_TYPES[java][0]
+    if java in ENUM_SUMMARIES:
+        return ENUM_SUMMARIES[java]
     found = javadoc(source, java)
     if not found:
         owner = "htsjdk" if java.startswith("htsjdk.") else "Picard"
