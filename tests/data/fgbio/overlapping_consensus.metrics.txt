@@ -1,0 +1,3 @@
+kind	total	overlapping	corrected
+Templates	1965	871	249
+Bases	393000	42824	311

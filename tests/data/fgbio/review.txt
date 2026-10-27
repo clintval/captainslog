@@ -1,0 +1,2 @@
+chrom	pos	ref	genotype	filters	A	C	G	T	N	consensus_read	consensus_insert	consensus_call	consensus_qual	a	c	g	t	n
+chr1	501	A	A/G	PASS	2	0	1	0	0	S1-lib|S2-lib:4/1	chr1:452-770 | F1R2	G	72	0	0	1	0	0

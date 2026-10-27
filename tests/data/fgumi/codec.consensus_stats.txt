@@ -1,0 +1,23 @@
+key	value	description
+raw_reads_considered	3902	Total raw reads considered from input file
+raw_reads_rejected	2168	Total number of raw reads rejected before consensus calling
+raw_reads_used	1734	Total count of raw reads used in consensus reads
+frac_raw_reads_used	0.444387	Fraction of raw reads used in consensus reads
+raw_reads_rejected_for_insufficient_support	0	Insufficient reads to generate a consensus
+raw_reads_rejected_for_minority_alignment	0	Reads has a different, and minority, set of indels
+raw_reads_rejected_for_orphan_consensus	0	Only one of R1 or R2 consensus generated
+raw_reads_rejected_for_zero_bases_post_trimming	0	Read or mate had zero bases post trimming
+raw_reads_rejected_for_non_paired_reads	0	Unpaired/fragment reads not supported by Duplex caller
+raw_reads_rejected_for_single_strand_only	0	Only Generating One Strand of Duplex Consensus
+raw_reads_rejected_for_potential_umi_collision	0	Potential collision between independent duplex molecules
+raw_reads_rejected_for_r1_r2_overlap_too_short	2168	Overlap between R1s and R2s too short for CODEC calling
+raw_reads_rejected_for_indel_error_between_strands	0	Indel error between top/bottom strands
+raw_reads_rejected_for_high_duplex_disagreement	0	Too many errors between top/bottoms strands
+raw_reads_rejected_for_clip_overlap_failed	0	See https://github.com/fulcrumgenomics/fgbio/issues/1090
+raw_reads_rejected_for_not_primary_fr_pair	0	Template did not have a single primary FR pair of reads
+consensus_reads_emitted	295	Total number of consensus reads (R1+R2=2) emitted.
+consensus_reads_rejected_hdd	0	Consensus Reads Rejected: High Duplex Disagreement
+consensus_bases_emitted	44105	Total consensus bases emitted in consensus reads
+consensus_duplex_bases_emitted	13787	Consensus bases emitted with support from both strands of the duplex
+duplex_disagreement_base_count	34	Number of consensus bases at which the top and bottom strands disagreed
+duplex_disagreement_rate	0.002466	Rate of top/bottom strand disagreement within duplex regions of consensus reads

@@ -1,0 +1,2 @@
+total_reads	ercc_reads	fraction_ercc_reads	ercc_templates	total_transcripts	passing_filter_transcripts	pearsons_correlation	spearmans_correlation	intercept	slope	r_squared
+3930	132	0.033588	66	2	2	1	1	2.426066	2.205338	1

@@ -1,0 +1,2 @@
+total_reads	passed_reads	failed_reads	pass_rate
+588	584	4	0.9931972789115646

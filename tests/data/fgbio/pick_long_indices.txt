@@ -1,0 +1,11 @@
+index	source	min_mismatches	indices_at_min_mismatches	gc	longest_homopolymer	worst_structure_seq	worst_structure_dbn	worst_structure_delta_g
+AGACACGA	novel	4	1	0.5	1			
+CCGTAGTG	novel	5	1	0.625	2			
+CTAGTCAC	novel	6	3	0.5	1			
+GAATCGAT	novel	5	1	0.375	2			
+GACCAACG	novel	4	2	0.625	2			
+GAGAATGG	novel	3	1	0.5	2			
+GCTAATGA	novel	3	1	0.375	2			
+GCTCGCCA	novel	4	1	0.75	2			
+GGACCAGG	novel	4	3	0.75	2			
+TGAATATG	novel	4	1	0.25	2			
