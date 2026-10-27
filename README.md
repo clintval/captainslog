@@ -34,8 +34,12 @@ from captainslog.riker import IsizeMetrics
 from captainslog.riker import ReadCategory
 from captainslog.riker import RikerReader
 
-alignment = {row.category: row for row in RikerReader.from_path[AlignmentMetrics]("tests/data/riker/s.alignment-metrics.txt")}
-[isize] = RikerReader.from_path[IsizeMetrics]("tests/data/riker/s.isize-metrics.txt")
+with (
+    RikerReader.from_path[AlignmentMetrics]("tests/data/riker/s.alignment-metrics.txt") as alignments,
+    RikerReader.from_path[IsizeMetrics]("tests/data/riker/s.isize-metrics.txt") as isizes,
+):
+    alignment = {row.category: row for row in alignments}
+    [isize] = isizes
 
 frac_reads_in_fr_pairs = 2 * isize.read_pairs / alignment[ReadCategory.PAIR].total_reads
 
@@ -56,12 +60,14 @@ from captainslog.riker import IsizeHistogram
 
 assert riker.metrics_class("tests/data/riker/s.hybcap-metrics.txt") is HybcapMetrics
 
-[hybcap] = RikerReader.from_path[HybcapMetrics]("tests/data/riker/s.hybcap-metrics.txt")
+with RikerReader.from_path[HybcapMetrics]("tests/data/riker/s.hybcap-metrics.txt") as reader:
+    [hybcap] = reader
 
 assert hybcap.sample == "NA12891"
 assert hybcap.mean_target_coverage == 70.54
 
-isize = riker.columns(list(RikerReader.from_path[IsizeHistogram]("tests/data/riker/s.isize-histogram.txt")))
+with RikerReader.from_path[IsizeHistogram]("tests/data/riker/s.isize-histogram.txt") as reader:
+    isize = riker.columns(list(reader))
 
 assert isize.insert_size[:3] == (112, 128, 134)
 assert isize.fr_count[:3] == (1, 1, 1)
@@ -100,7 +106,8 @@ path = Path(temp_dir.name) / "s.hs_metrics"
 with PicardWriter.from_path[HsMetrics](path) as writer:
     writer.write(hs)
 
-assert list(PicardReader.from_path[HsMetrics](path)) == [hs]
+with PicardReader.from_path[HsMetrics](path) as reader:
+    assert list(reader) == [hs]
 ```
 
 ### Interacting with Metrics
@@ -132,8 +139,8 @@ from captainslog.picard import InsertSizeHistogram
 from captainslog.picard import PairOrientation
 from captainslog.picard import PicardHistogramReader
 
-bins = list(PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics"))
-hist = picard.columns(bins)
+with PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics") as reader:
+    hist = picard.columns(list(reader))
 
 assert hist.insert_size[:3] == (112, 128, 134)
 
@@ -150,7 +157,8 @@ Histogram-only files read the same way:
 ```python
 from captainslog.picard import QualityScoreDistribution
 
-qualities = list(PicardHistogramReader.from_path[QualityScoreDistribution]("tests/data/picard/cmm.quality_distribution_metrics"))
+with PicardHistogramReader.from_path[QualityScoreDistribution]("tests/data/picard/cmm.quality_distribution_metrics") as reader:
+    qualities = list(reader)
 
 assert qualities[0].quality == 1
 assert qualities[0].count_of_q == 2
@@ -164,7 +172,8 @@ Picard writes a row for each accumulation level it is asked for: all reads, then
 from captainslog.picard import AccumulationLevel
 from captainslog.picard import InsertSizeMetrics
 
-rows = list(PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics"))
+with PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics") as reader:
+    rows = list(reader)
 
 assert [picard.accumulation_level(row) for row in rows] == [
     AccumulationLevel.ALL_READS,
@@ -189,7 +198,8 @@ CollectHsMetrics and CollectTargetedPcrMetrics can also write plain tables of co
 from captainslog.picard import PerTargetCoverage
 from captainslog.picard import PicardCoverageReader
 
-targets = list(PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt"))
+with PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt") as reader:
+    targets = list(reader)
 
 assert targets[0].name == "rs7555566"
 assert targets[0].frac_gc == 0.41
@@ -206,7 +216,8 @@ class MyHsMetrics(HsMetrics):
     def frac_bases_on_target(self) -> float:
         return self.on_target_bases / self.pf_bases_aligned
 
-[hs] = PicardReader.from_path[MyHsMetrics]("tests/data/picard/hs.hs_metrics")
+with PicardReader.from_path[MyHsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
+    [hs] = reader
 
 assert round(hs.frac_bases_on_target, 4) == 0.2398
 ```
