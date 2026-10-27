@@ -56,8 +56,6 @@ from captainslog import riker
 from captainslog.riker import HybcapMetrics
 from captainslog.riker import IsizeHistogram
 
-assert riker.metrics_class("riker/s.hybcap-metrics.txt") is HybcapMetrics
-
 with RikerReader.from_path[HybcapMetrics]("riker/s.hybcap-metrics.txt") as reader:
     [hybcap] = reader
 
@@ -121,16 +119,17 @@ with PicardReader.from_path[HsMetrics](path) as reader:
 
 #### Finding the Class of a File
 
-The `metrics_class` and `histogram_class` functions return the metric type in a data file.
+The `metrics_class` function returns the metric type in a data file, and Picard's `histogram_class` returns the type of the histogram inside one.
 
 ```python
 from captainslog import picard
 from captainslog.picard import HsHistogram
-from captainslog.picard import MeanQualityByCycle
+
+assert riker.metrics_class("riker/s.hybcap-metrics.txt") is HybcapMetrics
+assert riker.metrics_class("riker/s.isize-histogram.txt") is IsizeHistogram
 
 assert picard.metrics_class("picard/hs.hs_metrics.txt") is HsMetrics
 assert picard.histogram_class("picard/hs.hs_metrics.txt") is HsHistogram
-assert picard.histogram_class("picard/cmm.quality_by_cycle_metrics.txt") is MeanQualityByCycle
 ```
 
 #### Histograms and Columns
@@ -251,8 +250,7 @@ targets = [
 
 with register_locatable(PerTargetCoverage, as_interval):
     exons = TreeDetector(targets).overlapping(gene)
-
-assert {exon.name for exon in exons} == {"exon2", "exon3"}
+    assert {exon.name for exon in exons} == {"exon2", "exon3"}
 ```
 
 ## Development and Testing
