@@ -4,6 +4,9 @@ channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64", "osx-arm64"]
 
 [dependencies]
+bwa = { version = "==0.7.19", channel = "bioconda" }
+fgbio = { version = "==4.1.1", channel = "bioconda" }
+fgumi = { version = "==0.8.0", channel = "bioconda" }
 openjdk = "*"
 picard = { version = "==3.5.0", channel = "bioconda" }
 r-base = "*"
@@ -13,3 +16,4 @@ samtools = { version = "*", channel = "bioconda" }
 [activation.env]
 PATH = "$CONDA_PREFIX/lib/jvm/bin:$PATH"
 PICARD_JAR = "$CONDA_PREFIX/share/picard-3.5.0-0/picard.jar"
+FGBIO_JAR = "$CONDA_PREFIX/share/fgbio/fgbio.jar"

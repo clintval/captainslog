@@ -1,0 +1,2 @@
+sample	library	templates	aligned_templates	switchback_templates	fraction_switchbacks	read_based_switchbacks	mean_length	mean_offset	tandem_based_switchbacks	mean_gap
+S1,S2	S1-lib,S2-lib	1965	1965	0	0	0	0	0	0	0

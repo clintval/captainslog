@@ -1,0 +1,4 @@
+pair_orientation	read_pairs	mean	standard_deviation	median	min	max	median_absolute_deviation
+FR	1850	204.135676	63.209375	203	1	61	51
+RF	0	0	0	0	0	0	0
+TANDEM	0	0	0	0	0	0	0

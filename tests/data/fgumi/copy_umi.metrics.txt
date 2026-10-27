@@ -1,0 +1,2 @@
+total_records	rx_written	rx_overwritten	names_trimmed
+400	400	0	0

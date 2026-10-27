@@ -1,0 +1,5 @@
+operation	kind	records_applied	dst_overwritten	src_missing
+RX::copy::BX	copy	3902	0	0
+MI::move::XM	move	3902	0	0
+BX::delete	delete	3902	0	0
+ZZ::delete	delete	0	0	3902

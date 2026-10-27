@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from captainslog._htsjdk import PairOrientation
+
 __all__ = [
     "AlignmentMetrics",
     "BaseDistributionByCycle",
@@ -39,14 +41,6 @@ class ReadCategory(StrEnum):
     READ1 = "read1"
     READ2 = "read2"
     PAIR = "pair"
-
-
-class PairOrientation(StrEnum):
-    """The `pair_orientation` column of the insert size metrics."""
-
-    FR = "FR"
-    RF = "RF"
-    TANDEM = "TANDEM"
 
 
 class StrandSpec(StrEnum):

@@ -11,6 +11,10 @@ from typeline import WriterOptions
 from typing_extensions import Unpack
 
 if TYPE_CHECKING:
+    from captainslog.fgbio._reader import FgbioReader
+    from captainslog.fgbio._writer import FgbioWriter
+    from captainslog.fgumi._reader import FgumiReader
+    from captainslog.fgumi._writer import FgumiWriter
     from captainslog.picard._coverage import PicardCoverageReader
     from captainslog.picard._coverage import PicardCoverageWriter
     from captainslog.picard._header import PicardHeader
@@ -129,6 +133,42 @@ class BoundRikerWriterFromPath(Protocol):
         ...
 
 
+class BoundFgbioReaderFromPath(Protocol):
+    """The `from_path` of a fgbio reader class, waiting to be subscripted with a record type."""
+
+    def __getitem__(self, record_type: type[RecordType], /) -> "OpensPath[FgbioReader[RecordType]]":
+        """Bind the record type, giving a constructor of the fgbio reader over it."""
+        ...
+
+
+class BoundFgbioWriterFromPath(Protocol):
+    """The `from_path` of a fgbio writer class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "WritesOptions[FgbioWriter[RecordType]]":
+        """Bind the record type, giving a constructor of the fgbio writer over it."""
+        ...
+
+
+class BoundFgumiReaderFromPath(Protocol):
+    """The `from_path` of a fgumi reader class, waiting to be subscripted with a record type."""
+
+    def __getitem__(self, record_type: type[RecordType], /) -> "OpensPath[FgumiReader[RecordType]]":
+        """Bind the record type, giving a constructor of the fgumi reader over it."""
+        ...
+
+
+class BoundFgumiWriterFromPath(Protocol):
+    """The `from_path` of a fgumi writer class, waiting to be subscripted with a record type."""
+
+    def __getitem__(
+        self, record_type: type[RecordType], /
+    ) -> "WritesOptions[FgumiWriter[RecordType]]":
+        """Bind the record type, giving a constructor of the fgumi writer over it."""
+        ...
+
+
 class FromPath:
     """The typeline `from_path` a class inherits, which type checkers see build that class.
 
@@ -165,6 +205,14 @@ class FromPath:
     def __get__(self, obj: object, owner: type["RikerReader[Any]"]) -> BoundRikerReaderFromPath: ...
     @overload
     def __get__(self, obj: object, owner: type["RikerWriter[Any]"]) -> BoundRikerWriterFromPath: ...
+    @overload
+    def __get__(self, obj: object, owner: type["FgbioReader[Any]"]) -> BoundFgbioReaderFromPath: ...
+    @overload
+    def __get__(self, obj: object, owner: type["FgbioWriter[Any]"]) -> BoundFgbioWriterFromPath: ...
+    @overload
+    def __get__(self, obj: object, owner: type["FgumiReader[Any]"]) -> BoundFgumiReaderFromPath: ...
+    @overload
+    def __get__(self, obj: object, owner: type["FgumiWriter[Any]"]) -> BoundFgumiWriterFromPath: ...
     @overload
     def __get__(self, obj: object, owner: type[object]) -> object: ...
     # fmt: on

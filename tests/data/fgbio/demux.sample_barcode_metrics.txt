@@ -1,0 +1,4 @@
+barcode_name	library_name	barcode	templates	pf_templates	perfect_matches	pf_perfect_matches	one_mismatch_matches	pf_one_mismatch_matches	q20_bases	q30_bases	total_number_of_bases	fraction_matches	ratio_this_barcode_to_best_barcode	pf_fraction_matches	pf_ratio_this_barcode_to_best_barcode	pf_normalized_matches	frac_q20_bases	frac_q30_bases
+S1	S1-lib	AAACCCGG	163	163	153	153	10	10	28236	24909	31296	0.543333	1	0.543333	1	1.63	0.902224	0.795916
+S2	S2-lib	TTTGGGCC	125	125	111	111	14	14	21665	19154	24000	0.416667	0.766871	0.416667	0.766871	1.25	0.902708	0.798083
+unmatched	unmatched	NNNNNNNN	12	12	0	0	0	0	2055	1839	2304	0.04	0.07362	0.04	0.07362	0.12	0.891927	0.798177

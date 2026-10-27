@@ -1,11 +1,11 @@
 [project]
 name = "captainslog-ngs"
 version = "0.1.1"
-description = "Typed dataclasses for the metrics files that Riker and Picard write."
+description = "Typed dataclasses for the metrics files that Riker, fgumi, Picard, and fgbio write."
 authors = [{ name = "Clint Valentine", email = "valentine.clint@gmail.com" }]
 license = "MIT"
 readme = "README.md"
-keywords = ["bioinformatics", "Picard", "Riker", "metrics", "NGS"]
+keywords = ["bioinformatics", "Riker", "fgumi", "Picard", "fgbio", "metrics", "NGS", "UMI"]
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
@@ -70,6 +70,8 @@ only-include = [
   "captainslog",
   "tests",
   "conftest.py",
+  "scripts/fgbio/fgbio-4.1.1.json",
+  "scripts/fgumi/fgumi-0.8.0.json",
   "scripts/picard/picard-3.5.0.json",
   "scripts/picard/units.json",
   "README.md",
@@ -149,6 +151,7 @@ doctest_optionflags = [
 
 [tool.mypy]
 files                       = ["captainslog/", "tests/", "scripts/", "conftest.py"]
+explicit_package_bases      = true
 strict_optional             = true
 strict_equality             = true
 check_untyped_defs          = true
@@ -216,11 +219,17 @@ unfixable = ["B"]
 
 [tool.ruff.lint.per-file-ignores]
 "captainslog/_binding.py" = ["E501"]
+"captainslog/fgbio/_metrics.py" = ["D205"]
+"captainslog/fgbio/_scala.py" = ["E501"]
+"captainslog/fgumi/_metrics.py" = ["D205"]
+"captainslog/fgumi/_rust.py" = ["E501"]
 "captainslog/picard/_columns.py" = ["E501"]
 "captainslog/picard/_histograms.py" = ["E501"]
 "captainslog/picard/_java.py" = ["E501"]
 "captainslog/picard/_metrics.py" = ["D205"]
 "captainslog/riker/_columns.py" = ["E501"]
+"scripts/fgbio/generate.py" = ["E501"]
+"scripts/fgumi/generate.py" = ["E501"]
 "scripts/picard/generate.py" = ["E501"]
 
 [tool.ruff.lint.mccabe]

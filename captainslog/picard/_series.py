@@ -2,13 +2,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from captainslog._htsjdk import PairOrientation
 from captainslog.picard._histograms import InsertSizeHistogram
 from captainslog.picard._histograms import InsertSizeHistogramColumns
 from captainslog.picard._histograms import LibraryComplexityHistogram
 from captainslog.picard._histograms import LibraryComplexityHistogramColumns
 from captainslog.picard._histograms import RnaCoverageHistogram
 from captainslog.picard._histograms import RnaCoverageHistogramColumns
-from captainslog.picard._metrics import PairOrientation
 from captainslog.picard._table import mark_repeats
 from captainslog.picard._table import unmark
 

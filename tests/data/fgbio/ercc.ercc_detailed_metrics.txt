@@ -1,0 +1,3 @@
+name	concentration	count	normalized_count
+ERCC-00130	30000	50	0.05
+ERCC-00004	7500	16	0.016

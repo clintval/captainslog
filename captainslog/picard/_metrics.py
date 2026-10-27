@@ -3,6 +3,8 @@ import datetime
 from dataclasses import dataclass
 from enum import StrEnum
 
+from captainslog._htsjdk import PairOrientation
+
 __all__ = [
     "AlignmentSummaryMetrics",
     "ArraysControlCodesSummaryMetrics",
@@ -115,14 +117,6 @@ class FingerprintResult(StrEnum):
     UNEXPECTED_MATCH = "UNEXPECTED_MATCH"
     UNEXPECTED_MISMATCH = "UNEXPECTED_MISMATCH"
     INCONCLUSIVE = "INCONCLUSIVE"
-
-
-class PairOrientation(StrEnum):
-    """htsjdk's `SamPairUtil$PairOrientation`."""
-
-    FR = "FR"
-    RF = "RF"
-    TANDEM = "TANDEM"
 
 
 class PfFailReason(StrEnum):

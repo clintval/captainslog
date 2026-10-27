@@ -1,0 +1,3 @@
+sample	variant_sites	singletons	estimated_fraction	standard_error	ci99_low	ci99_high
+S1	5	5	0.472423	0.126287	0.146603	0.798243
+S2	3	3	0.527577	0.163036	0.106945	0.948209

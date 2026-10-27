@@ -10,10 +10,10 @@
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
-Typed dataclasses for the metrics files that Riker and Picard write.
+Typed dataclasses for the metrics files that Riker, fgumi, Picard, and fgbio write.
 
-Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
-Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, and Picard's `?` is NaN.
+Open a [Riker](https://github.com/fulcrumgenomics/riker), [fgumi](https://github.com/fulcrumgenomics/fgumi), [Picard](https://github.com/broadinstitute/picard), or [fgbio](https://github.com/fulcrumgenomics/fgbio) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
+Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, Picard's `?` and fgbio's `NaN` are NaN, and fgbio's `Infinity` and `-Infinity` are infinite.
 
 ## Installation
 
@@ -90,11 +90,45 @@ assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 > A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
 > Writing the metrics back out keeps Picard's label for each `frac` field.
 
+### Reading fgumi and fgbio Metrics
+
+An `FgumiReader` or `FgbioReader` reads a metrics file of fgumi or fgbio into dataclasses, one per row.
+Both tools write a file under whatever path they are given, so `metrics_class` names the dataclass of a file by its header row:
+
+```python
+from captainslog import fgbio
+from captainslog import fgumi
+from captainslog.fgbio import DuplexYieldMetric
+from captainslog.fgbio import FgbioReader
+from captainslog.fgumi import FgumiReader
+
+assert fgbio.metrics_class("fgbio/duplex.duplex_yield_metrics.txt") is DuplexYieldMetric
+
+with FgbioReader.from_path[DuplexYieldMetric]("fgbio/duplex.duplex_yield_metrics.txt") as reader:
+    *_, library = reader
+
+assert library.fraction == 1.0
+assert library.ds_duplexes == 294
+assert round(library.ds_fraction_duplexes, 6) == 0.807692
+```
+
+fgumi writes eleven of these files with fgbio's columns, such as the duplex yield metrics, so the dataclass of either tool reads a file of the other:
+
+```python
+kind = fgumi.metrics_class("fgumi/duplex.duplex_yield_metrics.txt")
+
+with FgumiReader.from_path[kind]("fgumi/duplex.duplex_yield_metrics.txt") as reader:
+    *_, other = reader
+
+assert (other.ss_families, other.ds_duplexes) == (library.ss_families, library.ds_duplexes)
+```
+
 ### Writing Metrics
 
 Each reader has a writer, which makes realistic files for unit tests:
 
 - `RikerWriter`
+- `FgumiWriter` and `FgbioWriter`
 - `PicardWriter`, with `write_histogram`
 - `PicardHistogramWriter`
 - `PicardCoverageWriter`
