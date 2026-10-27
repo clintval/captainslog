@@ -12,7 +12,7 @@
 
 Typed dataclasses for the metrics files that Riker and Picard write.
 
-Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file and get a list of frozen dataclasses with typed fields.
+Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, and Picard's `?` is NaN.
 A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
 
@@ -74,7 +74,7 @@ assert isize.fr_count[:3] == (1, 1, 1)
 
 ### Reading Picard Metrics
 
-A `PicardReader` reads a Picard metrics file, plain or compressed, into dataclasses, one per row.
+A `PicardReader` reads a Picard metrics file into dataclasses, one per row.
 
 ```python
 from captainslog.picard import HsMetrics
@@ -91,7 +91,12 @@ assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 
 ### Writing Metrics
 
-Each reader has a writer, which makes realistic files for unit tests: `RikerWriter`, `PicardWriter` with `write_histogram`, `PicardHistogramWriter`, and `PicardCoverageWriter`.
+Each reader has a writer, which makes realistic files for unit tests:
+
+- `RikerWriter`
+- `PicardWriter`, with `write_histogram`
+- `PicardHistogramWriter`
+- `PicardCoverageWriter`
 
 ```python
 from pathlib import Path
