@@ -90,6 +90,7 @@ assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 
 > [!TIP]
 > A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
+> Writing the metrics back out keeps Picard's label for each `frac` field.
 
 ### Writing Metrics
 
