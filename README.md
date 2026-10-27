@@ -136,7 +136,11 @@ assert picard.histogram_class("tests/data/picard/cmm.quality_by_cycle_metrics") 
 #### Histograms and Columns
 
 A `PicardHistogramReader` reads the histogram of a file into one dataclass per bin, and `columns` transposes the bins into one tuple per column.
-The functions `insert_size_series`, `rna_coverage_series`, and `library_complexity_series` turn the columns Picard names after samples, libraries, and read groups into typed series, and `insert_size_bins` and its siblings turn series back into bins.
+For the histograms whose columns Picard names after samples, libraries, and read groups, these functions turn the columns into typed series and the series back into bins:
+
+- `insert_size_series` and `insert_size_bins`, for an `InsertSizeHistogram`
+- `rna_coverage_series` and `rna_coverage_bins`, for an `RnaCoverageHistogram`
+- `library_complexity_series` and `library_complexity_bins`, for a `LibraryComplexityHistogram`
 
 ```python
 from captainslog.picard import InsertSizeHistogram
