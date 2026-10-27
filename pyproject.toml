@@ -37,6 +37,7 @@ classifiers = [
 
 [dependency-groups]
 test = [
+    "bedspec ~=4.3",
     "pytest ~=9.1",
     "pytest-cov ~=7.1",
     "sybil[pytest] ~=10.1",
@@ -81,8 +82,8 @@ only-include = [
 # caught before it can be locked. Must stay >= the Dependabot `cooldown` in
 # .github/dependabot.yml, or Dependabot will propose versions that can't lock.
 exclude-newer = "1 week"
-# typeline is released alongside captainslog, so its new releases are allowed right away.
-exclude-newer-package = { typeline = false }
+# bedspec and typeline are released alongside captainslog, so their new releases are allowed right away.
+exclude-newer-package = { bedspec = false, typeline = false }
 
 [tool.poe.tasks]
 fix-format = "ruff format"

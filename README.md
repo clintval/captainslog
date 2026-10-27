@@ -233,21 +233,24 @@ assert round(hs_metrics.frac_bases_on_target, 4) == 0.2398
 
 With [bedspec](https://github.com/clintval/bedspec), find captainslog's targets, bases, SNPs, and CpGs by overlap:
 
-<!-- skip: next -->
 ```python
 from bedspec import Bed3
 from bedspec import register_locatable
 from bedspec.ext.captainslog import as_interval
 from bedspec.overlap import TreeDetector
 
-with (
-    register_locatable(PerTargetCoverage, as_interval),
-    PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt") as reader,
-):
-    targets = TreeDetector(reader)
-    [target] = targets.overlapping(Bed3("1", start=200, end=201))
+gene = Bed3("chr1", start=500, end=2_000)
 
-assert target.name == "rs7555566"
+targets = [
+    PerTargetCoverage(chrom="chr1", start=1_001, end=1_100, name="exon2"),
+    PerTargetCoverage(chrom="chr1", start=1_501, end=1_600, name="exon3"),
+    PerTargetCoverage(chrom="chr2", start=501, end=600, name="exon7"),
+]
+
+with register_locatable(PerTargetCoverage, as_interval):
+    exons = TreeDetector(targets).overlapping(gene)
+
+assert {exon.name for exon in exons} == {"exon2", "exon3"}
 ```
 
 ## Development and Testing
