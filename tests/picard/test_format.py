@@ -116,7 +116,7 @@ def test_picard_float_codec_reads_numbers_as_typeline_does(text: str, value: flo
 
 @pytest.mark.parametrize(
     ("name", "kind"),
-    [("hs.hs_metrics", HsMetrics), ("cmm.insert_size_metrics", InsertSizeMetrics)],
+    [("hs.hs_metrics.txt", HsMetrics), ("cmm.insert_size_metrics.txt", InsertSizeMetrics)],
     ids=["hs", "insert-size"],
 )
 def test_reader_reads_metrics_whose_floats_hold_a_decimal_comma(
@@ -140,8 +140,8 @@ def test_reader_reads_metrics_whose_floats_hold_a_decimal_comma(
 @pytest.mark.parametrize(
     ("name", "kind"),
     [
-        ("rna.rna_metrics", RnaCoverageHistogram),
-        ("cmm.quality_by_cycle_metrics", MeanQualityByCycle),
+        ("rna.rna_metrics.txt", RnaCoverageHistogram),
+        ("cmm.quality_by_cycle_metrics.txt", MeanQualityByCycle),
     ],
     ids=["rna", "mean-quality"],
 )

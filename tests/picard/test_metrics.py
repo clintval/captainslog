@@ -110,8 +110,8 @@ def test_reads_used_is_an_enum_of_the_constants_picard_writes() -> None:
 @pytest.mark.parametrize(
     ("kind", "name"),
     [
-        (GcBiasDetailMetrics, "cmm.gc_bias.detail_metrics"),
-        (GcBiasSummaryMetrics, "cmm.gc_bias.summary_metrics"),
+        (GcBiasDetailMetrics, "cmm.gc_bias.detail_metrics.txt"),
+        (GcBiasSummaryMetrics, "cmm.gc_bias.summary_metrics.txt"),
     ],
 )
 def test_gc_bias_reads_used_is_read_as_a_reads_used(kind: type[Any], name: str) -> None:

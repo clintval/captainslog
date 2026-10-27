@@ -69,19 +69,19 @@ def _holds_a_histogram(path: Path) -> bool:
 PICARD_HISTOGRAM_FIXTURES = sorted(path for path in DATA.glob("*") if _holds_a_histogram(path))
 
 FIXTURE_CLASSES: dict[str, type[Any]] = {
-    "cmm.alignment_summary_metrics": ReadLengthHistogram,
-    "cmm.insert_size_metrics": InsertSizeHistogram,
-    "cmm.quality_by_cycle_metrics": MeanQualityByCycle,
-    "cmm.quality_distribution_metrics": QualityScoreDistribution,
-    "dup.duplication_metrics": DuplicateSetSizeHistogram,
-    "elc.duplication_metrics": LibraryComplexityHistogram,
-    "hs.hs_metrics": HsHistogram,
-    "nonzero.wgs_metrics": WgsNonZeroCoverageHistogram,
-    "one_library.duplication_metrics": DuplicationRoiHistogram,
-    "pcr.targeted_pcr_metrics": HsHistogram,
-    "raw.raw_wgs_metrics": WgsHistogram,
-    "rna.rna_metrics": RnaCoverageHistogram,
-    "wgs.wgs_metrics": WgsHistogram,
+    "cmm.alignment_summary_metrics.txt": ReadLengthHistogram,
+    "cmm.insert_size_metrics.txt": InsertSizeHistogram,
+    "cmm.quality_by_cycle_metrics.txt": MeanQualityByCycle,
+    "cmm.quality_distribution_metrics.txt": QualityScoreDistribution,
+    "dup.duplication_metrics.txt": DuplicateSetSizeHistogram,
+    "elc.duplication_metrics.txt": LibraryComplexityHistogram,
+    "hs.hs_metrics.txt": HsHistogram,
+    "nonzero.wgs_metrics.txt": WgsNonZeroCoverageHistogram,
+    "one_library.duplication_metrics.txt": DuplicationRoiHistogram,
+    "pcr.targeted_pcr_metrics.txt": HsHistogram,
+    "raw.raw_wgs_metrics.txt": WgsHistogram,
+    "rna.rna_metrics.txt": RnaCoverageHistogram,
+    "wgs.wgs_metrics.txt": WgsHistogram,
 }
 
 
