@@ -79,7 +79,7 @@ def test_multilevel_dataclasses_end_with_their_levels() -> None:
 
 
 def test_alignment_summary_metrics_category_is_an_enum_of_its_java_constants() -> None:
-    """The category of the alignment summary metrics is an enum of its Java constants."""
+    """The category of the alignment summary metrics is an enumeration of its Java constants."""
     assert {c.value for c in ReadCategory} == {
         "UNPAIRED",
         "FIRST_OF_PAIR",

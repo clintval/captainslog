@@ -65,7 +65,7 @@ ENUM_SUMMARIES = {
 }
 # fmt: on
 
-# Picard declares these fields as strings, but writes only the constants of the enum named here.
+# Picard declares these fields as strings, but writes only the constants of the enumeration named here.
 # fmt: off
 STRING_ENUMS = {
     "picard.analysis.GcBiasDetailMetrics.READS_USED": "ReadsUsed",
@@ -274,7 +274,7 @@ def column_labels(java: str, fields: list[dict[str, str]]) -> dict[str, str]:
 def metrics_module(
     schema: dict[str, Any], source: Path, classes: dict[str, str], enums: dict[str, str]
 ) -> str:
-    """The source of the module holding every enum and dataclass."""
+    """The source of the module holding every enumeration and dataclass."""
     fields = {metric["class"]: metric["fields"] for metric in schema["classes"]}
     body: list[str] = []
     for java, name in sorted(enums.items(), key=lambda item: item[1]):

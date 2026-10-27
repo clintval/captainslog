@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-/** Prints, as JSON, Picard's metrics classes, the columns htsjdk writes for each, and their enums. */
+/** Prints, as JSON, Picard's metrics classes, the columns htsjdk writes for each, and their enumerations. */
 public class PicardSchema {
     public static void main(final String[] args) throws Exception {
         final List<Class<?>> classes = new ArrayList<>();

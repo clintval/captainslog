@@ -88,7 +88,7 @@ def test_optional_fields_default_to_none() -> None:
 
 
 def test_categorical_fields_are_required_enums() -> None:
-    """Each categorical column is its own enum with no default, and no other field is an enum."""
+    """Each categorical column is its own enumeration with no default, and no other field is one."""
     expected = {
         (AlignmentMetrics, "category"): ReadCategory,
         (IsizeMetrics, "pair_orientation"): PairOrientation,
@@ -106,7 +106,7 @@ def test_categorical_fields_are_required_enums() -> None:
 
 
 def test_every_field_type_is_one_riker_writes() -> None:
-    """Every field is an int, a float, a str, an optional number, or a Riker enum."""
+    """Every field is an int, a float, a str, an optional number, or a Riker enumeration."""
     allowed = {int, float, str, int | None, float | None, *ENUMS}
     for kind in DATACLASSES:
         for name, hint in get_type_hints(kind).items():

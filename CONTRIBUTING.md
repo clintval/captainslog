@@ -98,7 +98,7 @@ The script downloads its inputs from Picard's repository at the 3.5.0 tag, runs 
 ## Regenerating the Picard Dataclasses
 
 The Picard dataclasses in `captainslog/picard/_metrics.py`, and their Java names and column labels in `captainslog/picard/_java.py`, are generated, so change the generator rather than the files.
-The script `scripts/picard/PicardSchema.java` prints the metrics classes of a Picard jar as JSON, with the columns htsjdk writes for each and the constants of their enums:
+The script `scripts/picard/PicardSchema.java` prints the metrics classes of a Picard jar as JSON, with the columns htsjdk writes for each and the constants of their enumerations:
 
 ```console
 pixi run --manifest-path scripts/fixtures/pixi.toml bash -c 'java -cp "$PICARD_JAR" scripts/picard/PicardSchema.java "$PICARD_JAR" > scripts/picard/picard-3.5.0.json'
