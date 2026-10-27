@@ -118,8 +118,7 @@ with PicardReader.from_path[HsMetrics](path) as reader:
 
 #### Finding the Class of a File
 
-The `metrics_class` function names the dataclass of a file from its `## METRICS CLASS` line.
-Likewise, `histogram_class` names the dataclass of its histogram from its label row.
+The `metrics_class` and `histogram_class` functions return the metric type in a data file.
 
 ```python
 from captainslog import picard
