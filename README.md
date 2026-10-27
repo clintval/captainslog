@@ -13,7 +13,7 @@
 Typed dataclasses for the metrics files that Riker, Picard, fgbio, and fgumi write.
 
 Open a [Riker](https://github.com/fulcrumgenomics/riker), [Picard](https://github.com/broadinstitute/picard), [fgbio](https://github.com/fulcrumgenomics/fgbio), or [fgumi](https://github.com/fulcrumgenomics/fgumi) metrics file, plain or compressed, and get a list of frozen dataclasses with typed fields.
-Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, Picard's `?` is NaN, and fgbio's `NaN` and `Infinity` are the floats they spell.
+Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enumerations, Picard's `?` and fgbio's `NaN` are NaN, and fgbio's `Infinity` and `-Infinity` are infinite.
 
 ## Installation
 

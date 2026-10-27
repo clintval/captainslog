@@ -1,11 +1,11 @@
 [project]
 name = "captainslog-ngs"
 version = "0.1.1"
-description = "Typed dataclasses for the metrics files that Riker and Picard write."
+description = "Typed dataclasses for the metrics files that Riker, Picard, fgbio, and fgumi write."
 authors = [{ name = "Clint Valentine", email = "valentine.clint@gmail.com" }]
 license = "MIT"
 readme = "README.md"
-keywords = ["bioinformatics", "Picard", "Riker", "metrics", "NGS"]
+keywords = ["bioinformatics", "Riker", "fgumi", "Picard", "fgbio", "metrics", "NGS", "UMI"]
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [

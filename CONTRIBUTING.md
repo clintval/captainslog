@@ -84,7 +84,7 @@ uv run poe fix-all
 uv run poe fix-and-check-all
 ```
 
-## Regenerating the Test Fixtures
+## Regenerating the Riker and Picard Fixtures
 
 The files in `tests/data/picard` and `tests/data/riker` are written by Picard 3.5.0 and Riker 0.5.0, from inputs in Picard's own test data.
 To write them again, install [pixi](https://pixi.sh), then run `make.sh` in the environment of `scripts/fixtures/pixi.toml`, which holds Riker, Picard, samtools, and Java:
