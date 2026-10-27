@@ -10,9 +10,9 @@
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
-Typed dataclasses for the metrics files that [Riker](https://github.com/fulcrumgenomics/riker) and [Picard](https://github.com/broadinstitute/picard) write.
+Typed dataclasses for the metrics files that Riker and Picard write.
 
-Open a Riker or Picard metrics file and get a list of frozen dataclasses with typed fields, and do arithmetic on them without casting.
+Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file and get a list of frozen dataclasses with typed fields, and do arithmetic on them without casting.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enums, and Picard's `?` is NaN.
 A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
 
@@ -30,8 +30,8 @@ Read two Riker metrics files from the same run, and combine their typed fields w
 
 ```python
 from captainslog.riker import AlignmentMetrics
-from captainslog.riker import ReadCategory
 from captainslog.riker import IsizeMetrics
+from captainslog.riker import ReadCategory
 from captainslog.riker import RikerReader
 
 alignment = {row.category: row for row in RikerReader.from_path[AlignmentMetrics]("tests/data/riker/s.alignment-metrics.txt")}
@@ -46,8 +46,8 @@ assert round(frac_reads_in_fr_pairs, 3) == 0.972
 
 ### Reading Riker Metrics
 
-`RikerReader` reads Riker's plain tables.
-`riker.metrics_class` names the dataclass of a file by the suffix Riker gives it, and `riker.columns` transposes Riker's histograms.
+A `RikerReader` reads Riker's plain tables.
+The `riker.metrics_class` function names the dataclass of a file by the suffix Riker gives it, and `riker.columns` transposes Riker's histograms.
 
 ```python
 from captainslog import riker
@@ -69,25 +69,11 @@ assert isize.fr_count[:3] == (1, 1, 1)
 
 ### Reading Picard Metrics
 
-`PicardReader` reads a Picard metrics file, plain or compressed, into dataclasses, one per row.
+A `PicardReader` reads a Picard metrics file, plain or compressed, into dataclasses, one per row.
 
 ```python
-from captainslog import picard
-from captainslog.picard import AccumulationLevel
-from captainslog.picard import HsHistogram
 from captainslog.picard import HsMetrics
-from captainslog.picard import InsertSizeHistogram
-from captainslog.picard import InsertSizeMetrics
-from captainslog.picard import InsertSizeSeries
-from captainslog.picard import MeanQualityByCycle
-from captainslog.picard import PairOrientation
-from captainslog.picard import PerTargetCoverage
-from captainslog.picard import PicardCoverageReader
-from captainslog.picard import PicardHistogramReader
 from captainslog.picard import PicardReader
-from captainslog.picard import PicardWriter
-from captainslog.picard import QualityScoreDistribution
-from captainslog.picard import insert_size_bins
 
 with PicardReader.from_path[HsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
     [hs] = list(reader)
@@ -106,31 +92,31 @@ Each reader has a writer, which makes realistic files for unit tests: `RikerWrit
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from captainslog.picard import PicardWriter
+
 temp_dir = TemporaryDirectory()
-path = Path(temp_dir.name) / "s.insert_size_metrics"
-metric = InsertSizeMetrics(read_pairs=3, mean_insert_size=150.5, pair_orientation=PairOrientation.FR)
-insert_sizes = insert_size_bins([
-    InsertSizeSeries(name=None, orientation=PairOrientation.FR, insert_size=(150, 151), counts=(2, 1)),
-])
+path = Path(temp_dir.name) / "s.hs_metrics"
 
-with PicardWriter.from_path[InsertSizeMetrics](path) as writer:
-    writer.write(metric)
-    writer.write_histogram(insert_sizes)
+with PicardWriter.from_path[HsMetrics](path) as writer:
+    writer.write(hs)
 
-assert list(PicardReader.from_path[InsertSizeMetrics](path)) == [metric]
-assert list(PicardHistogramReader.from_path[InsertSizeHistogram](path)) == insert_sizes
+assert list(PicardReader.from_path[HsMetrics](path)) == [hs]
 ```
 
 ### Interacting with Metrics
 
-These find the dataclass that reads a Picard file, turn its histogram into typed columns and series, and tell the accumulation level of each row.
+A few helpers for working with Picard files.
 
 #### Finding the Class of a File
 
-`metrics_class` names the dataclass of a file from its `## METRICS CLASS` line.
-`histogram_class` names the dataclass of its histogram from its label row.
+The `metrics_class` function names the dataclass of a file from its `## METRICS CLASS` line.
+Likewise, `histogram_class` names the dataclass of its histogram from its label row.
 
 ```python
+from captainslog import picard
+from captainslog.picard import HsHistogram
+from captainslog.picard import MeanQualityByCycle
+
 assert picard.metrics_class("tests/data/picard/hs.hs_metrics") is HsMetrics
 assert picard.histogram_class("tests/data/picard/hs.hs_metrics") is HsHistogram
 assert picard.histogram_class("tests/data/picard/cmm.quality_by_cycle_metrics") is MeanQualityByCycle
@@ -138,10 +124,14 @@ assert picard.histogram_class("tests/data/picard/cmm.quality_by_cycle_metrics") 
 
 #### Histograms and Columns
 
-`PicardHistogramReader` reads the histogram of a file into one dataclass per bin, and `columns` transposes the bins into one tuple per column.
-`insert_size_series`, `rna_coverage_series`, and `library_complexity_series` turn the columns Picard names after samples, libraries, and read groups into typed series, and `insert_size_bins` and its siblings turn series back into bins.
+A `PicardHistogramReader` reads the histogram of a file into one dataclass per bin, and `columns` transposes the bins into one tuple per column.
+The functions `insert_size_series`, `rna_coverage_series`, and `library_complexity_series` turn the columns Picard names after samples, libraries, and read groups into typed series, and `insert_size_bins` and its siblings turn series back into bins.
 
 ```python
+from captainslog.picard import InsertSizeHistogram
+from captainslog.picard import PairOrientation
+from captainslog.picard import PicardHistogramReader
+
 bins = list(PicardHistogramReader.from_path[InsertSizeHistogram]("tests/data/picard/cmm.insert_size_metrics"))
 hist = picard.columns(bins)
 
@@ -158,6 +148,8 @@ assert [s.name for s in series] == [None, "NA12891", "Pond-492101", "NormPond-54
 Histogram-only files read the same way:
 
 ```python
+from captainslog.picard import QualityScoreDistribution
+
 qualities = list(PicardHistogramReader.from_path[QualityScoreDistribution]("tests/data/picard/cmm.quality_distribution_metrics"))
 
 assert qualities[0].quality == 1
@@ -169,6 +161,9 @@ assert qualities[0].count_of_q == 2
 Picard writes a row for each accumulation level it is asked for: all reads, then each sample, library, and read group.
 
 ```python
+from captainslog.picard import AccumulationLevel
+from captainslog.picard import InsertSizeMetrics
+
 rows = list(PicardReader.from_path[InsertSizeMetrics]("tests/data/picard/cmm.insert_size_metrics"))
 
 assert [picard.accumulation_level(row) for row in rows] == [
@@ -191,6 +186,9 @@ assert all_reads.pair_orientation is PairOrientation.FR
 CollectHsMetrics and CollectTargetedPcrMetrics can also write plain tables of coverage per target and per base, which `PicardCoverageReader` reads.
 
 ```python
+from captainslog.picard import PerTargetCoverage
+from captainslog.picard import PicardCoverageReader
+
 targets = list(PicardCoverageReader.from_path[PerTargetCoverage]("tests/data/picard/hs.per_target_coverage.txt"))
 
 assert targets[0].name == "rs7555566"
