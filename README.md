@@ -56,7 +56,7 @@ from captainslog.riker import IsizeHistogram
 
 assert riker.metrics_class("tests/data/riker/s.hybcap-metrics.txt") is HybcapMetrics
 
-[hybcap] = list(RikerReader.from_path[HybcapMetrics]("tests/data/riker/s.hybcap-metrics.txt"))
+[hybcap] = RikerReader.from_path[HybcapMetrics]("tests/data/riker/s.hybcap-metrics.txt")
 
 assert hybcap.sample == "NA12891"
 assert hybcap.mean_target_coverage == 70.54
@@ -76,7 +76,7 @@ from captainslog.picard import HsMetrics
 from captainslog.picard import PicardReader
 
 with PicardReader.from_path[HsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
-    [hs] = list(reader)
+    [hs] = reader
 
 assert hs.mean_target_coverage == 70.54
 assert hs.hs_library_size == 14903
@@ -206,7 +206,7 @@ class MyHsMetrics(HsMetrics):
     def frac_bases_on_target(self) -> float:
         return self.on_target_bases / self.pf_bases_aligned
 
-[hs] = list(PicardReader.from_path[MyHsMetrics]("tests/data/picard/hs.hs_metrics"))
+[hs] = PicardReader.from_path[MyHsMetrics]("tests/data/picard/hs.hs_metrics")
 
 assert round(hs.frac_bases_on_target, 4) == 0.2398
 ```
