@@ -12,7 +12,7 @@
 
 Typed dataclasses for the metrics files that Riker and Picard write.
 
-Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file and get a list of frozen dataclasses with typed fields, and do arithmetic on them without casting.
+Open a [Riker](https://github.com/fulcrumgenomics/riker) or [Picard](https://github.com/broadinstitute/picard) metrics file and get a list of frozen dataclasses with typed fields.
 Integer columns are `int`, decimal columns are `float`, `Y` and `N` are `bool`, categorical columns are enums, and Picard's `?` is NaN.
 A Picard column named for a percent that holds a fraction from 0 to 1 is a `frac` field, such as `frac_pf_reads_aligned` for `PCT_PF_READS_ALIGNED`.
 
