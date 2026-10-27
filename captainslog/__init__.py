@@ -1,4 +1,4 @@
-"""Typed dataclasses for the metrics files that Picard and Riker write."""
+"""Typed dataclasses for the metrics files that Riker and Picard write."""
 
 from captainslog import picard
 from captainslog import riker
