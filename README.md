@@ -81,10 +81,10 @@ from captainslog.picard import HsMetrics
 from captainslog.picard import PicardReader
 
 with PicardReader.from_path[HsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
-    [hs] = reader
+    [hs_metrics] = reader
 
-assert hs.mean_target_coverage == 70.54
-assert hs.hs_library_size == 14903
+assert hs_metrics.mean_target_coverage == 70.54
+assert hs_metrics.hs_library_size == 14903
 assert reader.header.command_line.startswith("CollectHsMetrics BAIT_INTERVALS=")
 assert reader.header.started_on == "Sat Oct 24 21:42:22 HST 2026"
 ```
@@ -108,15 +108,13 @@ temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name) / "s.hs_metrics"
 
 with PicardWriter.from_path[HsMetrics](path) as writer:
-    writer.write(hs)
+    writer.write(hs_metrics)
 
 with PicardReader.from_path[HsMetrics](path) as reader:
-    assert list(reader) == [hs]
+    assert list(reader) == [hs_metrics]
 ```
 
 ### Interacting with Metrics
-
-A few helpers for working with Picard files.
 
 #### Finding the Class of a File
 
@@ -221,9 +219,9 @@ class MyHsMetrics(HsMetrics):
         return self.on_target_bases / self.pf_bases_aligned
 
 with PicardReader.from_path[MyHsMetrics]("tests/data/picard/hs.hs_metrics") as reader:
-    [hs] = reader
+    [hs_metrics] = reader
 
-assert round(hs.frac_bases_on_target, 4) == 0.2398
+assert round(hs_metrics.frac_bases_on_target, 4) == 0.2398
 ```
 
 ## Development and Testing
