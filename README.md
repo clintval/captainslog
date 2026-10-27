@@ -193,7 +193,7 @@ assert all_reads.pair_orientation is PairOrientation.FR
 
 ### Per-Target and Per-Base Coverage
 
-CollectHsMetrics and CollectTargetedPcrMetrics can also write plain tables of coverage per target and per base, which `PicardCoverageReader` reads.
+CollectHsMetrics and CollectTargetedPcrMetrics can also write plain tables of coverage per target and per base.
 
 ```python
 from captainslog.picard import PerTargetCoverage
