@@ -231,7 +231,7 @@ assert round(hs_metrics.frac_bases_on_target, 4) == 0.2398
 
 ## Intervals with bedspec
 
-The [bedspec](https://github.com/clintval/bedspec) package reads the targets, bases, SNPs, and CpGs of captainslog as 0-based, half-open intervals, so they work with its overlap detectors:
+With [bedspec](https://github.com/clintval/bedspec), find captainslog's targets, bases, SNPs, and CpGs by overlap:
 
 <!-- skip: next -->
 ```python
