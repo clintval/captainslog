@@ -49,7 +49,7 @@ assert round(frac_reads_in_fr_pairs, 3) == 0.972
 
 ### Reading Riker Metrics
 
-A `RikerReader` reads Riker's plain tables.
+A `RikerReader` reads a Riker metrics file into dataclasses, one per row.
 
 ```python
 from captainslog import riker
