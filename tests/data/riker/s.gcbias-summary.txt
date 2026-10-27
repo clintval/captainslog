@@ -1,0 +1,2 @@
+sample	window_size	total_clusters	total_reads	aligned_reads	filtered_reads	frac_filtered_reads	at_dropout	gc_dropout	gc_0_19_normcov	gc_20_39_normcov	gc_40_59_normcov	gc_60_79_normcov	gc_80_100_normcov
+NA12891	100	495	984	981	0	0.00000	13.56459	12.42645	0.00000	0.73699	1.18573	0.00000	0.00000

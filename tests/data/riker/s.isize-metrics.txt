@@ -1,0 +1,2 @@
+sample	pair_orientation	read_pairs	mean_insert_size	standard_deviation	median_insert_size	median_absolute_deviation	mode_insert_size	min_insert_size	max_insert_size
+NA12891	FR	478	357.86	120.82	335.50	65.50	321	112	899

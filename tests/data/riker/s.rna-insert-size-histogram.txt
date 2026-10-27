@@ -1,0 +1,2 @@
+sample	insert_size	fr_count	rf_count	tandem_count
+NA12891	156	1	0	0
