@@ -40,9 +40,9 @@ with (
     alignment = {row.category: row for row in alignments}
     [isize_metrics] = isizes
 
-frac_reads_in_fr_pairs = 2 * isize_metrics.read_pairs / alignment[ReadCategory.PAIR].total_reads
+frac_fr_reads = 2 * isize_metrics.read_pairs / alignment[ReadCategory.PAIR].total_reads
 
-assert round(frac_reads_in_fr_pairs, 3) == 0.972
+assert round(frac_fr_reads, 3) == 0.972
 ```
 
 ## Quickstart
